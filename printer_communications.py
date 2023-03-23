@@ -17,6 +17,7 @@ class printer:
 
         # Other
         self.home_pos = [0,0,0]
+        self._finish = False
 
     def _serial_readline(self):
         while True:
@@ -24,6 +25,8 @@ class printer:
                 self._raw_received_message = self.printer.readline().decode('utf-8')[:-1]
                 if self._raw_received_message == "ok":
                     self._ok_flag = True
+                if self._raw_received_message[:1] == "X":
+                    self._finish = True
             except:
                 pass
             sleep(0.001)
@@ -98,6 +101,7 @@ class printer:
         self.move_axis(x = self.home_pos[0], y = self.home_pos[1], z = self.home_pos[2], f = f, printMsg=printMsg)
 
     def move_axis_relative(self, x = None, y = None, z = None, e = None, f = None, printMsg = False):
+        self._finish = False
         command = "G0"
         
         if x is not None:
@@ -114,6 +118,7 @@ class printer:
         self.send_gcode(command, wait_until_completion=True, printMsg=printMsg)
 
     def move_axis(self, x = None, y = None, z = None, e = None, f = None, printMsg = False):
+        self._finish = False
         command = "G0"
         
         if x is not None:
@@ -128,9 +133,10 @@ class printer:
     
             command = command + " F" + str(float(f))
 
-        self.send_gcode(command, wait_until_completion=True, printMsg=printMsg)
+        self.send_gcode(command, wait_until_completion=False, printMsg=printMsg)
 
     def move_axis_incremental(self, x = None, y = None, z = None, e = None, f = None, printMsg = False):
+        self._finish = False
         command = "G0"
         position = self.read_position(printMsg=False)
         
@@ -174,3 +180,35 @@ class printer:
             except:
                 # print('read position error')
                 sleep(0.2)
+                
+                
+    def read_position_relative(self, printMsg=False):
+        pos = self.read_position()
+        pos[0] = pos[0] + self.home_pos[0]
+        pos[1] = pos[1] + self.home_pos[1]
+        pos[2] = pos[2] + self.home_pos[2]
+        
+        if printMsg:
+            print("position:", pos)
+        return pos
+    
+            
+    def finish_request(self, printMsg = False):
+        
+        self._finish = False     
+        self.send_gcode("M114", wait_until_completion=False, printMsg=printMsg)
+        
+    def get_ok_flag(self):
+        return self._ok_flag
+    
+    def get_finish_flag(self):
+        return self._finish
+                        
+        
+class position:
+    def __init__(self, x=None, y=None, z=None, e=None, f=None):
+        self.x = x
+        self.y = y
+        self.z = z
+        self.e = e
+        self.f = f
