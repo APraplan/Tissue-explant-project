@@ -228,6 +228,12 @@ def manual_control():
 
         # reads frames from a camera 
         _, frame = cap.read() 
+        frame = cv.undistort(frame)
+        
+        markerSize = 15
+        thickness = 1
+        center = (302, 214)
+        frame = cv2.drawMarker(frame, center, (255, 0, 0), cv2.MARKER_CROSS, markerSize, thickness)
         
         # Display an original image 
         cv2.imshow('Camera', frame) 
@@ -270,9 +276,7 @@ def commande(key, incr):
     
     # Anycubic
     if key == ord('r'):
-        anycubic.read_position_relative(printMsg=True)
-        while key == ord('r'):
-            pass
+        anycubic.read_position(printMsg=True)
         
     if key == ord('a'):
         anycubic.move_axis_incremental(x=-incr, printMsg=False)
@@ -292,17 +296,10 @@ def commande(key, incr):
     if key == ord('c'):
         anycubic.move_axis_incremental(z=-incr, printMsg=False)
         
-    if key == ord('8'):
-        anycubic.move_axis(x = 100, y = 50, f = 3000)
-    
-    if key == ord('9'):
-        anycubic.move_axis(x=50, y=50 ,f = 3000)
     
     if key == ord('0'):
-        anycubic.move_axis(x=0, y=0, f = 3000)
+        anycubic.move_axis(x=75.0, y=115, z=50, f = 8000)
         
-    if key == ord('t'):
-        anycubic.position_request()
     
         
     # if key == ord('x'):

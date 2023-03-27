@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 import glob
+import pickle
 
 
 
@@ -18,7 +19,7 @@ criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 objp = np.zeros((chessboardSize[0] * chessboardSize[1], 3), np.float32)
 objp[:,:2] = np.mgrid[0:chessboardSize[0],0:chessboardSize[1]].T.reshape(-1,2)
 
-size_of_chessboard_squares_mm = 3
+size_of_chessboard_squares_mm = 10
 objp = objp * size_of_chessboard_squares_mm
 
 
@@ -58,10 +59,13 @@ cv2.destroyAllWindows()
 
 ret, cameraMatrix, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, frameSize, None, None)
 
+pickle.dump((cameraMatrix, dist), open('calibration.pkl', 'wb'))
+pickle.dump(cameraMatrix, open('cameraMatrix.pkl', 'wb'))
+pickle.dump(dist, open('dist.pkl', 'wb'))
 
 ############## UNDISTORTION #####################################################
 
-img = cv2.imread('Pictures\calibration\imageedit_2.png')
+img = cv2.imread('Pictures\calibration\image2.png')
 h,  w = img.shape[:2]
 newCameraMatrix, roi = cv2.getOptimalNewCameraMatrix(cameraMatrix, dist, (w,h), 1, (w,h))
 

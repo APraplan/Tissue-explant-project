@@ -2,19 +2,38 @@ import cv2
 import matplotlib as plt
 import numpy as np
 from skimage import measure, color
+import pickle
 
 # def get_cell_position():
 #     return tissue(50, 105, 10)
 
 
-WIDHT_PX = 640
-HEIGHT_PX = 480
-WIDHT_CM = 12
-HEIGHT_CM = 8
-RATIO_X = WIDHT_CM/WIDHT_PX
-RATIO_Y = HEIGHT_CM/HEIGHT_PX
-OFFSET_X = 10
-OFFSET_Y = -10 
+WIDTH_PX = 603
+HEIGHT_PX = 427
+WIDHT_MM = 137
+HEIGHT_MM = 98
+RATIO_X = WIDHT_MM/WIDTH_PX
+RATIO_Y = HEIGHT_MM/HEIGHT_PX
+OFFSET_X = -24.6
+OFFSET_Y = -13.65
+
+cameraMatrix = pickle.load(open('CameraMatrix.pkl', 'rb'))
+dist = pickle.load(open('dist.pkl', 'rb'))
+
+def undistort(img):
+    
+    h,  w = img.shape[:2]
+    newCameraMatrix, roi = cv2.getOptimalNewCameraMatrix(cameraMatrix, dist, (w,h), 1, (w,h))
+
+    # Undistort with Remapping
+    mapx, mapy = cv2.initUndistortRectifyMap(cameraMatrix, dist, None, newCameraMatrix, (w,h), 5)
+    dst = cv2.remap(img, mapx, mapy, cv2.INTER_LINEAR)
+
+    # crop the image
+    x, y, w, h = roi
+    dst = dst[y:y+h, x:x+w]
+ 
+    return dst
 
 
 def get_position2(image):
@@ -108,6 +127,7 @@ def detection_test(image, mask):
     thickness = 1
     
     for i in range(len(keypoints)):
+        print(int(keypoints[i].pt[0]),int(keypoints[i].pt[1]))
         out = cv2.circle(out, (int(keypoints[i].pt[0]),int(keypoints[i].pt[1])), radius, color, thickness)
             
     return out
@@ -166,7 +186,8 @@ def detect(image, position, detector, mask = None):
     
        
     if len(keypoints) > 0:
-        target = (position[0]+OFFSET_Y+keypoints[0].pt[1]*RATIO_Y, position[1]+OFFSET_X+keypoints[0].pt[1]*RATIO_X) 
+        target = (position[0]+OFFSET_X+(keypoints[0].pt[1]-HEIGHT_PX/2)*RATIO_Y,\
+                  position[1]+OFFSET_Y+(keypoints[0].pt[0]-WIDTH_PX/2)*RATIO_X) 
     else:
         target = None
         
@@ -196,4 +217,5 @@ def check_pickup(image, detector):
     if keypoints is not None:
         return True
     else:
-        return False
+        return False 
+    

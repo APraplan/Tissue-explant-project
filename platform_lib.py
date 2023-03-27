@@ -44,15 +44,15 @@ class platform_pick_and_place:
         
         # Picking zone
         self.safe_height = 25
-        self.pick_height = 0.8
-        self.detection_place = [75, 120, 50]
-        self.reset_pos = [50, 100, 10]
+        self.pick_height = 3.2
+        self.detection_place = [75.0, 125, 50]
+        self.reset_pos = [90, 115, 10]
                 
         # Dropping zone
         self.dropping_pos = [180, 160]
         self.nb_pos = [8, 12]
         self.offset_pos = 8.2
-        self.drop_height = 1
+        self.drop_height = 3.5
         
         # Anycubic
         self.anycubic = anycubic
@@ -71,7 +71,7 @@ class platform_pick_and_place:
         
         # Camera
         self.detector = detector 
-        self.mask = cv.create_mask(200, (480, 640), (320, 240))
+        self.mask = cv.create_mask(200, (427, 603), (301, 213))
         self.detect_attempt = 0
         self.max_attempt = 50
         
@@ -92,7 +92,7 @@ class platform_pick_and_place:
     def __detect(self, frame):
         
   
-        if self.sub_state == 'go to detection place':
+        if self.sub_state == 'go to position':
             
             if self.com_state == 'not send':
                 self.anycubic.move_axis(z=self.safe_height, f=self.fast_speed)
@@ -122,7 +122,7 @@ class platform_pick_and_place:
                 
                 if self.detect_attempt == self.max_attempt:
                     self.state = 'pause'
-                    self.last_state = 'picture'
+                    self.last_state = 'detect'
                     self.detect_attempt = 0
                     print('No tissue detected')
        
@@ -145,7 +145,7 @@ class platform_pick_and_place:
         elif self.sub_state == 'go to position':
             
             if self.com_state == 'not send':
-                self.anycubic.move_axis(x=self.sample_list[self.nb_sample-1].x, y=self.sample_list[self.nb_sample-1].y, f=self.fast_speed)
+                self.anycubic.move_axis(x=self.sample_list[self.nb_sample-1].x, y=self.sample_list[self.nb_sample-1].y, f=self.slow_speed)
                 self.anycubic.move_axis(z=self.pick_height, f=self.slow_speed)
                 self.anycubic.finish_request()
                 self.com_state = 'send'
@@ -277,8 +277,8 @@ class platform_pick_and_place:
                 
             elif self.dyna.pipette_is_in_position(100, ID = 1):
                 self.dyna.write_position(self.dyna.pipette(0), ID = 1)
-                self.state = 'picture'
-                self.sub_state = 'go to detection place'
+                self.state = 'detect'
+                self.sub_state = 'go to position'
                 self.com_state = 'not send'   
                       
     
@@ -286,7 +286,7 @@ class platform_pick_and_place:
     
     def run(self, frame):
             
-        if self.state == 'picture':
+        if self.state == 'detect':
             self.__detect(frame=frame)
             
         elif self.state == 'pick':

@@ -59,10 +59,11 @@
 import cv2
 import numpy as np
 import computer_vision as mcv
+import pickle
 
 num = 0
 
-cap = cv2.VideoCapture(1) 
+cap = cv2.VideoCapture(0) 
 
 # Check if camera opened successfully
 if not cap.isOpened():
@@ -79,6 +80,7 @@ mask = cv2.circle(mask, center_coordinates, radius, color, thickness)
 
 chessboardSize = (9, 6)
 criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
+
     
 while(True): 
 
@@ -91,17 +93,22 @@ while(True):
     # Detection chessboard
     # out2 = frame.copy()
     # gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    # Find the chess board corners
+    # # Find the chess board corners
     # ret, corners = cv2.findChessboardCorners(gray, chessboardSize, None)
     
     # Display an original image 
-    # cv2.imshow('Camera', frame) 
+    cv2.imshow('Camera', frame) 
     cv2.imshow('Detection', out)
      
     # if ret is True:
     #     corners = cv2.cornerSubPix(gray,corners, (11,11), (-1,-1), criteria)
     #     out2 = cv2.drawChessboardCorners(out2, chessboardSize, corners, ret)
     #     cv2.imshow('Chessboard', out2)
+
+    out = mcv.undistort(frame)
+    cv2.imshow('Calibrated camera', out) 
+    print(out.shape)
+
 
     # Wait for Esc key to stop 
     k = cv2.waitKey(5) & 0xFF
@@ -116,9 +123,6 @@ while(True):
     
 cap.release() 
 cv2.destroyAllWindows()
-
-
-
 
 
 

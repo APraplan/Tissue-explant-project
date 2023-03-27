@@ -95,7 +95,7 @@ class printer:
         self.home_pos = [x, y, z]
 
     def homing(self, printMsg=False):
-        self.send_gcode("G28 X0 Y0 Z0", printMsg=printMsg)
+        self.send_gcode("G28 R25", printMsg=printMsg)
 
     def move_home(self, f = 1000, printMsg=False):
         self.move_axis(x = self.home_pos[0], y = self.home_pos[1], z = self.home_pos[2], f = f, printMsg=printMsg)
@@ -178,7 +178,7 @@ class printer:
 
                 return position
             except:
-                # print('read position error')
+                print('read position error')
                 sleep(0.2)
                 
                 
