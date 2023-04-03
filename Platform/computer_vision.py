@@ -1,7 +1,7 @@
 import cv2
 import matplotlib as plt
 import numpy as np
-from skimage import measure, color
+# from skimage import measure, color
 
 # def get_cell_position():
 #     return tissue(50, 105, 10)
@@ -43,8 +43,8 @@ def get_position2(image):
     # cv2.imshow('Dilated', dilated)
     # cv2.waitKey(0) 
     
-    labels = measure.label(erroded)
-    cv2.imshow('Dilated', labels)
+    # labels = measure.label(erroded)
+    # cv2.imshow('Dilated', labels)
     cv2.waitKey(0) 
 
 image = cv2.imread('Pictures/image6.png')
@@ -197,3 +197,27 @@ def check_pickup(image, detector):
         return True
     else:
         return False
+
+
+# def pick_and_place():
+    
+#     cap = cv2.VideoCapture(0) 
+
+#     # Check if camera opened successfully
+#     if not cap.isOpened():
+#         print("Error opening video stream or file")
+           
+#     while True:
+        
+#         _, frame = cap.read()                 
+        
+#         # Display   
+#         imshow = platform.print(frame)   
+#         cv2.imshow('Camera', imshow) 
+
+
+    
+#         sleep(0.05)
+        
+#     cap.release() 
+#     cv2.destroyAllWindows()

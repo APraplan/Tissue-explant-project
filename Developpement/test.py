@@ -58,11 +58,21 @@
 
 import cv2
 import numpy as np
-import computer_vision as mcv
+import Platform.computer_vision as mcv
+
+def make_720p():
+    cap.set(3, 1280)
+    cap.set(4, 720)
+    
+def make_1080p():
+    cap.set(3, 1920)
+    cap.set(4, 1080)
 
 num = 0
 
-cap = cv2.VideoCapture(1) 
+cap = cv2.VideoCapture(0) 
+
+make_1080p()
 
 # Check if camera opened successfully
 if not cap.isOpened():
@@ -85,8 +95,9 @@ while(True):
     # reads frames from a camera 
     _, frame = cap.read() 
     
+    
     # Detection
-    out = mcv.detection_test(frame, mask)
+    # out = mcv.detection_test(frame, mask)
     
     # Detection chessboard
     # out2 = frame.copy()
@@ -95,8 +106,8 @@ while(True):
     # ret, corners = cv2.findChessboardCorners(gray, chessboardSize, None)
     
     # Display an original image 
-    # cv2.imshow('Camera', frame) 
-    cv2.imshow('Detection', out)
+    cv2.imshow('Camera', frame) 
+    # cv2.imshow('Detection', out)
      
     # if ret is True:
     #     corners = cv2.cornerSubPix(gray,corners, (11,11), (-1,-1), criteria)

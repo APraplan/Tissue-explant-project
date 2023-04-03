@@ -1,6 +1,6 @@
 import sys
 from dynamixel_sdk import * 
-from dynamixel_address_book import *
+from Platform.Communication.dynamixel_address_book import *
 import math
 
 class Dynamixel:

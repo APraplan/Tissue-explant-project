@@ -4,7 +4,7 @@ from geometric_functions import *
 from helpers_pump import *
 from dynamixel_controller import *
 import keyboard
-import computer_vision as cv
+import Platform.computer_vision as cv
 import cv2
 sys.path.append('../')
 
@@ -14,20 +14,23 @@ dyna = Dynamixel(ID=[1], descriptive_device_name="XL430 test motor", series_name
 detector = cv.create_detector()
 platform = platform_pick_and_place(anycubic=anycubic, dynamixel=dyna, detector=detector)
 
-def platform_init():
+# def platform_init():
     
-    # Home position for the printer
-    anycubic.connect()
-    anycubic.homing()
-    anycubic.set_home_pos(x=0, y=200, z=0)
-    # anycubic.max_x_feedrate(15000)
-    # anycubic.max_y_feedrate(15000)
-    # anycubic.max_z_feedrate(100)
-    # anycubic.move_home()
+#     # Home position for the printer
+#     anycubic.connect()
+#     anycubic.homing()
+#     anycubic.set_home_pos(x=0, y=200, z=0)
+#     # anycubic.max_x_feedrate(15000)
+#     # anycubic.max_y_feedrate(15000)
+#     # anycubic.max_z_feedrate(100)
+#     # anycubic.move_home()
     
-    dyna.begin_communication()
-    dyna.set_operating_mode("position", ID=1)
-    dyna.write_position(dyna.pipette(0), ID=1)
+#     dyna.begin_communication()
+#     dyna.set_operating_mode("position", ID=1)
+#     dyna.write_position(dyna.pipette(0), ID=1)
+
+def test_multi():
+    platform.start()
     
 # def pick(object):
     
