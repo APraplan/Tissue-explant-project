@@ -1,5 +1,5 @@
 from movement_functions import *
-from computer_vision import *
+from Platform.computer_vision import *
 
 def pick_and_place():
     
@@ -8,6 +8,8 @@ def pick_and_place():
     # Check if camera opened successfully
     if not cap.isOpened():
         print("Error opening video stream or file")
+        
+    make_720p(cap)
         
     out = cv2.VideoWriter('video.mp4', -1, 25.0, (603,427))
            

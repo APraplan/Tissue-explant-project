@@ -1,23 +1,28 @@
 import cv2
 import matplotlib as plt
 import numpy as np
-from skimage import measure, color
+# from skimage import measure, color
 import pickle
+import sys
 
 # def get_cell_position():
 #     return tissue(50, 105, 10)
 
 
-WIDTH_PX = 603
-HEIGHT_PX = 427
-WIDHT_MM = 137
-HEIGHT_MM = 98
+WIDTH_PX = 1146
+HEIGHT_PX = 530
+WIDHT_MM = 210
+HEIGHT_MM = 95.7
 RATIO_X = WIDHT_MM/WIDTH_PX
 RATIO_Y = HEIGHT_MM/HEIGHT_PX
-OFFSET_X = -24.6
-OFFSET_Y = -13.65
+OFFSET_X = -24.0
+OFFSET_Y = -9.5
 
-cameraMatrix = pickle.load(open('CameraMatrix.pkl', 'rb'))
+def make_720p(cap):
+    cap.set(3, 1280)
+    cap.set(4, 720)
+
+cameraMatrix = pickle.load(open('cameraMatrix.pkl', 'rb'))
 dist = pickle.load(open('dist.pkl', 'rb'))
 
 def undistort(img):
@@ -62,8 +67,8 @@ def get_position2(image):
     # cv2.imshow('Dilated', dilated)
     # cv2.waitKey(0) 
     
-    labels = measure.label(erroded)
-    cv2.imshow('Dilated', labels)
+    # labels = measure.label(erroded)
+    # cv2.imshow('Dilated', labels)
     cv2.waitKey(0) 
 
 image = cv2.imread('Pictures/image6.png')
@@ -186,10 +191,12 @@ def detect(image, position, detector, mask = None):
     
        
     if len(keypoints) > 0:
-        target = (position[0]+OFFSET_X+(keypoints[0].pt[1]-HEIGHT_PX/2)*RATIO_Y,\
+        target_rel = (keypoints[0].pt[1], keypoints[0].pt[0])
+        target_abs = (position[0]+OFFSET_X+(keypoints[0].pt[1]-HEIGHT_PX/2)*RATIO_Y,\
                   position[1]+OFFSET_Y+(keypoints[0].pt[0]-WIDTH_PX/2)*RATIO_X) 
     else:
-        target = None
+        target_abs = None
+        target_rel = None
         
     font = cv2.FONT_HERSHEY_SIMPLEX
     fontScale = 0.5
@@ -203,7 +210,7 @@ def detect(image, position, detector, mask = None):
     
     cv2.imwrite("Pictures\detection\image.png", image)
     
-    return target
+    return target_abs, target_rel
 
 
 def check_pickup(image, detector):

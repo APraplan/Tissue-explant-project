@@ -1,8 +1,12 @@
-from movement_functions import *
-from interface_functions import *
+import sys
+sys.path.append('c:/Users/APrap/Documents/CREATE/Pick-and-Place/Platform')
+from Platform.interface_functions import *
 
-platform_init()
 
-select_mode()
+platform = platform_pick_and_place()
 
-disconnect_all()
+platform.init()
+
+platform.run()
+
+platform.disconnect()

@@ -1,18 +1,14 @@
-from printer_communications import *
+from Platform.Communication.printer_communications import *
 from platform_lib import *
-from geometric_functions import *
-from helpers_pump import *
-from dynamixel_controller import *
+# from geometric_functions import *
+# from helpers_pump import *
+from Platform.Communication.dynamixel_controller import *
 import keyboard
-import computer_vision as cv
+import Platform.computer_vision as cv
 import cv2
 sys.path.append('../')
 
-anycubic = printer(descriptive_device_name="printer", port_name="COM4", baudrate=115200)
-dyna = Dynamixel(ID=[1], descriptive_device_name="XL430 test motor", series_name=["xl"], baudrate=57600,
-                 port_name="COM12")
-detector = cv.create_detector()
-platform = platform_pick_and_place(anycubic=anycubic, dynamixel=dyna, detector=detector)
+
 
 def platform_init():
     
@@ -210,6 +206,8 @@ def manual_control():
     incr = 10
     
     cap = cv2.VideoCapture(0) 
+    
+    cv.make_720p(cap)
 
     # Check if camera opened successfully
     if not cap.isOpened():
@@ -232,7 +230,7 @@ def manual_control():
         
         markerSize = 15
         thickness = 1
-        center = (302, 214)
+        center = (cv.WIDTH_PX//2, cv.HEIGHT_PX//2)
         frame = cv2.drawMarker(frame, center, (255, 0, 0), cv2.MARKER_CROSS, markerSize, thickness)
         
         # Display an original image 
