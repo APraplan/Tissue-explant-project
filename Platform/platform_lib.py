@@ -19,16 +19,16 @@ class platform_pick_and_place:
         self.pick_height = 2.5
         self.pick_offset = 7
         self.detection_place = [75.0, 125, 50]
-        self.reset_pos = [90, 115, 10]
+        self.reset_pos = [70, 115, 10]
                 
         # Dropping zone
-        self.dropping_pos = [180, 160]
-        self.nb_pos = [8, 12]
-        self.offset_pos = 8.2
+        self.dropping_pos = [160, 115]
+        # self.nb_pos = [8, 12]
+        # self.offset_pos = 8.2
         self.drop_height = 2.5
         
         # Anycubic
-        self.anycubic = printer(descriptive_device_name="printer", port_name="COM10", baudrate=115200)
+        self.anycubic = Printer(descriptive_device_name="printer", port_name="COM10", baudrate=115200)
         self.fast_speed = 5000
         self.medium_speed = 2000
         self.slow_speed = 300
@@ -36,14 +36,26 @@ class platform_pick_and_place:
         # Dynamixel
         self.dyna = Dynamixel(ID=[1], descriptive_device_name="XL430 test motor", series_name=["xl"], baudrate=57600,
                  port_name="COM12")
-        self.pipette_empty_speed = 100
-        self.pipette_fill_speed = 10
+        
+        self.pipette_pos = 0
+        self.pipette_full = 0
+        self.pipette_empty = 100
+        self.pipette_dropping_speed = 40
+        self.pipette_dropping_volume = 10
+        self.pipette_pumping_speed = 10
+        self.pipette_pumping_volume = 33
         
         # Tissues
+        self.target_pos = (0,0)
         self.nb_sample = 0
-        self.sample_list = []
         
         # Camera
+        self.cap = cv2.VideoCapture(0) 
+        cv.make_720p(self.cap)  
+        _, frame = self.cap.read() 
+        self.cam = cv.Camera(frame)
+        self.frame = self.cam.undistort(frame)
+        self.mask = cv.create_mask(200, self.frame.shape[0:2], (self.frame.shape[1]//2, self.frame.shape[0]//2))
         self.detector = cv.create_detector() 
         self.detect_attempt = 0
         self.max_attempt = 50
@@ -78,25 +90,12 @@ class platform_pick_and_place:
     
     def run(self):
         
-        cap = cv2.VideoCapture(0) 
-
-        # Check if camera opened successfully
-        if not cap.isOpened():
-            print("Error opening video stream or file")
-        
-        cv.make_720p(cap)  
-        
-        _, frame = cap.read() 
-        self.frame = cv.undistort(frame)
-     
-        self.mask = cv.create_mask(200, self.frame.shape[0:2], (self.frame.shape[1]//2, self.frame.shape[0]//2))
-        
         # out = cv2.VideoWriter('video.mp4', -1, 25.0, (603,427))
            
         while True:
         
-            _, frame = cap.read() 
-            self.frame = cv.undistort(frame)
+            _, frame = self.cap.read() 
+            self.frame = self.cam.undistort(frame)
             
       
             self.update() 
@@ -132,7 +131,7 @@ class platform_pick_and_place:
                 x, y, w, h = [int(i) for i in self.bbox]
                 print('Tracker pos :', (int(x+w/2), int(y+h/2)))
     
-        cap.release() 
+        self.cap.release() 
         # out.release()
         cv2.destroyAllWindows()
         
@@ -199,7 +198,12 @@ class platform_pick_and_place:
         position = (20, 50)
         # size, _ = cv2.getTextSize(text, font, fontScale, thickness)
         out = cv2.putText(self.frame, text, position, font, 
-                   fontScale, color, thickness, cv2.LINE_AA)       
+                   fontScale, color, thickness, cv2.LINE_AA)   
+        
+        text = 'Nb sample : ' + str(self.nb_sample) 
+        position = (20, 80)   
+        out = cv2.putText(self.frame, text, position, font, 
+                   fontScale, color, thickness, cv2.LINE_AA)
         
         return out
 

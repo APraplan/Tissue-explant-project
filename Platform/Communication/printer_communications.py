@@ -3,7 +3,7 @@ from threading import Thread
 from time import time, sleep
 import sys
 
-class printer:
+class Printer:
     def __init__(self, descriptive_device_name, port_name, baudrate):
         # Communication inputs
         self.descriptive_device_name = descriptive_device_name

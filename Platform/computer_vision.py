@@ -13,8 +13,8 @@ WIDTH_PX = 1146
 HEIGHT_PX = 530
 WIDHT_MM = 210
 HEIGHT_MM = 95.7
-RATIO_X = WIDHT_MM/WIDTH_PX
-RATIO_Y = HEIGHT_MM/HEIGHT_PX
+RATIO_X = WIDHT_MM/WIDTH_PX # 0.1832 = 1/5.457
+RATIO_Y = HEIGHT_MM/HEIGHT_PX # 0.1805 = 1/5.538
 OFFSET_X = -24.0
 OFFSET_Y = -9.5
 
@@ -22,23 +22,56 @@ def make_720p(cap):
     cap.set(3, 1280)
     cap.set(4, 720)
 
-cameraMatrix = pickle.load(open('cameraMatrix.pkl', 'rb'))
-dist = pickle.load(open('dist.pkl', 'rb'))
 
-def undistort(img):
+class Camera:
+    def __init__(self, img):
+        
+        cameraMatrix = pickle.load(open('Platform/Calibration/cameraMatrix.pkl', 'rb'))
+        dist = pickle.load(open('Platform/Calibration/dist.pkl', 'rb'))
+        
+        self.offset = pickle.load(open('Platform/Calibration/offset.pkl', 'rb'))
+        self.z_offset = pickle.load(open('Platform/Calibration/z_offset.pkl', 'rb'))
+        self.f = pickle.load(open('Platform/Calibration/f.pkl', 'rb'))
+        
+        h,  w = img.shape[:2]
+        format = float(w)/float(h)
+        # print(format)
+        newCameraMatrix, roi = cv2.getOptimalNewCameraMatrix(cameraMatrix, dist, (w,h), 1, (w,h))
+
+        # Undistort with Remapping
+        self.mapx, self.mapy = cv2.initUndistortRectifyMap(cameraMatrix, dist, None, newCameraMatrix, (w,h), 5)
+        
+        # crop the image
+        x, y, w, h = roi
+        # print('x ', x, ' y ', y, ' w ', w, ' h ', h)
+        if w/h >= format:
+            self.h = h
+            self.w = int(h*format)
+        else:
+            self.w = w
+            self.h = int(w/format)
+            
+        self.center = (self.w//2, self.h//2)
+            
+        self.x = int(x+w/2-self.w/2)
+        self.y = int(y+h/2-self.h/2)
+        # print('self.x ', self.x, ' self.y ', self.y)
+        
+
+    def undistort(self, img):
+            
+        dst = cv2.remap(img, self.mapx, self.mapy, cv2.INTER_LINEAR)        
+        dst = dst[self.y:self.y+self.h, self.x:self.x+self.w]
     
-    h,  w = img.shape[:2]
-    newCameraMatrix, roi = cv2.getOptimalNewCameraMatrix(cameraMatrix, dist, (w,h), 1, (w,h))
-
-    # Undistort with Remapping
-    mapx, mapy = cv2.initUndistortRectifyMap(cameraMatrix, dist, None, newCameraMatrix, (w,h), 5)
-    dst = cv2.remap(img, mapx, mapy, cv2.INTER_LINEAR)
-
-    # crop the image
-    x, y, w, h = roi
-    dst = dst[y:y+h, x:x+w]
- 
-    return dst
+        return dst
+    
+    
+    def cam_to_platform_space(self, coord, position):
+        
+        coef_x = (position[2] + self.z_offset)/self.f[1]
+        coef_y = (position[2] + self.z_offset)/self.f[0]
+            
+        return [position[0]+self.offset[0]+(coord[1]-self.center[1])*coef_x, position[1]+self.offset[1]+(coord[0]-self.center[0])*coef_y]
 
 
 def get_position2(image):
@@ -179,8 +212,7 @@ def create_detector():
     return detector 
     
     
-
-def detect(image, position, detector, mask = None):
+def detect(image, detector, mask = None):
     
     if mask is not None:
         zoi = cv2.bitwise_and(image, image, mask=mask)
@@ -188,15 +220,14 @@ def detect(image, position, detector, mask = None):
         zoi = image
     
     keypoints = detector.detect(zoi)
-    
        
     if len(keypoints) > 0:
-        target_rel = (keypoints[0].pt[1], keypoints[0].pt[0])
-        target_abs = (position[0]+OFFSET_X+(keypoints[0].pt[1]-HEIGHT_PX/2)*RATIO_Y,\
-                  position[1]+OFFSET_Y+(keypoints[0].pt[0]-WIDTH_PX/2)*RATIO_X) 
+        target_px = [keypoints[0].pt[0], keypoints[0].pt[1]]
+        # target_abs = (position[0]+OFFSET_X+(keypoints[0].pt[1]-HEIGHT_PX/2)*RATIO_Y,\
+        #           position[1]+OFFSET_Y+(keypoints[0].pt[0]-WIDTH_PX/2)*RATIO_X) 
     else:
-        target_abs = None
-        target_rel = None
+        # target_abs = None
+        target_px = None
         
     font = cv2.FONT_HERSHEY_SIMPLEX
     fontScale = 0.5
@@ -210,7 +241,7 @@ def detect(image, position, detector, mask = None):
     
     cv2.imwrite("Pictures\detection\image.png", image)
     
-    return target_abs, target_rel
+    return target_px
 
 
 def check_pickup(image, detector):
