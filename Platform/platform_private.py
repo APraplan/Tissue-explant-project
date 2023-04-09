@@ -1,6 +1,7 @@
 import computer_vision as cv
 import cv2
 import math
+import time
 
 
 class sample:
@@ -44,16 +45,27 @@ def release_tracker(self):
     self.tracker = cv2.TrackerMIL.create() 
     
     
-def check_pickup(self): # A améliorer, plus précis pour réduir les faux positifs
+def check_pickup(self):
     
     x, y, w, h = [int(i) for i in self.bbox]
     tracker_pos = [int(x+w/2), int(y+h/2)]
     
-    if tracker_pos[1] > 440:
+    if (tracker_pos[0]-self.pipette_pos_px[0])**2+ (tracker_pos[1]-self.pipette_pos_px[1])**2 < 15**2:
         return True
     else:
         return False
 
+
+def delay(self, delay):
+
+    if not self.chrono_set:
+        self.chrono = delay/1000.0 + time.time()
+        self.chrono_set = True
+    elif time.time() >= self.chrono:
+        self.chrono_set = False
+        return True
+    return False        
+    
 
 def detect(self):
     
@@ -222,7 +234,6 @@ def place(self):
             
 
 def reset(self):
-    
 
     if self.sub_state == 'go to position':
         
@@ -246,8 +257,9 @@ def reset(self):
             self.com_state = 'send'
             
         elif self.dyna.pipette_is_in_position(self.pipette_empty, ID = 1):
-            self.dyna.write_position(self.dyna.pipette(self.pipette_full), ID = 1)
-            self.pipette_pos = self.pipette_full
-            self.state = 'detect'
-            self.sub_state = 'go to position'
-            self.com_state = 'not send'   
+            if delay(self, 800):
+                self.dyna.write_position(self.dyna.pipette(self.pipette_full), ID = 1)
+                self.pipette_pos = self.pipette_full
+                self.state = 'detect'
+                self.sub_state = 'go to position'
+                self.com_state = 'not send'   

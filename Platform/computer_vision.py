@@ -214,6 +214,8 @@ def create_detector():
     
 def detect(image, detector, mask = None):
     
+    cv2.imwrite("Pictures\detection\image.png", image)
+    
     if mask is not None:
         zoi = cv2.bitwise_and(image, image, mask=mask)
     else:
@@ -239,7 +241,7 @@ def detect(image, detector, mask = None):
         image = cv2.putText(image, str(i+1), (int(keypoints[i].pt[0]-size[0]/2),int(keypoints[i].pt[1]-5)), font, 
                    fontScale, color, thickness, cv2.LINE_AA)
     
-    cv2.imwrite("Pictures\detection\image.png", image)
+    cv2.imwrite("Pictures\detection\image_detection.png", image)
     
     return target_px
 

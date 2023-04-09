@@ -20,6 +20,7 @@ class platform_pick_and_place:
         self.pick_offset = 7
         self.detection_place = [75.0, 125, 50]
         self.reset_pos = [70, 115, 10]
+        self.pipette_pos_px = [585, 468]
                 
         # Dropping zone
         self.dropping_pos = [160, 115]
@@ -43,7 +44,7 @@ class platform_pick_and_place:
         self.pipette_dropping_speed = 40
         self.pipette_dropping_volume = 10
         self.pipette_pumping_speed = 10
-        self.pipette_pumping_volume = 33
+        self.pipette_pumping_volume = 20
         
         # Tissues
         self.target_pos = (0,0)
@@ -73,7 +74,8 @@ class platform_pick_and_place:
     def init(self):
         self.anycubic.connect()
         self.anycubic.homing()
-        self.anycubic.set_home_pos(x=0, y=200, z=0)
+        self.anycubic.set_home_pos(x=0, y=0, z=0)
+        self.anycubic.max_z_feedrate(20)
         
         self.dyna.begin_communication()
         self.dyna.set_operating_mode("position", ID=1)
@@ -173,11 +175,6 @@ class platform_pick_and_place:
             self.state = 'reset'
             self.sub_state = 'go to position'
             self.com_state = 'not send'
-            
-            
-    def get_sample(self):
-        
-        return self.sample_list, self.nb_sample
     
     
     def print(self):
