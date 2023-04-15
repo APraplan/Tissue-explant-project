@@ -10,10 +10,10 @@ The project use the frame from a 3D printer, an anycubic mega zero eith it's con
 The next illustrations represent the frame of the robot, the end effextor with the camera and the pipette tip and the actuation of the pipette.
 
 <p float="left">
-  <img src="https://user-images.githubusercontent.com/102581647/232227676-66328f60-7b82-4bbd-ab56-779f35e75ffc.jpeg" width="500">
-  <img src="https://user-images.githubusercontent.com/102581647/232227794-40725d5c-353e-4b71-98cb-569a5a18c339.jpeg" width="500">
-  <img src="https://user-images.githubusercontent.com/102581647/232227686-7f5400a6-4f1d-4fb0-b0e2-2f13a4018454.jpeg" width="500">
-  <img src="https://user-images.githubusercontent.com/102581647/232228675-5b9fca1a-79fd-449a-85b3-26f377ef2822.jpeg" width="500">
+  <img src="https://user-images.githubusercontent.com/102581647/232227676-66328f60-7b82-4bbd-ab56-779f35e75ffc.jpeg" width="300">
+  <img src="https://user-images.githubusercontent.com/102581647/232227794-40725d5c-353e-4b71-98cb-569a5a18c339.jpeg" width="300">
+  <img src="https://user-images.githubusercontent.com/102581647/232227686-7f5400a6-4f1d-4fb0-b0e2-2f13a4018454.jpeg" width="300">
+  <img src="https://user-images.githubusercontent.com/102581647/232228675-5b9fca1a-79fd-449a-85b3-26f377ef2822.jpeg" width="300">
 </p>
 
 
