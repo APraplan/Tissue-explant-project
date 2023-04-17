@@ -126,7 +126,6 @@ def pick(self):
         
         if self.com_state == 'not send':
             self.anycubic.move_axis(x=self.target_pos[0], y=self.target_pos[1], z=self.pick_height + self.pick_offset, f=self.slow_speed)
-            self.anycubic.move_axis(z=self.pick_height, f=self.slow_speed)
             self.anycubic.finish_request()
             self.com_state = 'send'
             
@@ -134,6 +133,21 @@ def pick(self):
             self.sub_state = 'suck'
             self.com_state = 'not send'
             
+
+    elif self.sub_state == 'correction':
+        
+        if self.com_state == 'not send':
+            x, y, w, h = self.bbox
+            target_px = [int(x+w/2), int(y+h/2)]
+            self.target_pos = self.cam.cam_to_platform_space(target_px, (self.target_pos[0], self.target_pos[1], self.pick_height + self.pick_offset))
+            self.anycubic.move_axis(x=self.target_pos[0], y=self.target_pos[1], z=self.pick_height, f=self.slow_speed)
+            self.anycubic.finish_request()
+            self.com_state = 'send'
+        
+        elif self.anycubic.get_finish_flag():
+            self.sub_state = 'suck'
+            self.com_state = 'not send'
+    
 
     elif self.sub_state == 'suck':
         
@@ -263,3 +277,89 @@ def reset(self):
                 self.state = 'detect'
                 self.sub_state = 'go to position'
                 self.com_state = 'not send'   
+      
+                
+def gui_parameter(self, direction=None):
+    
+    if direction == 'up':
+        
+        if self.gui_menu == 0:
+            self.pick_height += 0.1
+        if self.gui_menu == 1:
+            self.drop_height += 0.1
+        if self.gui_menu == 2:
+            self.slow_speed += 1
+        if self.gui_menu == 3:
+            self.medium_speed += 1
+        if self.gui_menu == 4:
+            self.fast_speed += 1        
+        if self.gui_menu == 5:
+            self.pipette_pumping_volume += 1
+        if self.gui_menu == 6:
+            self.pipette_pumping_speed += 1
+        if self.gui_menu == 7:
+            self.pipette_dropping_volume += 1
+        if self.gui_menu == 8:
+            self.pipette_dropping_speed += 1 
+    
+    if direction == 'down':
+        
+        if self.gui_menu == 0:
+            self.pick_height -= 0.1
+        if self.gui_menu == 1:
+            self.drop_height -= 0.1
+        if self.gui_menu == 2:
+            self.slow_speed -= 1
+        if self.gui_menu == 3:
+            self.medium_speed -= 1
+        if self.gui_menu == 4:
+            self.fast_speed -= 1        
+        if self.gui_menu == 5:
+            self.pipette_pumping_volume -= 1
+        if self.gui_menu == 6:
+            self.pipette_pumping_speed -= 1
+        if self.gui_menu == 7:
+            self.pipette_dropping_volume -= 1
+        if self.gui_menu == 8:
+            self.pipette_dropping_speed -= 1 
+            
+    if direction is None:
+        
+        if self.gui_menu == 0:
+            return self.pick_height
+        if self.gui_menu == 1:
+            return self.drop_height
+        if self.gui_menu == 2:
+            return self.slow_speed
+        if self.gui_menu == 3:
+            return self.medium_speed
+        if self.gui_menu == 4:
+            return self.fast_speed       
+        if self.gui_menu == 5:
+            return self.pipette_pumping_volume
+        if self.gui_menu == 6:
+            return self.pipette_pumping_speed
+        if self.gui_menu == 7:
+            return self.pipette_dropping_volume
+        if self.gui_menu == 8:
+            return self.pipette_dropping_speed
+        
+        
+def display(self, position):
+    
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    color = (0, 0, 255) #BGR
+    thickness = 2
+
+    fontScale = 0.8 
+    
+    text = self.gui_menu_label[(self.gui_menu)%len(self.gui_menu_label)]
+    self.imshow = cv2.putText(self.imshow, text, position, font, 
+                            fontScale, color, thickness, cv2.LINE_AA)  
+    
+    pos = position
+    pos[0] = pos[0] + 250 
+    text = str(round(gui_parameter(), 2))
+    self.imshow = cv2.putText(self.imshow, text, position, font, 
+                            fontScale, color, thickness, cv2.LINE_AA)  
+    

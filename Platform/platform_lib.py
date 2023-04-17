@@ -9,6 +9,12 @@ from Platform.Communication.printer_communications import *
 class platform_pick_and_place:
     
     def __init__(self):
+        
+        # GUI
+        self.gui_menu = 0
+        self.gui_menu_label = np.array(['Pick height', 'Drop height', 'Slow speed', 'Medium speed', 'Fast speed', 'Pumping Volume', 'Pumping speed', 'Dropping volume', 'Dropping speed'])
+
+        # FSM
         self.state = 'pause'
         self.last_state = 'reset'
         self.sub_state = 'go to position'
@@ -56,6 +62,7 @@ class platform_pick_and_place:
         _, frame = self.cap.read() 
         self.cam = cv.Camera(frame)
         self.frame = self.cam.undistort(frame)
+        self.imshow = self.frame
         self.mask = cv.create_mask(200, self.frame.shape[0:2], (self.frame.shape[1]//2, self.frame.shape[0]//2))
         self.detector = cv.create_detector() 
         self.detect_attempt = 0
@@ -74,8 +81,8 @@ class platform_pick_and_place:
     def init(self):
         self.anycubic.connect()
         self.anycubic.homing()
-        self.anycubic.set_home_pos(x=0, y=0, z=0)
-        self.anycubic.max_z_feedrate(20)
+        # self.anycubic.set_home_pos(x=0, y=0, z=0)
+        # self.anycubic.max_z_feedrate(20)
         
         self.dyna.begin_communication()
         self.dyna.set_operating_mode("position", ID=1)
@@ -98,40 +105,23 @@ class platform_pick_and_place:
         
             _, frame = self.cap.read() 
             self.frame = self.cam.undistort(frame)
+            self.imshow = self.frame
             
-      
             self.update() 
-                
-            # Display   
-            imshow = self.print()  
              
-            if self.success:
-                x, y, w, h = [int(i) for i in self.bbox]
-                cv2.circle(imshow, (int(x+w/2), int(y+h/2)), int((w+h)/4), (255, 0, 0), 2)
-                # cv2.rectangle(imshow, (x, y), (x + w, y + h), (0, 0, 255), 2) 
-                
-            cv2.imshow('Camera', imshow) 
-        
-            # out.write(imshow)
-
-
             # Inputs
             key = cv2.waitKey(10) & 0xFF    
+            
+            self.gui(key)
             
             if key == 27: #esc
                 self.reset()
                 break
-            if key == ord('p'):
-                self.pause()
-            if key == 13: # enter
-                self.resume()
-            if key == ord('r'):
-                self.track_on = False
-                self.success = False
-                self.tracker = cv2.TrackerMIL.create()  
-            if key == ord('t'):
-                x, y, w, h = [int(i) for i in self.bbox]
-                print('Tracker pos :', (int(x+w/2), int(y+h/2)))
+            
+            self.print() 
+            
+            cv2.imshow('Camera', self.imshow) 
+                
     
         self.cap.release() 
         # out.release()
@@ -188,22 +178,47 @@ class platform_pick_and_place:
         text = self.state
         position = (20, 20)
         # size, _ = cv2.getTextSize(text, font, fontScale, thickness)
-        out = cv2.putText(self.frame, text, position, font, 
+        self.imshow = cv2.putText(self.imshow, text, position, font, 
                    fontScale, color, thickness, cv2.LINE_AA)    
         
         text = self.sub_state
         position = (20, 50)
         # size, _ = cv2.getTextSize(text, font, fontScale, thickness)
-        out = cv2.putText(self.frame, text, position, font, 
+        self.imshow = cv2.putText(self.imshow, text, position, font, 
                    fontScale, color, thickness, cv2.LINE_AA)   
         
         text = 'Nb sample : ' + str(self.nb_sample) 
         position = (20, 80)   
-        out = cv2.putText(self.frame, text, position, font, 
+        self.imshow = cv2.putText(self.imshow, text, position, font, 
                    fontScale, color, thickness, cv2.LINE_AA)
         
-        return out
+        if self.success:
+            x, y, w, h = [int(i) for i in self.bbox]
+            cv2.circle(self.imshow, (int(x+w/2), int(y+h/2)), int((w+h)/4), (255, 0, 0), 2)
+            # cv2.rectangle(imshow, (x, y), (x + w, y + h), (0, 0, 255), 2)
 
    
-    def gui(self):
-        pass
+    def gui(self, key):
+        
+        if key == ord('p'):
+            self.pause()
+        if key == 13: # enter
+            self.resume()
+        
+        if key == ord('a'):
+            self.gui_menu += 1
+            if self.gui_menu == len(self.gui_menu_label):
+                self.gui_menu = 0
+                
+        if key == ord('d'):
+            self.gui_menu -= 1
+            if self.gui_menu < 0:
+                self.gui_menu = len(self.gui_menu_label)-1
+                
+        if key == ord('w'):
+            gui_parameter('up')
+            
+        if key == ord('s'):
+            gui_parameter('down')
+                        
+        display([50, 450])

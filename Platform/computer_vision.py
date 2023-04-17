@@ -216,20 +216,14 @@ def detect(image, detector, mask = None):
     
     cv2.imwrite("Pictures\detection\image.png", image)
     
+    # Choose image
     if mask is not None:
         zoi = cv2.bitwise_and(image, image, mask=mask)
     else:
         zoi = image
     
+    # Detect
     keypoints = detector.detect(zoi)
-       
-    if len(keypoints) > 0:
-        target_px = [keypoints[0].pt[0], keypoints[0].pt[1]]
-        # target_abs = (position[0]+OFFSET_X+(keypoints[0].pt[1]-HEIGHT_PX/2)*RATIO_Y,\
-        #           position[1]+OFFSET_Y+(keypoints[0].pt[0]-WIDTH_PX/2)*RATIO_X) 
-    else:
-        # target_abs = None
-        target_px = None
         
     font = cv2.FONT_HERSHEY_SIMPLEX
     fontScale = 0.5
@@ -242,6 +236,28 @@ def detect(image, detector, mask = None):
                    fontScale, color, thickness, cv2.LINE_AA)
     
     cv2.imwrite("Pictures\detection\image_detection.png", image)
+    
+    # Choose keypoint
+    w = 40
+    h = 100
+    id = 0
+    valid_keypoint = False
+    while not valid_keypoint:
+        valid_keypoint = True    
+        for i in range(len(keypoints)):
+            if i == id:
+                pass
+            if keypoints[i].pt[0] < keypoints[id].pt[0] + w/2 and keypoints[i].pt[0] > keypoints[id].pt[0] - w/2 and \
+                keypoints[i].pt[1] > keypoints[id].pt[1] and keypoints[i].pt[1] < keypoints[id].pt[1] + h:
+                valid_keypoint = False
+                id += 1
+                break
+
+    # Convert
+    if len(keypoints) > 0:
+        target_px = [keypoints[id].pt[0], keypoints[id].pt[1]]
+    else:
+        target_px = None 
     
     return target_px
 
