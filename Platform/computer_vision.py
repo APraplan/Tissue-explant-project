@@ -107,9 +107,20 @@ def get_position2(image):
 image = cv2.imread('Pictures/image6.png')
 
 
+def invert(image):
+    
+    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    inverted_gray_image = 255 - gray_image  
+    
+    return inverted_gray_image
+
+
 def detection_test(image, mask):
         
-    zoi = cv2.bitwise_and(image, image, mask=mask)
+    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    inverted_gray_image = 255 - gray_image    
+        
+    zoi = cv2.bitwise_and(inverted_gray_image, inverted_gray_image, mask=mask)
     
     out = image.copy()
 
@@ -123,8 +134,8 @@ def detection_test(image, mask):
 
     # Filter by Area.
     params.filterByArea = True
-    params.minArea = 30
-    params.maxArea = 500
+    params.minArea = 55
+    params.maxArea = 75
 
     # Filter by Circularity
     params.filterByCircularity = False
@@ -132,11 +143,11 @@ def detection_test(image, mask):
 
     # Filter by Convexity
     params.filterByConvexity = True
-    params.minConvexity = 0.87
+    params.minConvexity = 0.8
 
     # Filter by Inertia
-    params.filterByInertia = False
-    params.minInertiaRatio = 0.01
+    params.filterByInertia = True
+    params.minInertiaRatio = 0.5
 
     # Create a detector with the parameters
     # OLD: detector = cv2.SimpleBlobDetector(params)
@@ -210,7 +221,41 @@ def create_detector():
     detector = cv2.SimpleBlobDetector_create(params)
     
     return detector 
+
+
+def create_real_detector():
     
+    # Setup SimpleBlobDetector parameters.
+    params = cv2.SimpleBlobDetector_Params()
+
+    # Change thresholds
+    params.minThreshold = 10
+    params.maxThreshold = 200
+
+
+    # Filter by Area.
+    params.filterByArea = True
+    params.minArea = 55
+    params.maxArea = 70
+
+    # Filter by Circularity
+    params.filterByCircularity = False
+    params.minCircularity = 0.1
+
+    # Filter by Convexity
+    params.filterByConvexity = True
+    params.minConvexity = 0.8
+
+    # Filter by Inertia
+    params.filterByInertia = True
+    params.minInertiaRatio = 0.5
+
+    # Create a detector with the parameters
+    # OLD: detector = cv2.SimpleBlobDetector(params)
+    detector = cv2.SimpleBlobDetector_create(params)
+    
+    return detector
+        
     
 def detect(image, detector, mask = None):
     
@@ -219,6 +264,56 @@ def detect(image, detector, mask = None):
     # Choose image
     if mask is not None:
         zoi = cv2.bitwise_and(image, image, mask=mask)
+    else:
+        zoi = image
+    
+    # Detect
+    keypoints = detector.detect(zoi)
+        
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    fontScale = 0.5
+    color = (255, 0, 0)
+    thickness = 1
+    
+    for i in range(len(keypoints)):
+        size, _ = cv2.getTextSize(str(i+1), font, fontScale, thickness)
+        image = cv2.putText(image, str(i+1), (int(keypoints[i].pt[0]-size[0]/2),int(keypoints[i].pt[1]-5)), font, 
+                   fontScale, color, thickness, cv2.LINE_AA)
+    
+    cv2.imwrite("Pictures\detection\image_detection.png", image)
+    
+    # Choose keypoint
+    w = 40
+    h = 100
+    id = 0
+    valid_keypoint = False
+    while not valid_keypoint:
+        valid_keypoint = True    
+        for i in range(len(keypoints)):
+            if i == id:
+                pass
+            if keypoints[i].pt[0] < keypoints[id].pt[0] + w/2 and keypoints[i].pt[0] > keypoints[id].pt[0] - w/2 and \
+                keypoints[i].pt[1] > keypoints[id].pt[1] and keypoints[i].pt[1] < keypoints[id].pt[1] + h:
+                valid_keypoint = False
+                id += 1
+                break
+
+    # Convert
+    if len(keypoints) > 0:
+        target_px = [keypoints[id].pt[0], keypoints[id].pt[1]]
+    else:
+        target_px = None 
+    
+    return target_px
+
+
+def real_detect(image, inverted_gray_image, detector, mask):
+
+    cv2.imwrite("Pictures\detection\image.png", image)
+    
+    # Choose image
+    if mask is not None:
+        zoi = cv2.bitwise_and(inverted_gray_image, inverted_gray_image, mask=mask)
     else:
         zoi = image
     

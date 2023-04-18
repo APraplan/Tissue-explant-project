@@ -1,4 +1,7 @@
-from dynamixel_controller import Dynamixel
+import sys
+sys.path.append('c:/Users/APrap/Documents/CREATE/Pick-and-Place')
+
+from Platform.Communication.dynamixel_controller import Dynamixel
 from time import sleep
 import keyboard
 import math
@@ -10,13 +13,15 @@ dyna.begin_communication()
 # dyna.set_operating_mode("position", ID=1)
 dyna.set_operating_mode("position", ID=1)
 # dyna.write_profile_acceleration(5, ID="all")
-dyna.write_profile_velocity(10, ID="all")
+dyna.write_profile_velocity(60, ID="all")
 # turn : 4096
 
 # 0 = 2158
 # 100 = 2638
 
 position = 2158
+percentage = 0
+error = 0
 
 def linearisation(percentage):
     
@@ -35,19 +40,27 @@ def linearisation(percentage):
 while True:
     
     if keyboard.is_pressed('right'):
-        print('Position ', position)
-        position = 0
-        # position = position + 10
+        print('Position ', percentage)
+        # percentage = 0
+        percentage = percentage + 1
 
     if keyboard.is_pressed('left'):
-        print('Position ', position)
-        position = 100
-        # position = position -10
-        
+        print('Position ', percentage)
+        # percentage = 100
+        percentage = percentage - 1
+                
     if keyboard.is_pressed('esc'):
         break
     
-    dyna.write_position(linearisation(position), ID=1)   
+    dyna.write_position(linearisation(percentage)+error//2, ID=1)   
+    
+    error = error + linearisation(percentage) - dyna.read_position(ID=1)
+    if error <= -80:
+        error = -80
+    if error >= 80:
+        error = 80
+    
+    print('Position: ', dyna.read_position(ID=1), ' Desired position: ', linearisation(percentage), ' Send: ', linearisation(percentage)+error//2)
     
     sleep(0.02)
     

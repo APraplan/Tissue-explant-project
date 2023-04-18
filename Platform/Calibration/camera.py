@@ -7,7 +7,7 @@ import computer_vision as mcv
 import pickle
 
 detect_chessboard = False
-detect_sample = False
+detect_sample = True
 
 num = 0
 
@@ -20,6 +20,9 @@ if not cap.isOpened():
 mcv.make_720p(cap)
     
 ret, frame = cap.read() 
+
+cam = mcv.Camera(frame)
+frame = cam.undistort(frame)
 
 mask = np.zeros(frame.shape[0:2], dtype='uint8')
 center_coordinates = (int(mask.shape[1]/2), int(mask.shape[0]/2))
@@ -37,6 +40,7 @@ while(True):
 
     # reads frames from a camera 
     _, frame = cap.read() 
+    frame = cam.undistort(frame)
     
     cv2.imshow('Camera', frame) 
        
@@ -55,8 +59,6 @@ while(True):
             corners = cv2.cornerSubPix(gray,corners, (11,11), (-1,-1), criteria)
             out = cv2.drawChessboardCorners(out, chessboardSize, corners, ret)
         cv2.imshow('Chessboard', out)
-
-    out = mcv.undistort(frame)
     
     if not printed:
         print(out.shape)
@@ -68,7 +70,7 @@ while(True):
     k = cv2.waitKey(5) & 0xFF
     if k == ord('p'):
         # path = "C:\Users\APrap\Documents\CREATE\Pick-and-Place\Pictures\image" + str(num)
-        cv2.imwrite("Pictures\calibration\image" + str(num) + ".png", frame)
+        cv2.imwrite("Pictures\Realsample\image" + str(num) + ".png", frame)
         num += 1
         pass
     
@@ -78,68 +80,4 @@ while(True):
 cap.release() 
 cv2.destroyAllWindows()
 
-
-
-
-
-
-
-
-
-
-
-
-
-# anycubic = printer(descriptive_device_name="printer", port_name="COM10", baudrate=115200)
-
-# anycubic.connect()
-# anycubic.homing()
-# anycubic.set_home_pos(x=0, y=200, z=0)
-# anycubic.max_x_feedrate(15000)
-# anycubic.max_y_feedrate(15000)
-# anycubic.max_z_feedrate(100)
-# # anycubic.move_home()
-
-
-# path = []
-
-# path.append(position(50, 50, 20, 0, 5000))
-# path.append(position(150, 50, 25, 0, 5000))
-# path.append(position(150, 150, 30, 0, 5000))
-# path.append(position(50, 150, 35, 0, 5000))
-# path.append(position(50, 50, 40, 0, 5000))
-# path.append(position(150, 50, 45, 0, 5000))
-# path.append(position(150, 150, 20, 0, 5000))
-
-
-# print('Ready')
-# keyboard.wait('enter')
-
-# for i in range(len(path)):
-    
-#     position = path[i]
-    
-#     anycubic.move_axis(x=path[i].x, y=path[i].y, z=path[i].z, e=path[i].e, f=path[i].f)
-#     while(anycubic.read_position()[0] != position.x and anycubic.read_position()
-#           [1] != position.y):
-#         pass
-#     # command = "G0"
-    
-#     # if position.x is not None:
-#     #     command = command + " X" + str
-#     # (position.x)
-#     # if position.y is not None:
-#     #     command = command + " Y" + str(position.y)
-#     # if position.z is not None:
-#     #     command = command + " Z" + str(position.z)
-#     # if position.e is not None:
-#     #     command = command + " E" + str(position.e)
-#     # if position.f is not None:
-#     #     command = command + " F" + str(float(position.f))
-            
-#     # self.send_gcode(command, wait_until_completion=True, printMsg=printMsg)
-
-# while True:
-#     if keyboard.on_press('esc'):
-#         break
 

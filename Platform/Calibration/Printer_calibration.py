@@ -15,9 +15,9 @@ chessboard_calibration = False
 test_chessboard_calibration = False
 bed_leveling_calibration = False
 verticality_calibration = False
-offset_callibration = False
-camera_calibration = True
-test_camera_calibration = True
+offset_callibration = True
+camera_calibration = False
+test_camera_calibration = False
 
 
 cap = cv2.VideoCapture(0) 

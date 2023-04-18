@@ -10,11 +10,15 @@ class platform_pick_and_place:
     
     def __init__(self):
         
+        self.real_sample = True
+        
         # GUI
         self.gui_menu = 0
         self.gui_menu_label = np.array(['Pick height', 'Drop height', 'Slow speed', 'Medium speed', 'Fast speed', 'Pumping Volume', 'Pumping speed', 'Dropping volume', 'Dropping speed'])
 
         # FSM
+        self.chrono_set = False
+        self.chrono = 0
         self.state = 'pause'
         self.last_state = 'reset'
         self.sub_state = 'go to position'
@@ -22,7 +26,7 @@ class platform_pick_and_place:
         
         # Picking zone
         self.safe_height = 25
-        self.pick_height = 2.5
+        self.pick_height = 3.5
         self.pick_offset = 7
         self.detection_place = [75.0, 125, 50]
         self.reset_pos = [70, 115, 10]
@@ -32,7 +36,7 @@ class platform_pick_and_place:
         self.dropping_pos = [160, 115]
         # self.nb_pos = [8, 12]
         # self.offset_pos = 8.2
-        self.drop_height = 2.5
+        self.drop_height = 3.0
         
         # Anycubic
         self.anycubic = Printer(descriptive_device_name="printer", port_name="COM10", baudrate=115200)
@@ -48,9 +52,9 @@ class platform_pick_and_place:
         self.pipette_full = 0
         self.pipette_empty = 100
         self.pipette_dropping_speed = 40
-        self.pipette_dropping_volume = 10
+        self.pipette_dropping_volume = 6
         self.pipette_pumping_speed = 10
-        self.pipette_pumping_volume = 20
+        self.pipette_pumping_volume = 8
         
         # Tissues
         self.target_pos = (0,0)
@@ -62,15 +66,19 @@ class platform_pick_and_place:
         _, frame = self.cap.read() 
         self.cam = cv.Camera(frame)
         self.frame = self.cam.undistort(frame)
+        self.invert = cv.invert(self.frame)
         self.imshow = self.frame
         self.mask = cv.create_mask(200, self.frame.shape[0:2], (self.frame.shape[1]//2, self.frame.shape[0]//2))
-        self.detector = cv.create_detector() 
+        if self.real_sample:
+            self.detector = cv.create_real_detector()
+        else:
+            self.detector = cv.create_detector() 
         self.detect_attempt = 0
         self.max_attempt = 50
         
         # Tracker
-        self.tracker = cv2.TrackerMIL.create()       
-        self.roi_size = 35
+        self.tracker = cv2.TrackerCSRT.create()       
+        self.roi_size = 25
         self.track_on = False
         self.bbox = (0,0,0,0)
         self.success = False
@@ -82,7 +90,7 @@ class platform_pick_and_place:
         self.anycubic.connect()
         self.anycubic.homing()
         # self.anycubic.set_home_pos(x=0, y=0, z=0)
-        # self.anycubic.max_z_feedrate(20)
+        self.anycubic.max_z_feedrate(20)
         
         self.dyna.begin_communication()
         self.dyna.set_operating_mode("position", ID=1)
@@ -105,6 +113,7 @@ class platform_pick_and_place:
         
             _, frame = self.cap.read() 
             self.frame = self.cam.undistort(frame)
+            self.invert = cv.invert(self.frame)
             self.imshow = self.frame
             
             self.update() 
@@ -131,7 +140,7 @@ class platform_pick_and_place:
     def update(self):
         
         if self.track_on:
-            self.success, self.bbox = self.tracker.update(self.frame) 
+            self.success, self.bbox = self.tracker.update(self.invert) 
             
         if self.state == 'detect':
             detect(self)
@@ -216,9 +225,9 @@ class platform_pick_and_place:
                 self.gui_menu = len(self.gui_menu_label)-1
                 
         if key == ord('w'):
-            gui_parameter('up')
+            gui_parameter(self, 'up')
             
         if key == ord('s'):
-            gui_parameter('down')
+            gui_parameter(self, 'down')
                         
-        display([50, 450])
+        display(self, [20, 500])

@@ -34,7 +34,7 @@ def destination(self):
 def set_tracker(self, target_px):
 
     bbox = [int(target_px[0]-self.roi_size/2),int(target_px[1]-self.roi_size/2), self.roi_size, self.roi_size]
-    self.tracker.init(self.frame, bbox)
+    self.tracker.init(self.invert, bbox)
     self.track_on = True
     
 
@@ -42,7 +42,7 @@ def release_tracker(self):
     
     self.track_on = False
     self.success = False
-    self.tracker = cv2.TrackerMIL.create() 
+    self.tracker = cv2.TrackerCSRT.create() 
     
     
 def check_pickup(self):
@@ -50,7 +50,7 @@ def check_pickup(self):
     x, y, w, h = [int(i) for i in self.bbox]
     tracker_pos = [int(x+w/2), int(y+h/2)]
     
-    if (tracker_pos[0]-self.pipette_pos_px[0])**2+ (tracker_pos[1]-self.pipette_pos_px[1])**2 < 15**2:
+    if (tracker_pos[0]-self.pipette_pos_px[0])**2+ (tracker_pos[1]-self.pipette_pos_px[1])**2 < 20**2:
         return True
     else:
         return False
@@ -85,13 +85,16 @@ def detect(self):
             
     elif self.sub_state == 'analyse picture':
         
-        target_px =  cv.detect(self.frame, self.detector, self.mask)
-        self.target_pos = self.cam.cam_to_platform_space(target_px, self.detection_place)
-        
+        if self.real_sample:
+            target_px = cv.real_detect(self.frame, self.invert, self.detector, self.mask)
+        else:
+            target_px =  cv.detect(self.frame, self.detector, self.mask)
+                
         if target_px is not None:
              
             set_tracker(self, target_px)
-        
+            self.target_pos = self.cam.cam_to_platform_space(target_px, self.detection_place)
+
             self.state = 'pick'
             self.sub_state = 'empty pipette'
             self.com_state = 'not send'
@@ -130,7 +133,7 @@ def pick(self):
             self.com_state = 'send'
             
         elif self.anycubic.get_finish_flag():
-            self.sub_state = 'suck'
+            self.sub_state = 'correction'
             self.com_state = 'not send'
             
 
@@ -348,7 +351,7 @@ def gui_parameter(self, direction=None):
 def display(self, position):
     
     font = cv2.FONT_HERSHEY_SIMPLEX
-    color = (0, 0, 255) #BGR
+    color = (255, 255, 255) #BGR
     thickness = 2
 
     fontScale = 0.8 
@@ -359,7 +362,7 @@ def display(self, position):
     
     pos = position
     pos[0] = pos[0] + 250 
-    text = str(round(gui_parameter(), 2))
+    text = str(round(gui_parameter(self), 2))
     self.imshow = cv2.putText(self.imshow, text, position, font, 
                             fontScale, color, thickness, cv2.LINE_AA)  
     
