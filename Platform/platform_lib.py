@@ -10,8 +10,6 @@ class platform_pick_and_place:
     
     def __init__(self):
         
-        self.real_sample = True
-        
         # GUI
         self.gui_menu = 0
         self.gui_menu_label = np.array(['Pick height', 'Drop height', 'Slow speed', 'Medium speed', 'Fast speed', 'Pumping Volume', 'Pumping speed', 'Dropping volume', 'Dropping speed'])
@@ -47,7 +45,8 @@ class platform_pick_and_place:
         # Dynamixel
         self.dyna = Dynamixel(ID=[1], descriptive_device_name="XL430 test motor", series_name=["xl"], baudrate=57600,
                  port_name="COM12")
-        
+        self.sum_error = 0
+        self.past_error = 0
         self.pipette_pos = 0
         self.pipette_full = 0
         self.pipette_empty = 100
@@ -69,10 +68,10 @@ class platform_pick_and_place:
         self.invert = cv.invert(self.frame)
         self.imshow = self.frame
         self.mask = cv.create_mask(200, self.frame.shape[0:2], (self.frame.shape[1]//2, self.frame.shape[0]//2))
-        if self.real_sample:
-            self.detector = cv.create_real_detector()
-        else:
-            self.detector = cv.create_detector() 
+        self.intruder_detector = cv.create_intruder_detector()
+        self.sample_detector = cv.create_sample_detector() 
+        self.min_radius = 15
+        self.max_radius = 38
         self.detect_attempt = 0
         self.max_attempt = 50
         
@@ -82,6 +81,8 @@ class platform_pick_and_place:
         self.track_on = False
         self.bbox = (0,0,0,0)
         self.success = False
+        self.offset_check = 0
+        self.dist_check = 5
 
     
     # Public methodes
@@ -153,6 +154,9 @@ class platform_pick_and_place:
             
         elif self.state == 'reset':
             reset(self)  
+            
+        # pipette_control(self)
+        # print(self.pipette_pos)
         
      
     def pause(self):
@@ -213,6 +217,8 @@ class platform_pick_and_place:
             self.pause()
         if key == 13: # enter
             self.resume()
+        if key == ord('r'):
+            self.reset()
         
         if key == ord('a'):
             self.gui_menu += 1

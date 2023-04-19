@@ -84,16 +84,14 @@ def detect(self):
             
             
     elif self.sub_state == 'analyse picture':
-        
-        if self.real_sample:
-            target_px = cv.real_detect(self.frame, self.invert, self.detector, self.mask)
-        else:
-            target_px =  cv.detect(self.frame, self.detector, self.mask)
+          
+        target_px, optimal_angle = cv.detection(self)
                 
         if target_px is not None:
              
             set_tracker(self, target_px)
             self.target_pos = self.cam.cam_to_platform_space(target_px, self.detection_place)
+            self.offset_check = (self.dist_check*math.sin(optimal_angle), self.dist_check*math.cos(optimal_angle))
 
             self.state = 'pick'
             self.sub_state = 'empty pipette'
@@ -116,11 +114,11 @@ def pick(self):
     
         if self.com_state == 'not send':
             self.dyna.write_profile_velocity(self.pipette_dropping_speed, ID = 1)
-            self.dyna.write_position(self.dyna.pipette(self.pipette_empty), ID = 1)
+            self.pipette_pos = 50
+            self.dyna.write_position(self.dyna.pipette(self.pipette_pos), ID = 1)
             self.com_state = 'send'
             
-        elif self.dyna.pipette_is_in_position(self.pipette_empty, ID = 1):
-            self.pipette_pos = self.pipette_empty
+        elif self.dyna.pipette_is_in_position(self.pipette_pos, ID = 1):
             self.sub_state = 'go to position'
             self.com_state = 'not send'
                 
@@ -169,7 +167,7 @@ def pick(self):
         
         if self.com_state == 'not send':
             self.anycubic.move_axis(z=self.pick_height + self.pick_offset, f=self.slow_speed)
-            self.anycubic.move_axis(x=self.target_pos[0]+10, f=self.slow_speed)
+            self.anycubic.move_axis(x=self.target_pos[0]+self.offset_check[0], y=self.target_pos[1]+self.offset_check[1], f=self.slow_speed)
             self.anycubic.finish_request()
             self.com_state = 'send'
             
@@ -226,8 +224,8 @@ def place(self):
     elif self.sub_state == 'blow':
         
         if self.com_state == 'not send':
-            self.pipette_pos = self.pipette_pos + self.pipette_dropping_volume
             self.dyna.write_profile_velocity(self.pipette_dropping_speed, ID = 1)
+            self.pipette_pos = self.dyna.read_pipette_pos(ID=1) + self.pipette_dropping_volume
             self.dyna.write_position(self.dyna.pipette(self.pipette_pos), ID = 1)
             self.com_state = 'send'
             
@@ -255,6 +253,7 @@ def reset(self):
     if self.sub_state == 'go to position':
         
         if self.com_state == 'not send':
+            release_tracker(self=self)
             self.anycubic.move_axis(z=self.safe_height, f=self.fast_speed)
             self.anycubic.move_axis(x=self.reset_pos[0], y=self.reset_pos[1], f=self.fast_speed)
             self.anycubic.move_axis(z=self.reset_pos[2], f=self.fast_speed) 
@@ -270,16 +269,14 @@ def reset(self):
         
         if self.com_state == 'not send':
             self.dyna.write_profile_velocity(self.pipette_dropping_speed, ID = 1)
-            self.dyna.write_position(self.dyna.pipette(self.pipette_empty), ID = 1)
+            self.pipette_pos = self.pipette_empty
+            self.dyna.write_position(self.dyna.pipette(self.pipette_pos), ID = 1)
             self.com_state = 'send'
             
-        elif self.dyna.pipette_is_in_position(self.pipette_empty, ID = 1):
-            if delay(self, 800):
-                self.dyna.write_position(self.dyna.pipette(self.pipette_full), ID = 1)
-                self.pipette_pos = self.pipette_full
-                self.state = 'detect'
-                self.sub_state = 'go to position'
-                self.com_state = 'not send'   
+        elif self.dyna.pipette_is_in_position(self.pipette_pos, ID = 1):
+            self.state = 'detect'
+            self.sub_state = 'go to position'
+            self.com_state = 'not send'   
       
                 
 def gui_parameter(self, direction=None):
@@ -365,4 +362,28 @@ def display(self, position):
     text = str(round(gui_parameter(self), 2))
     self.imshow = cv2.putText(self.imshow, text, position, font, 
                             fontScale, color, thickness, cv2.LINE_AA)  
+    
+
+def pipette_control(self):
+    
+    # self.dyna.write_position(self.dyna.pipette(self.pipette_pos), ID=1)
+    
+    Ki = 0.2
+    Kd = 1
+    
+    error = self.dyna.pipette(self.pipette_pos) - self.dyna.read_position(ID=1)
+    
+    self.sum_error = self.sum_error + error
+    if self.sum_error <= -100/Ki:
+        self.sum_error = -100/Ki
+    if self.sum_error >= 100/Ki:
+        self.sum_error = 100/Ki
+        
+    correction = Ki * self.sum_error + Kd*(error - self.past_error)
+    self.past_error = error 
+    
+    self.dyna.write_position(self.dyna.pipette(self.pipette_pos)+correction, ID=1)  
+    
+    # print('Error ', error, ' Sum error ', self.sum_error, ' Correction ', correction)
+    
     

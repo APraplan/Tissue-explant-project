@@ -323,6 +323,28 @@ class Dynamixel:
         return math.acos(min + percentage/100.0*(max-min))/math.pi*4096
     
     
+    def read_pipette_pos(self, ID):
+    
+        selected_IDs = self.fetch_and_check_ID(ID)
+        reading = []
+        for selected_ID in selected_IDs:
+            position, dxl_comm_result, dxl_error = self.packet_handler.read4ByteTxRx(self.port_handler, selected_ID, ADDR_PRESENT_POSITION)
+            self._print_error_msg("Read position", dxl_comm_result=dxl_comm_result, dxl_error=dxl_error, selected_ID=selected_ID, print_only_if_error=True)
+            reading.append(self.compensate_twos_complement(position, "position"))
+            
+        if len(selected_IDs) == 1:
+            pos = reading[0]
+        else:
+            print('Multiple ID not supported')
+            
+        max = math.cos(2648*math.pi/4096)
+        min = math.cos(2158*math.pi/4096)
+    
+        percent = 100*((math.cos(math.pi*pos/4096)-min)/(max-min))
+        
+        return int(percent)
+    
+    
     def pipette_is_in_position(self, percentage, ID = None):
         
         if percentage < 0:
