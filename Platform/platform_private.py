@@ -32,9 +32,9 @@ def destination(self):
 
 
 def set_tracker(self, target_px):
-
+    
     bbox = [int(target_px[0]-self.roi_size/2),int(target_px[1]-self.roi_size/2), self.roi_size, self.roi_size]
-    self.tracker.init(self.invert, bbox)
+    self.tracker.init(self.frame, bbox)
     self.track_on = True
     
 
@@ -115,7 +115,8 @@ def pick(self):
         if self.com_state == 'not send':
             self.dyna.write_profile_velocity(self.pipette_dropping_speed, ID = 1)
             self.pipette_pos = 50
-            self.dyna.write_position(self.dyna.pipette(self.pipette_pos), ID = 1)
+            # self.dyna.write_position(self.dyna.pipette(self.pipette_pos), ID = 1)
+            self.dyna.write_pipette(self.pipette_pos, ID = 1)
             self.com_state = 'send'
             
         elif self.dyna.pipette_is_in_position(self.pipette_pos, ID = 1):
@@ -155,7 +156,8 @@ def pick(self):
         if self.com_state == 'not send':
             self.pipette_pos = self.pipette_pos - self.pipette_pumping_volume
             self.dyna.write_profile_velocity(self.pipette_pumping_speed, ID = 1)
-            self.dyna.write_position(self.dyna.pipette(self.pipette_pos), ID = 1)
+            # self.dyna.write_position(self.dyna.pipette(self.pipette_pos), ID = 1)
+            self.dyna.write_pipette(self.pipette_pos, ID = 1)
             self.com_state = 'send'
             
         elif self.dyna.pipette_is_in_position(self.pipette_pos, ID = 1):
@@ -225,8 +227,9 @@ def place(self):
         
         if self.com_state == 'not send':
             self.dyna.write_profile_velocity(self.pipette_dropping_speed, ID = 1)
-            self.pipette_pos = self.dyna.read_pipette_pos(ID=1) + self.pipette_dropping_volume
-            self.dyna.write_position(self.dyna.pipette(self.pipette_pos), ID = 1)
+            self.pipette_pos = self.pipette_pos + self.pipette_dropping_volume
+            # self.dyna.write_position(self.dyna.pipette(self.pipette_pos), ID = 1)
+            self.dyna.write_pipette(self.pipette_pos, ID = 1)
             self.com_state = 'send'
             
         elif self.dyna.pipette_is_in_position(self.pipette_pos, ID = 1):
@@ -270,7 +273,8 @@ def reset(self):
         if self.com_state == 'not send':
             self.dyna.write_profile_velocity(self.pipette_dropping_speed, ID = 1)
             self.pipette_pos = self.pipette_empty
-            self.dyna.write_position(self.dyna.pipette(self.pipette_pos), ID = 1)
+            # self.dyna.write_position(self.dyna.pipette(self.pipette_pos), ID = 1)
+            self.dyna.write_pipette(self.pipette_pos, ID = 1)
             self.com_state = 'send'
             
         elif self.dyna.pipette_is_in_position(self.pipette_pos, ID = 1):
@@ -364,26 +368,26 @@ def display(self, position):
                             fontScale, color, thickness, cv2.LINE_AA)  
     
 
-def pipette_control(self):
+# def pipette_control(self):
     
-    # self.dyna.write_position(self.dyna.pipette(self.pipette_pos), ID=1)
+#     # self.dyna.write_position(self.dyna.pipette(self.pipette_pos), ID=1)
     
-    Ki = 0.2
-    Kd = 1
+#     Ki = 0.2
+#     Kd = 1
     
-    error = self.dyna.pipette(self.pipette_pos) - self.dyna.read_position(ID=1)
+#     error = self.dyna.pipette(self.pipette_pos) - self.dyna.read_position(ID=1)
     
-    self.sum_error = self.sum_error + error
-    if self.sum_error <= -100/Ki:
-        self.sum_error = -100/Ki
-    if self.sum_error >= 100/Ki:
-        self.sum_error = 100/Ki
+#     self.sum_error = self.sum_error + error
+#     if self.sum_error <= -100/Ki:
+#         self.sum_error = -100/Ki
+#     if self.sum_error >= 100/Ki:
+#         self.sum_error = 100/Ki
         
-    correction = Ki * self.sum_error + Kd*(error - self.past_error)
-    self.past_error = error 
+#     correction = Ki * self.sum_error + Kd*(error - self.past_error)
+#     self.past_error = error 
     
-    self.dyna.write_position(self.dyna.pipette(self.pipette_pos)+correction, ID=1)  
+#     self.dyna.write_position(self.dyna.pipette(self.pipette_pos)+correction, ID=1)  
     
-    # print('Error ', error, ' Sum error ', self.sum_error, ' Correction ', correction)
+#     # print('Error ', error, ' Sum error ', self.sum_error, ' Correction ', correction)
     
     

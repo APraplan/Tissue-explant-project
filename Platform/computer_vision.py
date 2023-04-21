@@ -154,6 +154,28 @@ def invert(image):
     
     return inverted_gray_image
 
+def mask_pipette(self):
+
+    image = self.frame.copy()
+    color = (0,0,0)
+    thickness = -1
+    radius = 7
+    
+    p1 = [605, 525]
+    p2 = [670, 525]
+
+    cv2.line(image, self.pipette_pos_px, p1, color, 12)
+    cv2.line(image, self.pipette_pos_px, p2, color, 12)
+    cv2.line(image, self.pipette_pos_px, ((p1[0]+p2[0])//2,(p1[1]+p2[1])//2), color, 12)
+    cv2.line(image, self.pipette_pos_px, ((2*p1[0]+p2[0])//3,(2*p1[1]+p2[1])//3), color, 12)
+    cv2.line(image, self.pipette_pos_px, ((p1[0]+2*p2[0])//3,(p1[1]+2*p2[1])//3), color, 12)
+    cv2.line(image, self.pipette_pos_px, ((4*p1[0]+p2[0])//5,(4*p1[1]+p2[1])//5), color, 12)
+    cv2.line(image, self.pipette_pos_px, ((p1[0]+4*p2[0])//5,(p1[1]+4*p2[1])//5), color, 12)
+    cv2.circle(image, self.pipette_pos_px, radius, color, thickness)
+    
+    cv2.imshow('mask', image)
+
+    return image
 
 def detection_test(image, mask):
         
@@ -274,8 +296,8 @@ def create_sample_detector():
 
     # Filter by Area.
     params.filterByArea = True
-    params.minArea = 50
-    params.maxArea = 70
+    params.minArea = 55
+    params.maxArea = 65
 
     # Filter by Circularity
     params.filterByCircularity = False
@@ -287,7 +309,7 @@ def create_sample_detector():
 
     # Filter by Inertia
     params.filterByInertia = True
-    params.minInertiaRatio = 0.5
+    params.minInertiaRatio = 0.6
 
     # Create a detector with the parameters
     # OLD: detector = cv2.SimpleBlobDetector(params)

@@ -24,17 +24,15 @@ class platform_pick_and_place:
         
         # Picking zone
         self.safe_height = 25
-        self.pick_height = 3.5
-        self.pick_offset = 7
+        self.pick_height = 2.6
+        self.pick_offset = 4
         self.detection_place = [75.0, 125, 50]
         self.reset_pos = [70, 115, 10]
-        self.pipette_pos_px = [585, 468]
+        self.pipette_pos_px = [590, 463]
                 
         # Dropping zone
         self.dropping_pos = [160, 115]
-        # self.nb_pos = [8, 12]
-        # self.offset_pos = 8.2
-        self.drop_height = 3.0
+        self.drop_height = 2.5
         
         # Anycubic
         self.anycubic = Printer(descriptive_device_name="printer", port_name="COM10", baudrate=115200)
@@ -50,9 +48,9 @@ class platform_pick_and_place:
         self.pipette_pos = 0
         self.pipette_full = 0
         self.pipette_empty = 100
-        self.pipette_dropping_speed = 40
-        self.pipette_dropping_volume = 6
-        self.pipette_pumping_speed = 10
+        self.pipette_dropping_speed = 150
+        self.pipette_dropping_volume = 4
+        self.pipette_pumping_speed = 100
         self.pipette_pumping_volume = 8
         
         # Tissues
@@ -82,7 +80,7 @@ class platform_pick_and_place:
         self.bbox = (0,0,0,0)
         self.success = False
         self.offset_check = 0
-        self.dist_check = 5
+        self.dist_check = 4
 
     
     # Public methodes
@@ -95,7 +93,8 @@ class platform_pick_and_place:
         
         self.dyna.begin_communication()
         self.dyna.set_operating_mode("position", ID=1)
-        self.dyna.write_position(self.dyna.pipette(0), ID=1)
+        # self.anycubic.move_home()
+        # self.dyna.write_pipette(self.pipette_empty, ID=1)
         
         
     def disconnect(self):
@@ -141,7 +140,7 @@ class platform_pick_and_place:
     def update(self):
         
         if self.track_on:
-            self.success, self.bbox = self.tracker.update(self.invert) 
+            self.success, self.bbox = self.tracker.update(self.frame) 
             
         if self.state == 'detect':
             detect(self)
@@ -175,9 +174,10 @@ class platform_pick_and_place:
     def reset(self):
         
         # if self.state != 'reset':
-            self.state = 'reset'
-            self.sub_state = 'go to position'
-            self.com_state = 'not send'
+        self.nb_sample = 0
+        self.state = 'reset'
+        self.sub_state = 'go to position'
+        self.com_state = 'not send'
     
     
     def print(self):

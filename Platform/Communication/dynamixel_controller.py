@@ -3,6 +3,9 @@ from dynamixel_sdk import *
 from Platform.Communication.dynamixel_address_book import *
 import math
 
+PIPETTE_MIN = 280
+PIPETTE_MAX = 2800
+
 class Dynamixel:
     def __init__(self, ID, descriptive_device_name, port_name, baudrate, series_name = "xm"):
         # Communication inputs
@@ -42,6 +45,9 @@ class Dynamixel:
         # Communication settings
         self.port_handler = PortHandler(self.port_name)
         self.packet_handler = PacketHandler(2)
+        
+        # pipette
+        self.past_percentage = 0
 
     def fetch_and_check_ID(self, ID):
         if self.multiple_motors:
@@ -308,65 +314,104 @@ class Dynamixel:
                 dxl_comm_result, dxl_error = self.packet_handler.write4ByteTxRx(self.port_handler, selected_ID, ADDR, int(value))
                     
             self._print_error_msg("Write to address", dxl_comm_result=dxl_comm_result, dxl_error=dxl_error, selected_ID=selected_ID, print_only_if_error=True)
-            
+         
     
-    def pipette(self, percentage):
+    def write_pipette(self, percentage, ID = None):
         
-        if percentage < 0:
-            percentage = 0
         if percentage > 100:
             percentage = 100
+        elif percentage < 0:
+            percentage = 0
+
+        pos = int(PIPETTE_MIN + percentage/100.0*(PIPETTE_MAX-PIPETTE_MIN))
         
-        max = math.cos(2648*math.pi/4096)
-        min = math.cos(2158*math.pi/4096)
-        
-        return math.acos(min + percentage/100.0*(max-min))/math.pi*4096
-    
-    
-    def read_pipette_pos(self, ID):
-    
-        selected_IDs = self.fetch_and_check_ID(ID)
-        reading = []
-        for selected_ID in selected_IDs:
-            position, dxl_comm_result, dxl_error = self.packet_handler.read4ByteTxRx(self.port_handler, selected_ID, ADDR_PRESENT_POSITION)
-            self._print_error_msg("Read position", dxl_comm_result=dxl_comm_result, dxl_error=dxl_error, selected_ID=selected_ID, print_only_if_error=True)
-            reading.append(self.compensate_twos_complement(position, "position"))
+        self.write_position(pos=pos, ID = ID)
             
-        if len(selected_IDs) == 1:
-            pos = reading[0]
-        else:
-            print('Multiple ID not supported')
             
-        max = math.cos(2648*math.pi/4096)
-        min = math.cos(2158*math.pi/4096)
-    
-        percent = 100*((math.cos(math.pi*pos/4096)-min)/(max-min))
-        
-        return int(percent)
-    
-    
     def pipette_is_in_position(self, percentage, ID = None):
         
-        if percentage < 0:
-            percentage = 0
-        if percentage > 100:
-            percentage = 100
-            
-        d_pos = self.pipette(percentage=percentage)
+        d_pos = int(PIPETTE_MIN + percentage/100.0*(PIPETTE_MAX-PIPETTE_MIN))
         
-        selected_IDs = self.fetch_and_check_ID(ID)
-        reading = []
-        for selected_ID in selected_IDs:
-            position, dxl_comm_result, dxl_error = self.packet_handler.read4ByteTxRx(self.port_handler, selected_ID, ADDR_PRESENT_POSITION)
-            self._print_error_msg("Read position", dxl_comm_result=dxl_comm_result, dxl_error=dxl_error, selected_ID=selected_ID, print_only_if_error=True)
-            reading.append(self.compensate_twos_complement(position, "position"))
-            
-        if len(selected_IDs) == 1:
-            a_pos = reading[0]
-        else:
-            print('Multiple ID not supported')
+        a_pos = self.read_position(ID = ID)
         
-        if abs(d_pos-a_pos) < 35:
+        if abs(d_pos-a_pos) <= 15:
             return True
         else:
             return False
+    
+    # def pipette(self, percentage):
+        
+    #     if percentage < 0:
+    #         percentage = 0
+    #     if percentage > 100:
+    #         percentage = 100
+        
+    #     max = math.cos(2648*math.pi/4096)
+    #     min = math.cos(2158*math.pi/4096)
+        
+    #     return math.acos(min + percentage/100.0*(max-min))/math.pi*4096
+    
+    # def write_pipette(self, percentage, ID):
+        
+    #     max = math.cos(2648*math.pi/4096)
+    #     min = math.cos(2158*math.pi/4096)
+        
+    #     # Up
+    #     if self.past_percentage >= percentage:
+    #         self.past_percentage = percentage
+    #         pos = 1.004*math.acos(min + percentage/100.0*(max-min))/math.pi*4096
+    #     # Down
+    #     else:
+    #         self.past_percentage = percentage
+    #         pos = 1.011*math.acos(min + percentage/100.0*(max-min))/math.pi*4096
+            
+    #     self.write_position(pos=pos, ID = ID)
+        
+    
+    # def read_pipette_pos(self, ID):
+    
+    #     selected_IDs = self.fetch_and_check_ID(ID)
+    #     reading = []
+    #     for selected_ID in selected_IDs:
+    #         position, dxl_comm_result, dxl_error = self.packet_handler.read4ByteTxRx(self.port_handler, selected_ID, ADDR_PRESENT_POSITION)
+    #         self._print_error_msg("Read position", dxl_comm_result=dxl_comm_result, dxl_error=dxl_error, selected_ID=selected_ID, print_only_if_error=True)
+    #         reading.append(self.compensate_twos_complement(position, "position"))
+            
+    #     if len(selected_IDs) == 1:
+    #         pos = reading[0]
+    #     else:
+    #         print('Multiple ID not supported')
+            
+    #     max = math.cos(2648*math.pi/4096)
+    #     min = math.cos(2158*math.pi/4096)
+    
+    #     percent = 100*((math.cos(math.pi*pos/4096)-min)/(max-min))
+        
+    #     return int(percent)
+    
+    
+    # def pipette_is_in_position(self, percentage, ID = None):
+        
+    #     if percentage < 0:
+    #         percentage = 0
+    #     if percentage > 100:
+    #         percentage = 100
+            
+    #     d_pos = self.pipette(percentage=percentage)
+        
+    #     selected_IDs = self.fetch_and_check_ID(ID)
+    #     reading = []
+    #     for selected_ID in selected_IDs:
+    #         position, dxl_comm_result, dxl_error = self.packet_handler.read4ByteTxRx(self.port_handler, selected_ID, ADDR_PRESENT_POSITION)
+    #         self._print_error_msg("Read position", dxl_comm_result=dxl_comm_result, dxl_error=dxl_error, selected_ID=selected_ID, print_only_if_error=True)
+    #         reading.append(self.compensate_twos_complement(position, "position"))
+            
+    #     if len(selected_IDs) == 1:
+    #         a_pos = reading[0]
+    #     else:
+    #         print('Multiple ID not supported')
+        
+    #     if abs(d_pos-a_pos) < 35:
+    #         return True
+    #     else:
+    #         return False
