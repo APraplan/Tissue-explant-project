@@ -297,7 +297,7 @@ def create_sample_detector():
     # Filter by Area.
     params.filterByArea = True
     params.minArea = 55
-    params.maxArea = 65
+    params.maxArea = 70
 
     # Filter by Circularity
     params.filterByCircularity = False

@@ -10,6 +10,10 @@ class platform_pick_and_place:
     
     def __init__(self):
         
+        # Temp
+        self.save = 0
+        self.counter = 0
+        
         # GUI
         self.gui_menu = 0
         self.gui_menu_label = np.array(['Pick height', 'Drop height', 'Slow speed', 'Medium speed', 'Fast speed', 'Pumping Volume', 'Pumping speed', 'Dropping volume', 'Dropping speed'])
@@ -24,7 +28,7 @@ class platform_pick_and_place:
         
         # Picking zone
         self.safe_height = 25
-        self.pick_height = 2.6
+        self.pick_height = 3.0
         self.pick_offset = 4
         self.detection_place = [75.0, 125, 50]
         self.reset_pos = [70, 115, 10]
@@ -32,7 +36,7 @@ class platform_pick_and_place:
                 
         # Dropping zone
         self.dropping_pos = [160, 115]
-        self.drop_height = 2.5
+        self.drop_height = 3.0
         
         # Anycubic
         self.anycubic = Printer(descriptive_device_name="printer", port_name="COM10", baudrate=115200)
@@ -49,7 +53,7 @@ class platform_pick_and_place:
         self.pipette_full = 0
         self.pipette_empty = 100
         self.pipette_dropping_speed = 150
-        self.pipette_dropping_volume = 4
+        self.pipette_dropping_volume = 3
         self.pipette_pumping_speed = 100
         self.pipette_pumping_volume = 8
         
@@ -93,6 +97,7 @@ class platform_pick_and_place:
         
         self.dyna.begin_communication()
         self.dyna.set_operating_mode("position", ID=1)
+        self.dyna.set_position_gains(P_gain = 2500, I_gain = 60, D_gain = 5000, ID = 1)
         # self.anycubic.move_home()
         # self.dyna.write_pipette(self.pipette_empty, ID=1)
         
@@ -154,6 +159,8 @@ class platform_pick_and_place:
         elif self.state == 'reset':
             reset(self)  
             
+        elif self.state == 'temp1':
+            temp1(self)
         # pipette_control(self)
         # print(self.pipette_pos)
         

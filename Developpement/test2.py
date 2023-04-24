@@ -14,6 +14,7 @@ dyna.begin_communication()
 dyna.set_operating_mode("position", ID=1)
 # dyna.write_profile_acceleration(5, ID="all")
 dyna.write_profile_velocity(100, ID="all")
+dyna.set_position_gains(P_gain = 2500, I_gain = 60, D_gain = 5000, ID = 1)
 # turn : 4096
     
 PIPETTE_MIN = 280

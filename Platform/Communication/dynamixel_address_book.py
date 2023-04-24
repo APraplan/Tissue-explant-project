@@ -9,6 +9,13 @@ ADDR_MIN_POSITION_LIMIT     = 52
 ADDR_TORQUE_ENABLE          = 64         
 ADDR_LED                    = 65
 
+# Gains
+ADDR_VELOCITY_I_GAIN        = 76
+ADDR_VELOCITY_P_GAIN        = 78
+ADDR_POSITION_D_GAIN        = 80
+ADDR_POSITION_I_GAIN        = 82
+ADDR_POSITION_P_GAIN        = 84
+
 # Reading
 ADDR_PRESENT_POSITION       = 132
 ADDR_PRESENT_VELOCITY       = 128

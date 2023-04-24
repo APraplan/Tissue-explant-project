@@ -178,7 +178,33 @@ class Dynamixel:
                     self.enable_torque(print_only_if_error=True, ID = selected_ID)
             else:
                 print("Enter valid operating mode. Select one of:\n" + str(list(operating_modes.keys())))
-     
+                
+    def set_velocity_gains(self,  P_gain = None, I_gain = None, ID = None):
+        selected_IDs = self.fetch_and_check_ID(ID)
+        for selected_ID in selected_IDs:
+            if P_gain is not None:
+                dxl_comm_result, dxl_error = self.packet_handler.write2ByteTxRx(self.port_handler, selected_ID, ADDR_VELOCITY_P_GAIN, int(P_gain))
+                self._print_error_msg("Write velocity P gain", dxl_comm_result=dxl_comm_result, dxl_error=dxl_error, selected_ID=selected_ID, print_only_if_error=True)
+            
+            if I_gain is not None:
+                dxl_comm_result, dxl_error = self.packet_handler.write2ByteTxRx(self.port_handler, selected_ID, ADDR_VELOCITY_I_GAIN, int(I_gain))
+                self._print_error_msg("Write velocity I gain", dxl_comm_result=dxl_comm_result, dxl_error=dxl_error, selected_ID=selected_ID, print_only_if_error=True)
+
+    def set_position_gains(self, P_gain = None, I_gain = None, D_gain = None, ID = None):
+        selected_IDs = self.fetch_and_check_ID(ID)
+        for selected_ID in selected_IDs:
+            if P_gain is not None:
+                dxl_comm_result, dxl_error = self.packet_handler.write2ByteTxRx(self.port_handler, selected_ID, ADDR_POSITION_P_GAIN, int(P_gain))
+                self._print_error_msg("Write position P gain", dxl_comm_result=dxl_comm_result, dxl_error=dxl_error, selected_ID=selected_ID, print_only_if_error=True)
+            
+            if I_gain is not None:
+                dxl_comm_result, dxl_error = self.packet_handler.write2ByteTxRx(self.port_handler, selected_ID, ADDR_POSITION_I_GAIN, int(I_gain))
+                self._print_error_msg("Write position I gain", dxl_comm_result=dxl_comm_result, dxl_error=dxl_error, selected_ID=selected_ID, print_only_if_error=True)
+
+            if D_gain is not None:
+                dxl_comm_result, dxl_error = self.packet_handler.write2ByteTxRx(self.port_handler, selected_ID, ADDR_POSITION_D_GAIN, int(D_gain))
+                self._print_error_msg("Write position D gain", dxl_comm_result=dxl_comm_result, dxl_error=dxl_error, selected_ID=selected_ID, print_only_if_error=True)
+                
     def compensate_twos_complement(self, value, quantity):
         if quantity in max_register_value:
             max_value = max_register_value[quantity]
@@ -334,84 +360,7 @@ class Dynamixel:
         
         a_pos = self.read_position(ID = ID)
         
-        if abs(d_pos-a_pos) <= 15:
+        if abs(d_pos-a_pos) <= 2:
             return True
         else:
             return False
-    
-    # def pipette(self, percentage):
-        
-    #     if percentage < 0:
-    #         percentage = 0
-    #     if percentage > 100:
-    #         percentage = 100
-        
-    #     max = math.cos(2648*math.pi/4096)
-    #     min = math.cos(2158*math.pi/4096)
-        
-    #     return math.acos(min + percentage/100.0*(max-min))/math.pi*4096
-    
-    # def write_pipette(self, percentage, ID):
-        
-    #     max = math.cos(2648*math.pi/4096)
-    #     min = math.cos(2158*math.pi/4096)
-        
-    #     # Up
-    #     if self.past_percentage >= percentage:
-    #         self.past_percentage = percentage
-    #         pos = 1.004*math.acos(min + percentage/100.0*(max-min))/math.pi*4096
-    #     # Down
-    #     else:
-    #         self.past_percentage = percentage
-    #         pos = 1.011*math.acos(min + percentage/100.0*(max-min))/math.pi*4096
-            
-    #     self.write_position(pos=pos, ID = ID)
-        
-    
-    # def read_pipette_pos(self, ID):
-    
-    #     selected_IDs = self.fetch_and_check_ID(ID)
-    #     reading = []
-    #     for selected_ID in selected_IDs:
-    #         position, dxl_comm_result, dxl_error = self.packet_handler.read4ByteTxRx(self.port_handler, selected_ID, ADDR_PRESENT_POSITION)
-    #         self._print_error_msg("Read position", dxl_comm_result=dxl_comm_result, dxl_error=dxl_error, selected_ID=selected_ID, print_only_if_error=True)
-    #         reading.append(self.compensate_twos_complement(position, "position"))
-            
-    #     if len(selected_IDs) == 1:
-    #         pos = reading[0]
-    #     else:
-    #         print('Multiple ID not supported')
-            
-    #     max = math.cos(2648*math.pi/4096)
-    #     min = math.cos(2158*math.pi/4096)
-    
-    #     percent = 100*((math.cos(math.pi*pos/4096)-min)/(max-min))
-        
-    #     return int(percent)
-    
-    
-    # def pipette_is_in_position(self, percentage, ID = None):
-        
-    #     if percentage < 0:
-    #         percentage = 0
-    #     if percentage > 100:
-    #         percentage = 100
-            
-    #     d_pos = self.pipette(percentage=percentage)
-        
-    #     selected_IDs = self.fetch_and_check_ID(ID)
-    #     reading = []
-    #     for selected_ID in selected_IDs:
-    #         position, dxl_comm_result, dxl_error = self.packet_handler.read4ByteTxRx(self.port_handler, selected_ID, ADDR_PRESENT_POSITION)
-    #         self._print_error_msg("Read position", dxl_comm_result=dxl_comm_result, dxl_error=dxl_error, selected_ID=selected_ID, print_only_if_error=True)
-    #         reading.append(self.compensate_twos_complement(position, "position"))
-            
-    #     if len(selected_IDs) == 1:
-    #         a_pos = reading[0]
-    #     else:
-    #         print('Multiple ID not supported')
-        
-    #     if abs(d_pos-a_pos) < 35:
-    #         return True
-    #     else:
-    #         return False
