@@ -85,13 +85,12 @@ def detect(self):
             
     elif self.sub_state == 'analyse picture':
           
-        target_px, optimal_angle = cv.detection(self)
+        target_px = cv.detect(self.invert, self.sample_detector, self.mask)
                 
         if target_px is not None:
              
-            set_tracker(self, target_px)
             self.target_pos = self.cam.cam_to_platform_space(target_px, self.detection_place)
-            self.offset_check = (self.dist_check*math.sin(optimal_angle), self.dist_check*math.cos(optimal_angle))
+            self.offset_check = (self.dist_check, 0)
 
             self.state = 'temp1'
             self.sub_state = 'empty pipette'
@@ -120,14 +119,14 @@ def pick(self):
             self.com_state = 'send'
             
         elif self.dyna.pipette_is_in_position(self.pipette_pos, ID = 1):
-            self.sub_state = 'go to position'
+            self.sub_state = 'go to position analyse'
             self.com_state = 'not send'
                 
             
-    elif self.sub_state == 'go to position':
+    elif self.sub_state == 'go to position analyse':
         
         if self.com_state == 'not send':
-            self.anycubic.move_axis(x=self.target_pos[0], y=self.target_pos[1], z=self.pick_height + self.pick_offset, f=self.slow_speed)
+            self.anycubic.move_axis(x=self.target_pos[0] + self.dist_check, y=self.target_pos[1], z=self.pick_height + self.pick_offset, f=self.slow_speed)
             self.anycubic.finish_request()
             self.com_state = 'send'
             
@@ -375,16 +374,15 @@ def temp1(self):
         if self.com_state == 'not send':
             self.dyna.write_profile_velocity(self.pipette_dropping_speed, ID = 1)
             self.pipette_pos = 50
-            # self.dyna.write_position(self.dyna.pipette(self.pipette_pos), ID = 1)
             self.dyna.write_pipette(self.pipette_pos, ID = 1)
             self.com_state = 'send'
             
         elif self.dyna.pipette_is_in_position(self.pipette_pos, ID = 1):
-            self.sub_state = 'go to position'
+            self.sub_state = 'go to detection'
             self.com_state = 'not send'
                 
             
-    elif self.sub_state == 'go to position':
+    elif self.sub_state == 'go to detection':
         
         if self.com_state == 'not send':
             self.anycubic.move_axis(x=self.target_pos[0]+self.dist_check, y=self.target_pos[1], z=self.pick_height + self.pick_offset, f=self.slow_speed)
@@ -392,28 +390,25 @@ def temp1(self):
             self.com_state = 'send'
             
         elif self.anycubic.get_finish_flag():
-            self.save = 0
-            self.sub_state = 'save'
+            self.sub_state = 'analyse'
             self.com_state = 'not send'
             
-    elif self.sub_state == 'save':
-            
-        if self.com_state == 'not send':
-            cv2.imwrite(r"C:\Users\APrap\Documents\CREATE\Pick-and-Place\Pictures\detection\image_check" + str(self.counter) + ".png", self.frame)
-            self.counter += 1
-            self.save += 1
-            if self.save >= 5:
-                self.com_state = 'send'
-            
+    elif self.sub_state == 'analyse':
+        
+        if self.counter == 0:
+            self.samples = cv.detect_sample(self.invert, self.intruder_detector, self.mask_pickup, 3)
         else:
-            self.sub_state = 'correction'
-            self.com_state = 'not send'       
+            new_samples = cv.detect_sample(self.invert, self.intruder_detector, self.mask_pickup, 3)
+            self.samples = cv.update_samples_opti(self.samples, new_samples)
+        self.counter += 1
+        if self.counter >= 5:
+            self.counter = 0
+            self.sub_state = 'correction'     
 
     elif self.sub_state == 'correction':
         
         if self.com_state == 'not send':
-            x, y, w, h = self.bbox
-            target_px = [int(x+w/2), int(y+h/2)]
+            target_px = cv.find_sample(self.samples, (580, 400), 60)
             self.target_pos = self.cam.cam_to_platform_space(target_px, (self.target_pos[0]+self.dist_check, self.target_pos[1], self.pick_height + self.pick_offset))
             self.anycubic.move_axis(x=self.target_pos[0], y=self.target_pos[1], z=self.pick_height, f=self.slow_speed)
             self.anycubic.finish_request()
@@ -429,7 +424,6 @@ def temp1(self):
         if self.com_state == 'not send':
             self.pipette_pos = self.pipette_pos - self.pipette_pumping_volume
             self.dyna.write_profile_velocity(self.pipette_pumping_speed, ID = 1)
-            # self.dyna.write_position(self.dyna.pipette(self.pipette_pos), ID = 1)
             self.dyna.write_pipette(self.pipette_pos, ID = 1)
             self.com_state = 'send'
             
@@ -444,24 +438,34 @@ def temp1(self):
             self.anycubic.move_axis(z=self.pick_height + self.pick_offset, f=self.slow_speed)
             self.anycubic.move_axis(x=self.target_pos[0]+self.dist_check, y=self.target_pos[1], f=self.slow_speed)
             self.anycubic.finish_request()
+            self.samples_before = self.samples
             self.com_state = 'send'
             
         elif self.anycubic.get_finish_flag():
             
-            print(check_pickup(self))
-            
-            if check_pickup(self):
-                           
-                release_tracker(self)
-                self.state = 'place'
-                self.sub_state = 'go to position'
-                self.com_state = 'not send' 
-                
-            elif self.pipette_pos - self.pipette_pumping_volume >= 0:
-                self.sub_state = 'go to position'
-                self.com_state = 'not send'
+            if self.counter == 0:
+                self.samples = cv.detect_sample(self.invert, self.intruder_detector, self.mask_pickup, 3)
             else:
-                release_tracker(self)
-                self.state = 'reset'
-                self.sub_state = 'go to position'
-                self.com_state = 'not send'       
+                new_samples = cv.detect_sample(self.invert, self.intruder_detector, self.mask_pickup, 3)
+                self.samples = cv.update_samples_opti(self.samples, new_samples)
+            self.counter += 1
+            if self.counter >= 5:
+                self.counter = 0
+                
+                results, self.imshow = cv.detect_pickup_opti(self.imshow, self.samples_before, self.samples)                       
+                
+                print(results)
+                
+                if results:
+                    self.state = 'place'
+                    self.sub_state = 'go to position'
+                    self.com_state = 'not send' 
+                    
+                elif self.pipette_pos - self.pipette_pumping_volume >= 0:
+                    self.sub_state = 'correction'
+                    self.com_state = 'not send'
+                    
+                else:
+                    self.state = 'reset'
+                    self.sub_state = 'go to position'
+                    self.com_state = 'not send'       

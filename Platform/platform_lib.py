@@ -11,8 +11,6 @@ class platform_pick_and_place:
     def __init__(self):
         
         # Temp
-        self.save = 0
-        self.counter = 0
         
         # GUI
         self.gui_menu = 0
@@ -69,9 +67,16 @@ class platform_pick_and_place:
         self.frame = self.cam.undistort(frame)
         self.invert = cv.invert(self.frame)
         self.imshow = self.frame
+        
         self.mask = cv.create_mask(200, self.frame.shape[0:2], (self.frame.shape[1]//2, self.frame.shape[0]//2))
-        self.intruder_detector = cv.create_intruder_detector()
         self.sample_detector = cv.create_sample_detector() 
+        
+        self.mask_pickup = cv.create_mask(140, self.frame.shape[0:2], (580, 380))
+        self.intruder_detector = cv.create_intruder_detector()
+        self.samples_before = []
+        self.samples = []
+        
+        self.counter = 0
         self.min_radius = 15
         self.max_radius = 38
         self.detect_attempt = 0

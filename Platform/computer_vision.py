@@ -1,9 +1,10 @@
 import cv2
 import matplotlib as plt
 import numpy as np
-# from skimage import measure, color
 import pickle
 import math
+from scipy.optimize import linear_sum_assignment
+
 
 # def get_cell_position():
 #     return tissue(50, 105, 10)
@@ -33,7 +34,6 @@ def d_circle(img, keypoints, radius, color):
     
     return img
     
-    
 def d_number(img, keypoints, color):
     
     font = cv2.FONT_HERSHEY_SIMPLEX
@@ -58,10 +58,24 @@ def d_angles(img, keypoint, angles, color):
     
     return img  
 
+def d_samples(img, samples, color):
+    
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    fontScale = 0.5
+    thickness = 1
+    
+
+    for sample in samples:
+        img = cv2.circle(img, (int(sample.x),int(sample.y)), int(sample.size), color, thickness)   
+        size, _ = cv2.getTextSize(str(sample.certainty), font, fontScale, thickness)
+        img = cv2.putText(img, str(sample.certainty), (int(sample.x-size[0]/2),int(sample.y-5)), font, 
+                    fontScale, color, thickness, cv2.LINE_AA)
+    
+    return img
+
 def make_720p(cap):
     cap.set(3, 1280)
     cap.set(4, 720)
-
 
 class Camera:
     def __init__(self, img):
@@ -113,7 +127,6 @@ class Camera:
             
         return [position[0]+self.offset[0]+(coord[1]-self.center[1])*coef_x, position[1]+self.offset[1]+(coord[0]-self.center[0])*coef_y]
 
-
 def get_position2(image):
     # cv2.imshow('Image', image)
     # cv2.waitKey(0) 
@@ -145,7 +158,6 @@ def get_position2(image):
     cv2.waitKey(0) 
 
 image = cv2.imread('Pictures/image6.png')
-
 
 def invert(image):
     
@@ -243,13 +255,11 @@ def detection_test(image, mask):
             
     return out
 
-
 def create_mask(radius, shape, center_coordinates):
     mask = np.zeros(shape, dtype='uint8')
     color = 255
     thickness = -1
     return cv2.circle(mask, center_coordinates, radius, color, thickness)
-
 
 def create_detector():
     
@@ -317,37 +327,37 @@ def create_sample_detector():
     
     return detector
 
-def create_intruder_detector():
+# def create_intruder_detector():
     
-    params = cv2.SimpleBlobDetector_Params()
+#     params = cv2.SimpleBlobDetector_Params()
 
-    # Change thresholds
-    params.minThreshold = 10
-    params.maxThreshold = 240
+#     # Change thresholds
+#     params.minThreshold = 10
+#     params.maxThreshold = 240
 
 
-    # Filter by Area.
-    params.filterByArea = True
-    params.minArea = 30
-    params.maxArea = 500
+#     # Filter by Area.
+#     params.filterByArea = True
+#     params.minArea = 30
+#     params.maxArea = 500
 
-    # Filter by Circularity
-    params.filterByCircularity = False
-    params.minCircularity = 0.1
+#     # Filter by Circularity
+#     params.filterByCircularity = False
+#     params.minCircularity = 0.1
 
-    # Filter by Convexity
-    params.filterByConvexity = False
-    params.minConvexity = 0.8
+#     # Filter by Convexity
+#     params.filterByConvexity = False
+#     params.minConvexity = 0.8
 
-    # Filter by Inertia
-    params.filterByInertia = False
-    params.minInertiaRatio = 0.5
+#     # Filter by Inertia
+#     params.filterByInertia = False
+#     params.minInertiaRatio = 0.5
     
-    # Create a detector with the parameters
-    # OLD: detector = cv2.SimpleBlobDetector(params)
-    detector = cv2.SimpleBlobDetector_create(params)
+#     # Create a detector with the parameters
+#     # OLD: detector = cv2.SimpleBlobDetector(params)
+#     detector = cv2.SimpleBlobDetector_create(params)
     
-    return detector
+#     return detector
 
 
 def distance(keypoint1, keypoint2):
@@ -385,7 +395,6 @@ def distance(keypoint1, keypoint2):
 #     detector = cv2.SimpleBlobDetector_create(params)
     
 #     return detector
-
 
 def detection(self):
     
@@ -469,8 +478,7 @@ def detection(self):
     cv2.imwrite("Pictures\detection\image_detection.png", out)
         
     return [keypoints[id_target].pt[0], keypoints[id_target].pt[1]], optimal_angle
-        
-    
+            
 def detect(image, detector, mask = None):
     
     cv2.imwrite("Pictures\detection\image.png", image)
@@ -519,7 +527,6 @@ def detect(image, detector, mask = None):
         target_px = None 
     
     return target_px
-
 
 def real_detect(image, inverted_gray_image, detector, mask):
 
@@ -570,7 +577,6 @@ def real_detect(image, inverted_gray_image, detector, mask):
     
     return target_px
 
-
 def check_pickup(image, detector):
     
     return True
@@ -584,3 +590,166 @@ def check_pickup(image, detector):
     else:
         return False 
     
+class Sample:
+    def __init__(self, x, y, size):
+        self.x = x
+        self.y = y
+        self.size = size
+        self.linked = False
+        self.matched = False
+        self.certainty = 0
+        
+    def link(self, sample):
+        sample.linked = True
+        self.certainty += 1
+        
+        self.x = (self.x + sample.x)/2
+        self.y = (self.y + sample.y)/2
+        self.size = (self.size + sample.size)/2
+        
+    def match_with(self, sample, max_size_dif, max_position_dif):
+        if np.sqrt((self.x-sample.x)**2+(self.y-sample.y)**2) < max_position_dif and np.abs(self.size-sample.size) < max_size_dif:
+            self.matched = True
+            sample.matched = True
+            
+def create_intruder_detector():
+    
+    params = cv2.SimpleBlobDetector_Params()
+
+    # Change thresholds
+    params.minThreshold = 30
+    params.maxThreshold = 240
+
+
+    # Filter by Area.
+    params.filterByArea = True
+    params.minArea = 55
+    params.maxArea = 1000
+
+    # Filter by Circularity
+    params.filterByCircularity = True
+    params.minCircularity = 0.4
+
+    # Filter by Convexity
+    params.filterByConvexity = False
+    params.minConvexity = 0.8
+
+    # Filter by Inertia
+    params.filterByInertia = True
+    params.minInertiaRatio = 0.1
+    
+    # Create a detector with the parameters
+    # OLD: detector = cv2.SimpleBlobDetector(params)
+    detector = cv2.SimpleBlobDetector_create(params)
+    
+    return detector
+
+def cost_fct(sample1, sample2):
+    """Compute the cost function between the two samples."""
+    dist = math.sqrt((sample1.x-sample2.x)**2 + (sample1.y-sample2.y)**2)
+    d_size = np.abs(sample1.size - sample2.size)
+    return dist + 0*d_size
+
+def update_samples_opti(samples, new_samples):
+    """Find the best combination of pairs to link all points in points1 to all points in points2."""
+    n = len(samples)
+    m = len(new_samples)
+    
+    cost = np.zeros((n, m))
+    
+    for i in range(n):
+        for j in range(m):
+            cost[i, j] = cost_fct(samples[i], new_samples[j])
+    
+    row_ind, col_ind = linear_sum_assignment(cost)
+            
+    for i, j in zip(row_ind, col_ind):
+            samples[i].link(new_samples[j])
+            
+    return samples
+
+def detect_sample(image, detector, mask, min_certainty):
+    """Create samples and update them with the other images"""
+    
+    zoi = cv2.bitwise_and(image, image, mask=mask)
+    keypoints = detector.detect(zoi)
+    samples = []
+    for keypoint in keypoints:
+        samples.append(Sample(keypoint.pt[0], keypoint.pt[1], keypoint.size))
+        
+    return samples
+
+def detect_pickup_opti(imshow, samples_before, samples_after):
+    
+                
+    center_coordinates = (580, 380)
+    radius = 70   
+    max_dist_threshold = 50
+    max_size_threshold = 20
+    
+    # Remover matching samples 
+    n = len(samples_before)
+    m = len(samples_after)
+    cost = np.zeros((n, m))
+    for i in range(n):
+        for j in range(m):
+            cost[i, j] = cost_fct(samples_before[i], samples_after[j])
+    
+    row_ind, col_ind = linear_sum_assignment(cost)
+    for i, j in zip(row_ind, col_ind):
+            samples_before[i].match_with(samples_after[j], max_dist_threshold, max_size_threshold)
+    i = 0
+    while i < len(samples_before):
+        if samples_before[i].matched:
+            del samples_before[i]
+        else:
+            i += 1
+    i = 0
+    while i < len(samples_after):
+        if samples_after[i].matched:
+            del samples_after[i]
+        else:
+            i += 1
+            
+    # Remove non matching samples far from center
+    i = 0
+    while i < len(samples_before):
+        if np.sqrt((samples_before[i].x - center_coordinates[0])**2+(samples_before[i].y - center_coordinates[1])**2) > radius:
+            del samples_before[i]
+        else:
+            i += 1
+    i = 0
+    while i < len(samples_after):
+        if np.sqrt((samples_after[i].x - center_coordinates[0])**2+(samples_after[i].y - center_coordinates[1])**2) > radius:
+            del samples_after[i]
+        else:
+            i += 1
+
+    imshow = d_samples(imshow, samples_after, RED)
+    imshow = d_samples(imshow, samples_before, BLUE)
+    
+    cv2.imwrite("Pictures\detection\image_compare.png", imshow)
+            
+    # Only one left => Success else fail
+    if len(samples_after) == 0 and len(samples_before) == 1:
+        return True, imshow
+    elif len(samples_after) == 0 and len(samples_before) == 0:
+        print('No missing sample')
+        return False, imshow
+    elif len(samples_after) == 1 and len(samples_before) == 2:
+        print('Two unmatch samples, maybe due to aglomeration')
+        return False, imshow
+    else:
+        print('Samples before : ', len(samples_before), ' Remaining samples : ', len(samples_after))
+        return False, imshow
+    
+def find_sample(samples, center, best_size):
+    perfect_sample = Sample(center[0], center[1], best_size)
+    cost_min = cost_fct(perfect_sample, samples[0])
+    id = 0
+    for i in range(1,len(samples),1):
+        if cost_fct(perfect_sample, samples[i]) < cost_min:
+            cost_min = cost_fct(perfect_sample, samples[i])
+            id = i
+    
+    return (samples[id].x, samples[id].y)
