@@ -3,8 +3,9 @@ from dynamixel_sdk import *
 from Platform.Communication.dynamixel_address_book import *
 import math
 
-PIPETTE_MIN = 280
-PIPETTE_MAX = 2800
+PIPETTE_MIN = [360, 3770]
+PIPETTE_MAX = [2880, 1250]
+TIP_POSITION = [3072, 2560, 3584]
 
 class Dynamixel:
     def __init__(self, ID, descriptive_device_name, port_name, baudrate, series_name = "xm"):
@@ -343,20 +344,21 @@ class Dynamixel:
          
     
     def write_pipette(self, percentage, ID = None):
-        
+            
         if percentage > 100:
             percentage = 100
         elif percentage < 0:
             percentage = 0
-
-        pos = int(PIPETTE_MIN + percentage/100.0*(PIPETTE_MAX-PIPETTE_MIN))
-        
-        self.write_position(pos=pos, ID = ID)
+            
+        selected_IDs = self.fetch_and_check_ID(ID)
+        for selected_ID in selected_IDs:
+            pos = int(PIPETTE_MIN[selected_ID-1] + percentage/100.0*(PIPETTE_MAX[selected_ID-1]-PIPETTE_MIN[selected_ID-1]))
+            self.write_position(pos=pos, ID = selected_ID)
             
             
     def pipette_is_in_position(self, percentage, ID = None):
         
-        d_pos = int(PIPETTE_MIN + percentage/100.0*(PIPETTE_MAX-PIPETTE_MIN))
+        d_pos = int(PIPETTE_MIN[ID-1] + percentage/100.0*(PIPETTE_MAX[ID-1]-PIPETTE_MIN[ID-1]))
         
         a_pos = self.read_position(ID = ID)
         
@@ -364,3 +366,9 @@ class Dynamixel:
             return True
         else:
             return False
+        
+    def select_tip(self, tip_number, ID = None):
+        selected_IDs = self.fetch_and_check_ID(ID)
+        for selected_ID in selected_IDs:
+            self.write_position(pos=TIP_POSITION[tip_number], ID = selected_ID)      
+        

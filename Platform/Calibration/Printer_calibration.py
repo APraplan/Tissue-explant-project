@@ -11,16 +11,19 @@ chessboardSize = (9, 6)
 size_of_chessboard_squares_mm = 10
 calibration_position = (100, 180)
 
+cam_number = 0
+printer_port = 'COM15'
+
 chessboard_calibration = False
 test_chessboard_calibration = False
 bed_leveling_calibration = False
-verticality_calibration = False
+verticality_calibration = True
 offset_callibration = True
-camera_calibration = False
-test_camera_calibration = False
+camera_calibration = True
+test_camera_calibration = True
 
 
-cap = cv2.VideoCapture(0) 
+cap = cv2.VideoCapture(cam_number) 
 
 # Check if camera opened successfully
 if not cap.isOpened():
@@ -136,7 +139,7 @@ if test_chessboard_calibration:
 
 if verticality_calibration or offset_callibration or camera_calibration or test_camera_calibration or bed_leveling_calibration:
     
-    anycubic = Printer(descriptive_device_name="printer", port_name="COM10", baudrate=115200)
+    anycubic = Printer(descriptive_device_name="printer", port_name=printer_port, baudrate=115200)
     
     anycubic.connect()
     anycubic.homing()
@@ -163,19 +166,19 @@ if bed_leveling_calibration:
         
         if key == ord('0'):
             anycubic.move_axis(z=5, f = 8000)
-            anycubic.move_axis(x=25, y=195, f = 8000)
+            anycubic.move_axis(x=25, y=200, f = 8000)
             anycubic.move_axis(z=0, f = 8000)
         if key == ord('1'):
             anycubic.move_axis(z=5, f = 8000)
-            anycubic.move_axis(x=175, y=195, f = 8000)
+            anycubic.move_axis(x=175, y=200, f = 8000)
             anycubic.move_axis(z=0, f = 8000)        
         if key == ord('2'):
             anycubic.move_axis(z=5, f = 8000)
-            anycubic.move_axis(x=175, y=25, f = 8000)
+            anycubic.move_axis(x=175, y=75, f = 8000)
             anycubic.move_axis(z=0, f = 8000)        
         if key == ord('3'):
             anycubic.move_axis(z=5, f = 8000)
-            anycubic.move_axis(x=25, y=25, f = 8000)
+            anycubic.move_axis(x=25, y=75, f = 8000)
             anycubic.move_axis(z=0, f = 8000)        
         if key == 27: 
             cv2.destroyAllWindows()
@@ -260,8 +263,8 @@ if offset_callibration:
     
 if camera_calibration:
      
-    z1 = 150
-    z2 = 50
+    z1 = 175
+    z2 = 75
     h = 388 # Real perimeter
     
     anycubic.move_axis(x=100, y=100, z=z1, f = 2000)

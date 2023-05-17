@@ -7,17 +7,25 @@ import computer_vision as mcv
 import pickle
 
 detect_chessboard = False
-detect_sample = True
+detect_sample = False
 
 num = 0
 
 cap = cv2.VideoCapture(0) 
+cap2 = cv2.VideoCapture(2)
+
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+cap.set(cv2.CAP_PROP_FPS, 25)
+
+cap2.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+cap2.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+cap2.set(cv2.CAP_PROP_FPS, 25)
 
 # Check if camera opened successfully
 if not cap.isOpened():
     print("Error opening video stream or file")
     
-mcv.make_720p(cap)
     
 ret, frame = cap.read() 
 
@@ -40,9 +48,11 @@ while(True):
 
     # reads frames from a camera 
     _, frame = cap.read() 
-    frame = cam.undistort(frame)
+    _, frame2 = cap2.read()
+    # frame = cam.undistort(frame)
     
     cv2.imshow('Camera', frame) 
+    cv2.imshow('Macro cam', frame2)
        
     # Detection
     if detect_sample:
@@ -61,10 +71,8 @@ while(True):
         cv2.imshow('Chessboard', out)
     
     if not printed:
-        print(out.shape)
+        print(frame.shape)
         printed = True
-        
-    cv2.imshow('Calibrated camera', out) 
 
     # Wait for Esc key to stop 
     k = cv2.waitKey(5) & 0xFF

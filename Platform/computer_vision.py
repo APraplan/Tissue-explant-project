@@ -15,8 +15,8 @@ WIDHT_MM = 210
 HEIGHT_MM = 95.7
 RATIO_X = WIDHT_MM/WIDTH_PX # 0.1832 = 1/5.457
 RATIO_Y = HEIGHT_MM/HEIGHT_PX # 0.1805 = 1/5.538
-OFFSET_X = -24.0
-OFFSET_Y = -9.5
+OFFSET_X = -10.4
+OFFSET_Y = 21.4
 
 YELLOW = (0, 255, 255)
 GREEN = (0, 255, 0)
@@ -296,8 +296,8 @@ def create_sample_detector():
 
     # Filter by Area.
     params.filterByArea = True
-    params.minArea = 55
-    params.maxArea = 70
+    params.minArea = 50
+    params.maxArea = 65
 
     # Filter by Circularity
     params.filterByCircularity = False

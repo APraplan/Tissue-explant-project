@@ -1,5 +1,6 @@
 import numpy as np
 import Platform.computer_vision as cv
+from vidgear.gears import VideoGear
 import cv2
 from Platform.platform_private import *
 from Platform.Communication.dynamixel_controller import *
@@ -8,7 +9,7 @@ from Platform.Communication.printer_communications import *
 
 class platform_pick_and_place:
     
-    def __init__(self):
+    def __init__(self, com_printer, com_dynamixel, cam_head, cam_macro):
         
         # Temp
         self.save = 0
@@ -27,44 +28,48 @@ class platform_pick_and_place:
         self.com_state = 'not send'
         
         # Picking zone
+        self.pick_height = 2.8
+        self.pipette_pumping_speed = 100
+        self.pipette_pumping_volume = 8
         self.safe_height = 25
-        self.pick_height = 3.0
         self.pick_offset = 4
         self.detection_place = [75.0, 125, 50]
         self.reset_pos = [70, 115, 10]
         self.pipette_pos_px = [590, 463]
                 
         # Dropping zone
+        self.drop_height = 2.6
+        self.pipette_dropping_speed = 150
+        self.pipette_dropping_volume = 1.5
         self.dropping_pos = [160, 115]
-        self.drop_height = 3.0
         
         # Anycubic
-        self.anycubic = Printer(descriptive_device_name="printer", port_name="COM10", baudrate=115200)
+        self.anycubic = Printer(descriptive_device_name="printer", port_name=com_printer, baudrate=115200)
         self.fast_speed = 5000
         self.medium_speed = 2000
         self.slow_speed = 300
         
         # Dynamixel
         self.dyna = Dynamixel(ID=[1], descriptive_device_name="XL430 test motor", series_name=["xl"], baudrate=57600,
-                 port_name="COM12")
+                 port_name=com_dynamixel)
         self.sum_error = 0
         self.past_error = 0
         self.pipette_pos = 0
         self.pipette_full = 0
         self.pipette_empty = 100
-        self.pipette_dropping_speed = 150
-        self.pipette_dropping_volume = 3
-        self.pipette_pumping_speed = 100
-        self.pipette_pumping_volume = 8
         
         # Tissues
         self.target_pos = (0,0)
         self.nb_sample = 0
         
-        # Camera
-        self.cap = cv2.VideoCapture(0) 
-        cv.make_720p(self.cap)  
-        _, frame = self.cap.read() 
+        # Camera 1 
+        options = {
+            "CAP_PROP_FRAME_WIDTH": 1080,
+            "CAP_PROP_FRAME_HEIGHT": 720,
+            "CAP_PROP_FPS": 30,
+        }
+        self.stream1 = VideoGear(source=cam_head, logging=True, **options).start() 
+        frame = self.stream1.read() 
         self.cam = cv.Camera(frame)
         self.frame = self.cam.undistort(frame)
         self.invert = cv.invert(self.frame)
@@ -76,6 +81,11 @@ class platform_pick_and_place:
         self.max_radius = 38
         self.detect_attempt = 0
         self.max_attempt = 50
+        
+        # Camera 2
+        self.stream2 = VideoGear(source=1, logging=True).start() 
+        self.macro_frame = self.stream2.read()
+        self.picture_pos = [0.0, 0.0]
         
         # Tracker
         self.tracker = cv2.TrackerCSRT.create()       
@@ -93,6 +103,8 @@ class platform_pick_and_place:
         self.anycubic.connect()
         self.anycubic.homing()
         # self.anycubic.set_home_pos(x=0, y=0, z=0)
+        self.anycubic.max_x_feedrate(300)
+        self.anycubic.max_y_feedrate(100)
         self.anycubic.max_z_feedrate(20)
         
         self.dyna.begin_communication()
@@ -106,8 +118,9 @@ class platform_pick_and_place:
         
         self.anycubic.disconnect()
         self.dyna.end_communication()
-    
-        print('Goodbye ;)')
+        
+        print_parameters(self)    
+        print(goodbye)
     
     
     def run(self):
@@ -116,10 +129,12 @@ class platform_pick_and_place:
            
         while True:
         
-            _, frame = self.cap.read() 
+            frame = self.stream1.read() 
             self.frame = self.cam.undistort(frame)
             self.invert = cv.invert(self.frame)
             self.imshow = self.frame
+            
+            self.macro_frame = self.stream2.read()
             
             self.update() 
              
@@ -135,9 +150,11 @@ class platform_pick_and_place:
             self.print() 
             
             cv2.imshow('Camera', self.imshow) 
+            cv2.imshow('Macro cam', self.macro_frame)
                 
     
-        self.cap.release() 
+        self.stream1.stop()
+        self.stream2.stop()
         # out.release()
         cv2.destroyAllWindows()
         
@@ -153,16 +170,14 @@ class platform_pick_and_place:
         elif self.state == 'pick':
             pick(self)
             
+        elif self.state == 'picture':
+            picture(self)
+        
         elif self.state == 'place':
             place(self)           
             
         elif self.state == 'reset':
             reset(self)  
-            
-        elif self.state == 'temp1':
-            temp1(self)
-        # pipette_control(self)
-        # print(self.pipette_pos)
         
      
     def pause(self):

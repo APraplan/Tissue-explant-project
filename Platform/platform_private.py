@@ -2,7 +2,7 @@ import computer_vision as cv
 import cv2
 import math
 import time
-
+import os
 
 class sample:
     
@@ -11,9 +11,6 @@ class sample:
         self.x = x
         self.y = y
         self.image = None
-
-
-# Private methodes
             
 def destination(self):
     
@@ -30,20 +27,17 @@ def destination(self):
 
     return [self.dropping_pos[0]+radius*math.cos(angle), self.dropping_pos[1]+radius*math.sin(angle)]
 
-
 def set_tracker(self, target_px):
     
     bbox = [int(target_px[0]-self.roi_size/2),int(target_px[1]-self.roi_size/2), self.roi_size, self.roi_size]
     self.tracker.init(self.frame, bbox)
     self.track_on = True
-    
 
 def release_tracker(self):
     
     self.track_on = False
     self.success = False
-    self.tracker = cv2.TrackerCSRT.create() 
-    
+    self.tracker = cv2.TrackerCSRT.create()  
     
 def check_pickup(self):
     
@@ -54,7 +48,14 @@ def check_pickup(self):
         return True
     else:
         return False
-
+    
+def check_pickup_two(self):
+    
+    number = len([entry for entry in os.listdir(r"Pictures\macro") if os.path.isfile(os.path.join(r"Pictures\macro", entry))])
+    
+    # cv2.imwrite("Pictures\macro\image" + str(number)  + ".png", self.macro_frame)
+    
+    return False
 
 def delay(self, delay):
 
@@ -65,7 +66,6 @@ def delay(self, delay):
         self.chrono_set = False
         return True
     return False        
-    
 
 def detect(self):
     
@@ -93,7 +93,7 @@ def detect(self):
             self.target_pos = self.cam.cam_to_platform_space(target_px, self.detection_place)
             self.offset_check = (self.dist_check*math.sin(optimal_angle), self.dist_check*math.cos(optimal_angle))
 
-            self.state = 'temp1'
+            self.state = 'pick'
             self.sub_state = 'empty pipette'
             self.com_state = 'not send'
             self.detect_attempt = 0
@@ -106,7 +106,6 @@ def detect(self):
                 self.detect_attempt = 0
                 print('No tissue detected')
     
-    
 def pick(self):
             
     
@@ -115,7 +114,6 @@ def pick(self):
         if self.com_state == 'not send':
             self.dyna.write_profile_velocity(self.pipette_dropping_speed, ID = 1)
             self.pipette_pos = 50
-            # self.dyna.write_position(self.dyna.pipette(self.pipette_pos), ID = 1)
             self.dyna.write_pipette(self.pipette_pos, ID = 1)
             self.com_state = 'send'
             
@@ -127,7 +125,7 @@ def pick(self):
     elif self.sub_state == 'go to position':
         
         if self.com_state == 'not send':
-            self.anycubic.move_axis(x=self.target_pos[0], y=self.target_pos[1], z=self.pick_height + self.pick_offset, f=self.slow_speed)
+            self.anycubic.move_axis(x=self.target_pos[0]+self.offset_check[0], y=self.target_pos[1]+self.offset_check[1], z=self.pick_height + self.pick_offset, f=self.slow_speed)
             self.anycubic.finish_request()
             self.com_state = 'send'
             
@@ -141,7 +139,7 @@ def pick(self):
         if self.com_state == 'not send':
             x, y, w, h = self.bbox
             target_px = [int(x+w/2), int(y+h/2)]
-            self.target_pos = self.cam.cam_to_platform_space(target_px, (self.target_pos[0], self.target_pos[1], self.pick_height + self.pick_offset))
+            self.target_pos = self.cam.cam_to_platform_space(target_px, (self.target_pos[0]+self.offset_check[0], self.target_pos[1]+self.offset_check[1], self.pick_height + self.pick_offset))
             self.anycubic.move_axis(x=self.target_pos[0], y=self.target_pos[1], z=self.pick_height, f=self.slow_speed)
             self.anycubic.finish_request()
             self.com_state = 'send'
@@ -156,7 +154,6 @@ def pick(self):
         if self.com_state == 'not send':
             self.pipette_pos = self.pipette_pos - self.pipette_pumping_volume
             self.dyna.write_profile_velocity(self.pipette_pumping_speed, ID = 1)
-            # self.dyna.write_position(self.dyna.pipette(self.pipette_pos), ID = 1)
             self.dyna.write_pipette(self.pipette_pos, ID = 1)
             self.com_state = 'send'
             
@@ -180,20 +177,44 @@ def pick(self):
             if check_pickup(self):
                            
                 release_tracker(self)
-                self.state = 'place'
+                self.state = 'picture'
                 self.sub_state = 'go to position'
                 self.com_state = 'not send' 
                 
             elif self.pipette_pos - self.pipette_pumping_volume >= 0:
-                self.sub_state = 'go to position'
+                self.sub_state = 'correction'
                 self.com_state = 'not send'
             else:
                 release_tracker(self)
                 self.state = 'reset'
                 self.sub_state = 'go to position'
-                self.com_state = 'not send'       
-            
+                self.com_state = 'not send'             
 
+def picture(self):
+    
+    if self.sub_state == 'go to position':
+        
+        if self.com_state == 'not send':
+            dest = destination(self)
+            self.anycubic.move_axis(z=self.safe_heightt, f=self.medium_speed)
+            self.anycubic.move_axis(x=self.picture_pos[0], y=dest[1], f=self.medium_speed)
+            self.anycubic.finish_request()
+            self.com_state = 'send'
+            
+        elif self.anycubic.get_finish_flag():
+            
+            print(check_pickup_two(self))
+            
+            if check_pickup_two(self):
+                self.state = 'place'
+                self.sub_state = 'go to position'
+                self.com_state = 'not send' 
+                
+            else:
+                self.state = 'reset'
+                self.sub_state = 'go to position'
+                self.com_state = 'not send'            
+                
 def place(self):
 
     if self.sub_state == 'go to position':
@@ -228,7 +249,6 @@ def place(self):
         if self.com_state == 'not send':
             self.dyna.write_profile_velocity(self.pipette_dropping_speed, ID = 1)
             self.pipette_pos = self.pipette_pos + self.pipette_dropping_volume
-            # self.dyna.write_position(self.dyna.pipette(self.pipette_pos), ID = 1)
             self.dyna.write_pipette(self.pipette_pos, ID = 1)
             self.com_state = 'send'
             
@@ -248,15 +268,14 @@ def place(self):
         elif self.anycubic.get_finish_flag():
             self.state = 'reset'
             self.sub_state = 'go to position'
-            self.com_state = 'not send'
-            
+            self.com_state = 'not send'        
 
 def reset(self):
 
     if self.sub_state == 'go to position':
         
         if self.com_state == 'not send':
-            release_tracker(self=self)
+            release_tracker(self)
             self.anycubic.move_axis(z=self.safe_height, f=self.fast_speed)
             self.anycubic.move_axis(x=self.reset_pos[0], y=self.reset_pos[1], f=self.fast_speed)
             self.anycubic.move_axis(z=self.reset_pos[2], f=self.fast_speed) 
@@ -273,7 +292,6 @@ def reset(self):
         if self.com_state == 'not send':
             self.dyna.write_profile_velocity(self.pipette_dropping_speed, ID = 1)
             self.pipette_pos = self.pipette_empty
-            # self.dyna.write_position(self.dyna.pipette(self.pipette_pos), ID = 1)
             self.dyna.write_pipette(self.pipette_pos, ID = 1)
             self.com_state = 'send'
             
@@ -281,8 +299,7 @@ def reset(self):
             self.state = 'detect'
             self.sub_state = 'go to position'
             self.com_state = 'not send'   
-      
-                
+            
 def gui_parameter(self, direction=None):
     
     if direction == 'up':
@@ -292,19 +309,19 @@ def gui_parameter(self, direction=None):
         if self.gui_menu == 1:
             self.drop_height += 0.1
         if self.gui_menu == 2:
-            self.slow_speed += 1
+            self.slow_speed += 50
         if self.gui_menu == 3:
-            self.medium_speed += 1
+            self.medium_speed += 50
         if self.gui_menu == 4:
-            self.fast_speed += 1        
+            self.fast_speed += 50     
         if self.gui_menu == 5:
-            self.pipette_pumping_volume += 1
+            self.pipette_pumping_volume += 0.5
         if self.gui_menu == 6:
-            self.pipette_pumping_speed += 1
+            self.pipette_pumping_speed += 10
         if self.gui_menu == 7:
-            self.pipette_dropping_volume += 1
+            self.pipette_dropping_volume += 0.5
         if self.gui_menu == 8:
-            self.pipette_dropping_speed += 1 
+            self.pipette_dropping_speed += 10 
     
     if direction == 'down':
         
@@ -313,19 +330,19 @@ def gui_parameter(self, direction=None):
         if self.gui_menu == 1:
             self.drop_height -= 0.1
         if self.gui_menu == 2:
-            self.slow_speed -= 1
+            self.slow_speed -= 50
         if self.gui_menu == 3:
-            self.medium_speed -= 1
+            self.medium_speed -= 50
         if self.gui_menu == 4:
-            self.fast_speed -= 1        
+            self.fast_speed -= 50     
         if self.gui_menu == 5:
-            self.pipette_pumping_volume -= 1
+            self.pipette_pumping_volume -= 0.5
         if self.gui_menu == 6:
-            self.pipette_pumping_speed -= 1
+            self.pipette_pumping_speed -= 10
         if self.gui_menu == 7:
-            self.pipette_dropping_volume -= 1
+            self.pipette_dropping_volume -= 0.5
         if self.gui_menu == 8:
-            self.pipette_dropping_speed -= 1 
+            self.pipette_dropping_speed -= 10
             
     if direction is None:
         
@@ -347,8 +364,7 @@ def gui_parameter(self, direction=None):
             return self.pipette_dropping_volume
         if self.gui_menu == 8:
             return self.pipette_dropping_speed
-        
-        
+    
 def display(self, position):
     
     font = cv2.FONT_HERSHEY_SIMPLEX
@@ -365,103 +381,45 @@ def display(self, position):
     pos[0] = pos[0] + 250 
     text = str(round(gui_parameter(self), 2))
     self.imshow = cv2.putText(self.imshow, text, position, font, 
-                            fontScale, color, thickness, cv2.LINE_AA)  
-    
+                            fontScale, color, thickness, cv2.LINE_AA)     
 
-def temp1(self):
+def print_parameters(self):
     
-    if self.sub_state == 'empty pipette':
-        
-        if self.com_state == 'not send':
-            self.dyna.write_profile_velocity(self.pipette_dropping_speed, ID = 1)
-            self.pipette_pos = 50
-            # self.dyna.write_position(self.dyna.pipette(self.pipette_pos), ID = 1)
-            self.dyna.write_pipette(self.pipette_pos, ID = 1)
-            self.com_state = 'send'
-            
-        elif self.dyna.pipette_is_in_position(self.pipette_pos, ID = 1):
-            self.sub_state = 'go to position'
-            self.com_state = 'not send'
-                
-            
-    elif self.sub_state == 'go to position':
-        
-        if self.com_state == 'not send':
-            self.anycubic.move_axis(x=self.target_pos[0]+self.dist_check, y=self.target_pos[1], z=self.pick_height + self.pick_offset, f=self.slow_speed)
-            self.anycubic.finish_request()
-            self.com_state = 'send'
-            
-        elif self.anycubic.get_finish_flag():
-            self.save = 0
-            self.sub_state = 'save'
-            self.com_state = 'not send'
-            
-    elif self.sub_state == 'save':
-            
-        if self.com_state == 'not send':
-            cv2.imwrite(r"C:\Users\APrap\Documents\CREATE\Pick-and-Place\Pictures\detection\image_check" + str(self.counter) + ".png", self.frame)
-            self.counter += 1
-            self.save += 1
-            if self.save >= 5:
-                self.com_state = 'send'
-            
-        else:
-            self.sub_state = 'correction'
-            self.com_state = 'not send'       
+    print('')
+    print('Parameters')
+    print('')
+    print('Fast speed: ', self.fast_speed)
+    print('Medium speed: ', self.medium_speed)
+    print('Slow speed: ', self.slow_speed)
+    print('Drop height: ', self.drop_height)
+    print('Dropping speed: ', self.pipette_dropping_speed)
+    print('Dropping volume: ', self.pipette_dropping_volume)
+    print('Pick height: ', self.pick_height)
+    print('Pumping speed: ', self.pipette_pumping_speed)
+    print('Pumping volume: ', self.pipette_pumping_volume)
+    print('')
 
-    elif self.sub_state == 'correction':
-        
-        if self.com_state == 'not send':
-            x, y, w, h = self.bbox
-            target_px = [int(x+w/2), int(y+h/2)]
-            self.target_pos = self.cam.cam_to_platform_space(target_px, (self.target_pos[0]+self.dist_check, self.target_pos[1], self.pick_height + self.pick_offset))
-            self.anycubic.move_axis(x=self.target_pos[0], y=self.target_pos[1], z=self.pick_height, f=self.slow_speed)
-            self.anycubic.finish_request()
-            self.com_state = 'send'
-        
-        elif self.anycubic.get_finish_flag():
-            self.sub_state = 'suck'
-            self.com_state = 'not send'
-    
-
-    elif self.sub_state == 'suck':
-        
-        if self.com_state == 'not send':
-            self.pipette_pos = self.pipette_pos - self.pipette_pumping_volume
-            self.dyna.write_profile_velocity(self.pipette_pumping_speed, ID = 1)
-            # self.dyna.write_position(self.dyna.pipette(self.pipette_pos), ID = 1)
-            self.dyna.write_pipette(self.pipette_pos, ID = 1)
-            self.com_state = 'send'
-            
-        elif self.dyna.pipette_is_in_position(self.pipette_pos, ID = 1):
-            self.sub_state = 'check'
-            self.com_state = 'not send'
-            
-    
-    elif self.sub_state == 'check':
-        
-        if self.com_state == 'not send':
-            self.anycubic.move_axis(z=self.pick_height + self.pick_offset, f=self.slow_speed)
-            self.anycubic.move_axis(x=self.target_pos[0]+self.dist_check, y=self.target_pos[1], f=self.slow_speed)
-            self.anycubic.finish_request()
-            self.com_state = 'send'
-            
-        elif self.anycubic.get_finish_flag():
-            
-            print(check_pickup(self))
-            
-            if check_pickup(self):
-                           
-                release_tracker(self)
-                self.state = 'place'
-                self.sub_state = 'go to position'
-                self.com_state = 'not send' 
-                
-            elif self.pipette_pos - self.pipette_pumping_volume >= 0:
-                self.sub_state = 'go to position'
-                self.com_state = 'not send'
-            else:
-                release_tracker(self)
-                self.state = 'reset'
-                self.sub_state = 'go to position'
-                self.com_state = 'not send'       
+goodbye ="""
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡤⠴⠒⠤⣄⡀⠀⠀⠀⠀⢠⣾⠉⠉⠉⠉⠑⠒⠦⢄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣴⠋⠀⠀⠀⠀⠀⠉⠲⡄⠀⢠⠏⡏⠀⠀⠀⠀⠀⠀⠀⠀⠉⠳⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⢤⣤⣀⡀⠀⠀⠀⠀⠀⢰⡏⠀⠀⠀⠀⠀⠀⠀⠀⠘⢆⢸⠀⡇⠀⠀⠀⢀⣀⠀⠀⠀⠀⠀⢸⡆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣰⠏⠀⠀⠀⠀⠈⠙⠢⣄⠀⠀⣿⠀⠀⠀⢰⣿⣷⣆⠀⠀⠀⠘⣾⠀⠇⠀⠀⠀⢾⣿⣿⣦⠀⠀⠀⠀⢻⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⢀⣀⡤⣄⠀⠀⠀⣼⡇⠀⠀⠀⢀⣀⠀⠀⠀⠈⠳⣴⢿⡄⠀⠀⢸⡿⣿⢹⠀⠀⠀⠀⣿⠀⡆⠀⠀⠀⣼⠻⣇⣸⠀⠀⠀⠀⣸⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⢀⡴⠚⠉⠀⠀⠈⠳⡄⠀⣿⡇⠀⠀⠀⣿⣿⡷⡄⠀⠀⠀⢹⣆⢧⠀⠀⠀⠙⠿⠋⠀⠀⠀⠀⣿⠀⡇⠀⠀⠀⠙⠛⠉⠁⠀⠀⠀⢠⡏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⢠⠟⠀⠀⠀⠀⢀⣤⣾⣷⣀⡇⢣⠀⠀⠀⢻⣟⣄⣷⠀⠀⠀⠈⣿⣾⣆⠀⠀⠀⠀⠀⠀⠀⠀⣸⢿⢰⡁⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⡾⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⣠⡏⠀⠀⠀⣼⡟⣿⣿⡿⠛⠉⢻⣞⣧⠀⠀⠀⠉⠛⠁⠀⠀⠀⠀⡿⣿⣿⣦⣀⠀⠀⠀⠀⣠⣾⡏⢸⣠⣧⣤⣄⣤⣤⣤⣤⣤⣴⣾⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⣿⠀⠀⠀⢸⠋⣿⠛⠁⠀⠀⠀⠀⠻⣯⣷⣄⠀⠀⠀⠀⠀⠀⢀⣼⠁⠘⠿⣿⣿⣻⣿⣿⣿⣿⠏⠀⣾⣿⣿⣿⣿⣿⣿⣿⡿⠟⠋⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⡟⣇⠀⠀⠈⢿⣏⢧⣴⣶⡆⠀⠀⠀⢿⣿⣿⢳⢦⣤⣤⣤⣶⣿⠟⠀⠀⠀⠀⠉⠉⠛⠋⢩⡤⠖⠒⠛⠛⡿⢁⣾⠋⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⣷⠀⠀⠀⠀⢀⣤⠤⠤⣀⡀⠀
+⣇⠘⣆⠀⠀⠀⠙⠻⠿⠛⠃⠀⠀⠀⣸⡙⠻⢿⣿⣿⣿⣿⠿⠋⠀⣀⡤⠤⠒⠚⠳⣄⢠⣿⠁⠀⠀⠀⢠⠇⡏⢸⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣾⠀⠀⢀⡴⢫⡇⠀⠀⠀⠈⠙
+⠘⣶⣿⣷⣄⡀⠀⠀⠀⠀⠀⠀⣀⣼⣿⠇⠀⠀⠀⣀⣀⣀⠀⢀⣼⣿⣦⡀⠀⠀⠀⠈⢻⡏⠀⠀⠀⠀⡞⠀⡇⢸⠀⠀⠀⠀⢰⣾⣶⣶⣶⣶⣶⡏⠀⠀⡼⠀⡞⠀⠀⠀⠀⠀⢸
+⠀⠈⠻⣿⣿⣿⣶⢶⡶⡶⣶⣾⣿⡿⠋⣠⠴⠚⠉⠁⠀⠉⠙⠺⡿⢿⣿⣿⣦⡀⠀⠀⠀⠀⠀⠀⠀⣸⠃⢰⠀⢸⠀⠀⠀⠀⠘⠛⠛⠿⠿⢿⡏⠀⠀⢰⠃⢠⠇⠀⠀⠀⠀⠀⠌
+⠀⠀⠀⠈⠙⠻⠿⠼⠽⠿⠿⠟⠋⢰⡟⠁⠀⠀⢀⣤⣄⡀⠀⠀⠹⡆⠙⢿⣿⣿⣦⡀⠀⠀⠀⠀⢰⡇⠀⢸⠀⢸⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡇⠀⠀⡞⠀⡜⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡾⢳⡀⠀⠀⠈⢿⡿⠇⠀⠀⣼⠃⠀⠀⠙⢿⣿⣿⣷⠀⠀⠀⠈⡇⠀⢸⠀⡄⠀⠀⠀⠀⢰⣶⣤⣤⣤⣼⠃⠀⢰⠃⢰⠃⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢷⠀⢣⠀⠀⠀⠀⠀⠀⠀⠈⠋⠉⠲⣄⠀⠀⠙⢿⠸⡄⠀⠀⠀⢳⠀⢸⠀⡇⠀⠀⠀⠀⠸⣿⣿⣿⣿⣃⠀⠀⣞⣠⣾⣤⣀⣀⠀⠀⡄⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⣆⠈⣇⠀⠀⠀⠀⣠⣤⣀⠀⠀⠀⠘⣆⠀⠀⠸⡄⢳⠀⠀⠀⠸⡆⢸⠀⣧⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⠀⠘⠻⢿⣿⣿⣿⣿⡿⠞⠁⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⡆⠘⡄⠀⠀⠀⢻⣿⣿⠆⠀⠀⠀⢸⠀⠀⠀⣇⠘⡆⠀⢀⣀⣧⢸⢀⣿⣶⣤⣤⣤⣀⣀⣀⠀⢀⡏⠀⢀⣴⠟⠁⠀⠀⠈⢳⡀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠹⡄⠹⡄⠀⠀⠈⠉⠁⠀⠀⠀⣠⡾⠀⠀⠀⢹⢀⣿⣿⣿⡿⠃⢸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠟⠁⢰⣯⡏⠀⠀⠀⠀⠀⠀⡇⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢳⠀⠹⡄⠀⠀⠀⢀⣠⣴⣾⣿⠃⠀⠀⠀⠘⠿⠟⠛⠛⠁⠀⠀⠀⠉⠉⠉⠛⠛⠛⠿⠟⠁⠀⠀⢾⣿⣷⣄⡀⠀⠀⢀⡼⠃⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⢧⠀⢳⣴⣶⣿⣿⣿⣿⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⢿⣿⣿⣿⣿⡿⠟⠁⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⣦⣿⣿⡿⠟⠛⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀   ⠀⠀⠀⠀⠈⠉⠉⣀⠀⠀⠀⠀⠀⠀⠀
+"""
