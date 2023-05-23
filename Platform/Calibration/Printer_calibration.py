@@ -17,10 +17,9 @@ printer_port = 'COM15'
 chessboard_calibration = False
 test_chessboard_calibration = False
 bed_leveling_calibration = False
-verticality_calibration = True
-offset_callibration = True
+verticality_calibration = False
+offset_callibration = False
 camera_calibration = True
-test_camera_calibration = True
 
 
 cap = cv2.VideoCapture(cam_number) 
@@ -137,7 +136,7 @@ if test_chessboard_calibration:
             cv2.destroyAllWindows()
             break
 
-if verticality_calibration or offset_callibration or camera_calibration or test_camera_calibration or bed_leveling_calibration:
+if verticality_calibration or offset_callibration or camera_calibration or bed_leveling_calibration:
     
     anycubic = Printer(descriptive_device_name="printer", port_name=printer_port, baudrate=115200)
     
@@ -217,7 +216,7 @@ if offset_callibration:
 
     anycubic.move_axis(x=calibration_position[0], y=calibration_position[1], z=75, f = 8000)
     
-    offset = [-23,-14.4]
+    offset = [-12.2, 20.5]
     
     while(True): 
 
@@ -334,6 +333,7 @@ if camera_calibration:
     
     anycubic.move_axis(x=100, y=100, z=100, f = 8000)
     offset = pickle.load(open('Platform/Calibration/offset.pkl', 'rb'))
+    angle = 0  
     
     while True:
         
@@ -378,6 +378,14 @@ if camera_calibration:
             f[0] -= 0.005
             print('f ', f)
             
+        if key == ord('q'):
+            angle -= 0.5*np.pi/180
+            print('angle ', angle)
+            
+        if key == ord('e'):
+            angle += 0.5*np.pi/180
+            print('angle ', angle)
+                        
         if key == ord('0'):
             anycubic.move_axis(x=100, y=100, z=75, f = 2000)
 
@@ -398,19 +406,24 @@ if camera_calibration:
             
             center = (imshow.shape[1]//2, imshow.shape[0]//2)
             
-            anycubic.move_axis(x=pos[0]+offset[0]+(markerCorners[0][1]-center[1])*coef_x, y=pos[1]+offset[1]+(markerCorners[0][0]-center[0])*coef_y, z=2, f = 3000)
-            anycubic.move_axis(x=pos[0]+offset[0]+(markerCorners[1][1]-center[1])*coef_x, y=pos[1]+offset[1]+(markerCorners[1][0]-center[0])*coef_y, z=2, f = 3000)
-            anycubic.move_axis(x=pos[0]+offset[0]+(markerCorners[2][1]-center[1])*coef_x, y=pos[1]+offset[1]+(markerCorners[2][0]-center[0])*coef_y, z=2, f = 3000)
-            anycubic.move_axis(x=pos[0]+offset[0]+(markerCorners[3][1]-center[1])*coef_x, y=pos[1]+offset[1]+(markerCorners[3][0]-center[0])*coef_y, z=2, f = 3000)
-            anycubic.move_axis(x=pos[0]+offset[0]+(markerCorners[0][1]-center[1])*coef_x, y=pos[1]+offset[1]+(markerCorners[0][0]-center[0])*coef_y, z=2, f = 3000)
-            anycubic.move_axis(x=100, y=100, z=100, f = 8000)
+            if len(markerCorners) > 0:
+                for i in range(5):
+                    x = pos[0]+offset[0]+np.cos(angle)*((markerCorners[i%4][1]-center[1])*coef_x)-np.sin(angle)*((markerCorners[i%4][0]-center[0])*coef_y)
+                    y = pos[1]+offset[1]+np.sin(angle)*((markerCorners[i%4][1]-center[1])*coef_x)+np.cos(angle)*((markerCorners[i%4][0]-center[0])*coef_y)        
+                    anycubic.move_axis(x, y, z=2, f = 3000)               
+                    
+                    # anycubic.move_axis(x=pos[0]+offset[0]+(markerCorners[1][1]-center[1])*coef_x, y=pos[1]+offset[1]+(markerCorners[1][0]-center[0])*coef_y, z=2, f = 3000)
+                    # anycubic.move_axis(x=pos[0]+offset[0]+(markerCorners[2][1]-center[1])*coef_x, y=pos[1]+offset[1]+(markerCorners[2][0]-center[0])*coef_y, z=2, f = 3000)
+                    # anycubic.move_axis(x=pos[0]+offset[0]+(markerCorners[3][1]-center[1])*coef_x, y=pos[1]+offset[1]+(markerCorners[3][0]-center[0])*coef_y, z=2, f = 3000)
+                    # anycubic.move_axis(x=pos[0]+offset[0]+(markerCorners[0][1]-center[1])*coef_x, y=pos[1]+offset[1]+(markerCorners[0][0]-center[0])*coef_y, z=2, f = 3000)
+                anycubic.move_axis(x=100, y=100, z=100, f = 8000)
                     
         if key == 27: 
             cv2.destroyAllWindows()
-            print('f ', f, ' z_offset ', z_offset)
+            print('f ', f, ' z_offset ', z_offset, ' angle ', angle)
             break
        
-    
+    pickle.dump(angle, open('Platform/Calibration/angle.pkl', 'wb'))
     pickle.dump(z_offset, open('Platform/Calibration/z_offset.pkl', 'wb'))
     pickle.dump(f, open('Platform/Calibration/f.pkl', 'wb'))
    

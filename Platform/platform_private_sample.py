@@ -1,0 +1,496 @@
+import computer_vision as cv
+import cv2
+import math
+import time
+import os
+
+class sample:
+    
+    def __init__(self, num, x, y, image = None):
+        self.num = num
+        self.x = x
+        self.y = y
+        self.image = None
+            
+def destination(self):
+    
+    # mod = int(self.nb_sample/self.nb_pos[1])
+    # 
+    # print('Tube n° ', self.number_sample)
+    # print('x offset', mod)
+    # print('y offset', self.number_sample%self.num_y)
+    # 
+    # return round(self.dropping_pos[0]-self.offset_pos*mod, 2), round(self.dropping_pos[1]-self.offset_pos*(self.nb_sample%self.nb_pos[1]), 2)
+    
+    angle = math.pi/180.0*30*(self.nb_sample)
+    radius = 15
+
+    return [self.dropping_pos[0]+radius*math.cos(angle), self.dropping_pos[1]+radius*math.sin(angle)]
+
+def set_tracker(self, target_px):
+    
+    bbox = [int(target_px[0]-self.roi_size/2),int(target_px[1]-self.roi_size/2), self.roi_size, self.roi_size]
+    self.tracker.init(self.frame, bbox)
+    self.track_on = True
+
+def release_tracker(self):
+    
+    self.track_on = False
+    self.success = False
+    self.tracker = cv2.TrackerCSRT.create()  
+    
+def check_pickup(self):
+    
+    x, y, w, h = [int(i) for i in self.bbox]
+    tracker_pos = [int(x+w/2), int(y+h/2)]
+    
+    if (tracker_pos[0]-self.pipette_pos_px[0])**2+ (tracker_pos[1]-self.pipette_pos_px[1])**2 < 20**2:
+        return True
+    else:
+        return False
+    
+def check_pickup_two(self):
+    
+    number = len([entry for entry in os.listdir(r"Pictures\macro") if os.path.isfile(os.path.join(r"Pictures\macro", entry))])
+    
+    cv2.imwrite("Pictures\macro\image" + str(number)  + ".png", self.macro_frame)
+    
+    return False
+
+def delay(self, delay):
+
+    if not self.chrono_set:
+        self.chrono = delay/1000.0 + time.time()
+        self.chrono_set = True
+    elif time.time() >= self.chrono:
+        self.chrono_set = False
+        return True
+    return False        
+
+def detect(self):
+    
+
+    if self.sub_state == 'go to position':
+        
+        if self.com_state == 'not send':
+            self.anycubic.move_axis(z=self.safe_height, f=self.fast_speed)
+            self.anycubic.move_axis(x=self.detection_place[0], y=self.detection_place[1], z=self.detection_place[2], f=self.fast_speed)
+            self.anycubic.finish_request()
+            self.com_state = 'send'
+            
+        elif self.anycubic.get_finish_flag():
+            self.tip_number = 1
+            self.dyna.select_tip(tip_number=self.tip_number, ID=3)
+            self.sub_state = 'analyse picture'
+            self.com_state = 'not send'
+            
+            
+    elif self.sub_state == 'analyse picture':
+          
+        target_px, optimal_angle = cv.detection(self)
+                
+        if target_px is not None:
+             
+            set_tracker(self, target_px)
+            self.target_pos = self.cam.cam_to_platform_space(target_px, self.detection_place)
+            self.offset_check = (self.dist_check*math.sin(optimal_angle), self.dist_check*math.cos(optimal_angle))
+
+            self.state = 'pick'
+            self.sub_state = 'empty pipette'
+            self.com_state = 'not send'
+            self.detect_attempt = 0
+        else:
+            self.detect_attempt += 1
+            
+            if self.detect_attempt == self.max_attempt:
+                self.state = 'pause'
+                self.last_state = 'detect'
+                self.detect_attempt = 0
+                print('No tissue detected')
+    
+def pick(self):
+            
+    
+    if self.sub_state == 'empty pipette':
+    
+        if self.com_state == 'not send':
+            self.dyna.write_profile_velocity(self.pipette_dropping_speed, ID = 1)
+            self.pipette_1_pos = 50
+            self.dyna.write_pipette(self.pipette_1_pos, ID = 1)
+            self.com_state = 'send'
+            
+        elif self.dyna.pipette_is_in_position(self.pipette_1_pos, ID = 1):
+            self.sub_state = 'go to position'
+            self.com_state = 'not send'
+                
+            
+    elif self.sub_state == 'go to position':
+        
+        if self.com_state == 'not send':
+            self.anycubic.move_axis(x=self.target_pos[0]+self.offset_check[0], y=self.target_pos[1]+self.offset_check[1], z=self.pick_height + self.pick_offset, f=self.slow_speed)
+            self.anycubic.finish_request()
+            self.com_state = 'send'
+            
+        elif self.anycubic.get_finish_flag():
+            self.sub_state = 'correction'
+            self.com_state = 'not send'
+            
+
+    elif self.sub_state == 'correction':
+        
+        if self.com_state == 'not send':
+            x, y, w, h = self.bbox
+            target_px = [int(x+w/2), int(y+h/2)]
+            self.target_pos = self.cam.cam_to_platform_space(target_px, (self.target_pos[0]+self.offset_check[0], self.target_pos[1]+self.offset_check[1], self.pick_height + self.pick_offset))
+            self.anycubic.move_axis(x=self.target_pos[0], y=self.target_pos[1], z=self.pick_height, f=self.slow_speed)
+            self.anycubic.finish_request()
+            self.com_state = 'send'
+        
+        elif self.anycubic.get_finish_flag():
+            self.sub_state = 'suck'
+            self.com_state = 'not send'
+    
+
+    elif self.sub_state == 'suck':
+        
+        if self.com_state == 'not send':
+            self.pipette_1_pos = self.pipette_1_pos - self.pipette_pumping_volume
+            self.dyna.write_profile_velocity(self.pipette_pumping_speed, ID = 1)
+            self.dyna.write_pipette(self.pipette_1_pos, ID = 1)
+            self.com_state = 'send'
+            
+        elif self.dyna.pipette_is_in_position(self.pipette_1_pos, ID = 1):
+            self.sub_state = 'check'
+            self.com_state = 'not send'
+            
+    
+    elif self.sub_state == 'check':
+        
+        if self.com_state == 'not send':
+            self.anycubic.move_axis(z=self.pick_height + self.pick_offset, f=self.slow_speed)
+            self.anycubic.move_axis(x=self.target_pos[0]+self.offset_check[0], y=self.target_pos[1]+self.offset_check[1], f=self.slow_speed)
+            self.anycubic.finish_request()
+            self.com_state = 'send'
+            
+        elif self.anycubic.get_finish_flag():
+            
+            print(check_pickup(self))
+            
+            if check_pickup(self):
+                           
+                release_tracker(self)
+                self.state = 'picture'
+                self.sub_state = 'go to position'
+                self.com_state = 'not send' 
+                
+            elif self.pipette_1_pos - self.pipette_pumping_volume >= 0:
+                self.sub_state = 'correction'
+                self.com_state = 'not send'
+            else:
+                release_tracker(self)
+                self.state = 'reset'
+                self.sub_state = 'go to position'
+                self.com_state = 'not send'             
+
+def picture(self):
+    
+    if self.sub_state == 'go to position':
+        
+        if self.com_state == 'not send':
+            dest = destination(self)
+            self.anycubic.move_axis(z=self.safe_height, f=self.medium_speed)
+            self.anycubic.move_axis(x=self.picture_pos, y=dest[1], f=self.medium_speed)
+            self.anycubic.finish_request()
+            self.com_state = 'send'
+            
+        elif self.anycubic.get_finish_flag():
+            
+            print(check_pickup_two(self))
+            
+            if check_pickup_two(self):
+                self.state = 'place'
+                self.sub_state = 'go to position'
+                self.com_state = 'not send' 
+                
+            else:
+                self.state = 'reset'
+                self.sub_state = 'go to position'
+                self.com_state = 'not send'            
+                
+def place(self):
+
+    if self.sub_state == 'go to position':
+        
+        if self.com_state == 'not send':
+            self.anycubic.move_axis(z=self.safe_height, f=self.medium_speed)
+            dest = destination(self)
+            self.anycubic.move_axis(x=dest[0], y=dest[1], f=self.medium_speed)
+            self.anycubic.finish_request()
+            self.com_state = 'send'
+            
+        elif self.anycubic.get_finish_flag():
+            self.sub_state = 'go down'
+            self.com_state = 'not send'       
+                        
+    
+    elif self.sub_state == 'go down':
+        
+        if self.com_state == 'not send':
+            self.anycubic.move_axis(z=self.drop_height, f=self.slow_speed)
+            self.anycubic.finish_request()
+            self.com_state = 'send'
+            
+        elif self.anycubic.get_finish_flag():
+            self.sub_state = 'blow'
+            self.com_state = 'not send'   
+            
+            
+            
+    elif self.sub_state == 'blow':
+        
+        if self.com_state == 'not send':
+            self.dyna.write_profile_velocity(self.pipette_dropping_speed, ID = 1)
+            self.pipette_1_pos = self.pipette_1_pos + self.pipette_dropping_volume
+            self.dyna.write_pipette(self.pipette_1_pos, ID = 1)
+            self.com_state = 'send'
+            
+        elif self.dyna.pipette_is_in_position(self.pipette_1_pos, ID = 1):
+            self.nb_sample += 1
+            self.sub_state = 'go up'
+            self.com_state = 'not send'     
+
+
+    elif self.sub_state == 'go up':
+        
+        if self.com_state == 'not send':
+            self.anycubic.move_axis(z=self.safe_height, f=self.fast_speed)
+            self.anycubic.finish_request()
+            self.com_state = 'send'
+        
+        elif self.anycubic.get_finish_flag():
+            self.state = 'reset'
+            self.sub_state = 'go to position'
+            self.com_state = 'not send'        
+
+def reset(self):
+    
+    if self.sub_state == 'go to position':
+        
+        if self.com_state == 'not send':
+            release_tracker(self)
+            self.anycubic.move_axis(z=self.safe_height, f=self.fast_speed)
+            self.anycubic.move_axis(x=self.reset_pos[0], y=self.reset_pos[1], f=self.fast_speed)
+            self.anycubic.move_axis(z=self.reset_pos[2], f=self.fast_speed) 
+            self.anycubic.finish_request() 
+            self.com_state = 'send'  
+            
+        elif self.anycubic.get_finish_flag():
+            self.sub_state = 'empty pipette'
+            self.com_state = 'not send'
+            
+            
+    elif self.sub_state == 'empty pipette':
+        
+        if self.com_state == 'not send':
+            self.dyna.write_profile_velocity(self.pipette_dropping_speed, ID = 1)
+            self.pipette_1_pos = self.pipette_empty
+            self.dyna.write_pipette(self.pipette_1_pos, ID = 1)
+            self.com_state = 'send'
+            
+        elif self.dyna.pipette_is_in_position(self.pipette_1_pos, ID = 1):
+            self.state = 'detect'
+            self.sub_state = 'go to position'
+            self.com_state = 'not send'   
+            
+def gui_parameter(self, direction=None):
+    
+    if direction == 'up':
+        
+        if self.gui_menu == 0:
+            self.pick_height += 0.1
+        if self.gui_menu == 1:
+            self.drop_height += 0.1
+        if self.gui_menu == 2:
+            self.slow_speed += 50
+        if self.gui_menu == 3:
+            self.medium_speed += 50
+        if self.gui_menu == 4:
+            self.fast_speed += 50     
+        if self.gui_menu == 5:
+            self.pipette_pumping_volume += 0.5
+        if self.gui_menu == 6:
+            self.pipette_pumping_speed += 10
+        if self.gui_menu == 7:
+            self.pipette_dropping_volume += 0.5
+        if self.gui_menu == 8:
+            self.pipette_dropping_speed += 10 
+            
+        if self.gui_menu == 9:
+            self.solution_pumping_height += 0.1
+        if self.gui_menu == 10:
+            self.solution_A_pumping_speed += 10
+        if self.gui_menu == 11:
+            self.solution_A_dropping_speed += 10
+        if self.gui_menu == 12:
+            self.solution_A_pumping_volume += 1
+        if self.gui_menu == 13:
+            self.solution_B_pumping_speed += 10
+        if self.gui_menu == 14:
+            self.solution_B_dropping_speed += 10
+        if self.gui_menu == 15:
+            self.solution_B_pumping_volume += 1
+        if self.gui_menu == 16:
+            self.num_mix  += 1
+        if self.gui_menu == 17:
+            self.num_wash += 1
+    
+    if direction == 'down':
+        
+        if self.gui_menu == 0:
+            self.pick_height -= 0.1
+        if self.gui_menu == 1:
+            self.drop_height -= 0.1
+        if self.gui_menu == 2:
+            self.slow_speed -= 50
+        if self.gui_menu == 3:
+            self.medium_speed -= 50
+        if self.gui_menu == 4:
+            self.fast_speed -= 50     
+        if self.gui_menu == 5:
+            self.pipette_pumping_volume -= 0.5
+        if self.gui_menu == 6:
+            self.pipette_pumping_speed -= 10
+        if self.gui_menu == 7:
+            self.pipette_dropping_volume -= 0.5
+        if self.gui_menu == 8:
+            self.pipette_dropping_speed -= 10
+            
+        if self.gui_menu == 9:
+            self.solution_pumping_height -= 0.1
+        if self.gui_menu == 10:
+            self.solution_A_pumping_speed -= 10
+        if self.gui_menu == 11:
+            self.solution_A_dropping_speed -= 10
+        if self.gui_menu == 12:
+            self.solution_A_pumping_volume -= 1
+        if self.gui_menu == 13:
+            self.solution_B_pumping_speed -= 10
+        if self.gui_menu == 14:
+            self.solution_B_dropping_speed -= 10
+        if self.gui_menu == 15:
+            self.solution_B_pumping_volume -= 1
+        if self.gui_menu == 16:
+            self.num_mix  -= 1
+        if self.gui_menu == 17:
+            self.num_wash -= 1
+            
+    if direction is None:
+        
+        if self.gui_menu == 0:
+            return self.pick_height
+        if self.gui_menu == 1:
+            return self.drop_height
+        if self.gui_menu == 2:
+            return self.slow_speed
+        if self.gui_menu == 3:
+            return self.medium_speed
+        if self.gui_menu == 4:
+            return self.fast_speed       
+        if self.gui_menu == 5:
+            return self.pipette_pumping_volume
+        if self.gui_menu == 6:
+            return self.pipette_pumping_speed
+        if self.gui_menu == 7:
+            return self.pipette_dropping_volume
+        if self.gui_menu == 8:
+            return self.pipette_dropping_speed
+        
+        if self.gui_menu == 9:
+            return self.solution_pumping_height
+        if self.gui_menu == 10:
+            return self.solution_A_pumping_speed
+        if self.gui_menu == 11:
+            return self.solution_A_dropping_speed
+        if self.gui_menu == 12:
+            return self.solution_A_pumping_volume
+        if self.gui_menu == 13:
+            return self.solution_B_pumping_speed
+        if self.gui_menu == 14:
+            self.solution_B_dropping_speed
+        if self.gui_menu == 15:
+            return self.solution_B_pumping_volume
+        if self.gui_menu == 16:
+            return self.num_mix
+        if self.gui_menu == 17:
+            return self.num_wash
+        
+        
+        
+    
+def display(self, position):
+    
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    color = (255, 255, 255) #BGR
+    thickness = 2
+
+    fontScale = 0.8 
+    
+    text = self.gui_menu_label[(self.gui_menu)%len(self.gui_menu_label)]
+    self.imshow = cv2.putText(self.imshow, text, position, font, 
+                            fontScale, color, thickness, cv2.LINE_AA)  
+    
+    pos = position
+    pos[0] = pos[0] + 250 
+    text = str(round(gui_parameter(self), 2))
+    self.imshow = cv2.putText(self.imshow, text, position, font, 
+                            fontScale, color, thickness, cv2.LINE_AA)     
+
+def print_parameters(self):
+    
+    print('')
+    print('Parameters')
+    print('')
+    print('Fast speed: ', self.fast_speed)
+    print('Medium speed: ', self.medium_speed)
+    print('Slow speed: ', self.slow_speed)
+    print('Drop height: ', self.drop_height)
+    print('Dropping speed: ', self.pipette_dropping_speed)
+    print('Dropping volume: ', self.pipette_dropping_volume)
+    print('Pick height: ', self.pick_height)
+    print('Pumping speed: ', self.pipette_pumping_speed)
+    print('Pumping volume: ', self.pipette_pumping_volume)
+    print('Solution pumping height', self.solution_pumping_height)
+    print('Solution A pumping speed', self.solution_A_pumping_speed)
+    print('Solution A dropping speed', self.solution_A_dropping_speed)
+    print('Solution A pumping volume', self.solution_A_pumping_volume)
+    print('Solution B pumping speed', self.solution_B_pumping_speed)
+    print('Solution B dropping speed', self.solution_B_dropping_speed)
+    print('Solution B pumping volume', self.solution_B_pumping_volume)
+    print('Number of mix', self.num_mix)
+    print('Number of wash', self.num_wash)
+    print('')
+
+goodbye ="""
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡤⠴⠒⠤⣄⡀⠀⠀⠀⠀⢠⣾⠉⠉⠉⠉⠑⠒⠦⢄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣴⠋⠀⠀⠀⠀⠀⠉⠲⡄⠀⢠⠏⡏⠀⠀⠀⠀⠀⠀⠀⠀⠉⠳⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⢤⣤⣀⡀⠀⠀⠀⠀⠀⢰⡏⠀⠀⠀⠀⠀⠀⠀⠀⠘⢆⢸⠀⡇⠀⠀⠀⢀⣀⠀⠀⠀⠀⠀⢸⡆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣰⠏⠀⠀⠀⠀⠈⠙⠢⣄⠀⠀⣿⠀⠀⠀⢰⣿⣷⣆⠀⠀⠀⠘⣾⠀⠇⠀⠀⠀⢾⣿⣿⣦⠀⠀⠀⠀⢻⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⢀⣀⡤⣄⠀⠀⠀⣼⡇⠀⠀⠀⢀⣀⠀⠀⠀⠈⠳⣴⢿⡄⠀⠀⢸⡿⣿⢹⠀⠀⠀⠀⣿⠀⡆⠀⠀⠀⣼⠻⣇⣸⠀⠀⠀⠀⣸⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⢀⡴⠚⠉⠀⠀⠈⠳⡄⠀⣿⡇⠀⠀⠀⣿⣿⡷⡄⠀⠀⠀⢹⣆⢧⠀⠀⠀⠙⠿⠋⠀⠀⠀⠀⣿⠀⡇⠀⠀⠀⠙⠛⠉⠁⠀⠀⠀⢠⡏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⢠⠟⠀⠀⠀⠀⢀⣤⣾⣷⣀⡇⢣⠀⠀⠀⢻⣟⣄⣷⠀⠀⠀⠈⣿⣾⣆⠀⠀⠀⠀⠀⠀⠀⠀⣸⢿⢰⡁⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⡾⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⣠⡏⠀⠀⠀⣼⡟⣿⣿⡿⠛⠉⢻⣞⣧⠀⠀⠀⠉⠛⠁⠀⠀⠀⠀⡿⣿⣿⣦⣀⠀⠀⠀⠀⣠⣾⡏⢸⣠⣧⣤⣄⣤⣤⣤⣤⣤⣴⣾⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⣿⠀⠀⠀⢸⠋⣿⠛⠁⠀⠀⠀⠀⠻⣯⣷⣄⠀⠀⠀⠀⠀⠀⢀⣼⠁⠘⠿⣿⣿⣻⣿⣿⣿⣿⠏⠀⣾⣿⣿⣿⣿⣿⣿⣿⡿⠟⠋⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⡟⣇⠀⠀⠈⢿⣏⢧⣴⣶⡆⠀⠀⠀⢿⣿⣿⢳⢦⣤⣤⣤⣶⣿⠟⠀⠀⠀⠀⠉⠉⠛⠋⢩⡤⠖⠒⠛⠛⡿⢁⣾⠋⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⣷⠀⠀⠀⠀⢀⣤⠤⠤⣀⡀⠀
+⣇⠘⣆⠀⠀⠀⠙⠻⠿⠛⠃⠀⠀⠀⣸⡙⠻⢿⣿⣿⣿⣿⠿⠋⠀⣀⡤⠤⠒⠚⠳⣄⢠⣿⠁⠀⠀⠀⢠⠇⡏⢸⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣾⠀⠀⢀⡴⢫⡇⠀⠀⠀⠈⠙
+⠘⣶⣿⣷⣄⡀⠀⠀⠀⠀⠀⠀⣀⣼⣿⠇⠀⠀⠀⣀⣀⣀⠀⢀⣼⣿⣦⡀⠀⠀⠀⠈⢻⡏⠀⠀⠀⠀⡞⠀⡇⢸⠀⠀⠀⠀⢰⣾⣶⣶⣶⣶⣶⡏⠀⠀⡼⠀⡞⠀⠀⠀⠀⠀⢸
+⠀⠈⠻⣿⣿⣿⣶⢶⡶⡶⣶⣾⣿⡿⠋⣠⠴⠚⠉⠁⠀⠉⠙⠺⡿⢿⣿⣿⣦⡀⠀⠀⠀⠀⠀⠀⠀⣸⠃⢰⠀⢸⠀⠀⠀⠀⠘⠛⠛⠿⠿⢿⡏⠀⠀⢰⠃⢠⠇⠀⠀⠀⠀⠀⠌
+⠀⠀⠀⠈⠙⠻⠿⠼⠽⠿⠿⠟⠋⢰⡟⠁⠀⠀⢀⣤⣄⡀⠀⠀⠹⡆⠙⢿⣿⣿⣦⡀⠀⠀⠀⠀⢰⡇⠀⢸⠀⢸⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡇⠀⠀⡞⠀⡜⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡾⢳⡀⠀⠀⠈⢿⡿⠇⠀⠀⣼⠃⠀⠀⠙⢿⣿⣿⣷⠀⠀⠀⠈⡇⠀⢸⠀⡄⠀⠀⠀⠀⢰⣶⣤⣤⣤⣼⠃⠀⢰⠃⢰⠃⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢷⠀⢣⠀⠀⠀⠀⠀⠀⠀⠈⠋⠉⠲⣄⠀⠀⠙⢿⠸⡄⠀⠀⠀⢳⠀⢸⠀⡇⠀⠀⠀⠀⠸⣿⣿⣿⣿⣃⠀⠀⣞⣠⣾⣤⣀⣀⠀⠀⡄⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⣆⠈⣇⠀⠀⠀⠀⣠⣤⣀⠀⠀⠀⠘⣆⠀⠀⠸⡄⢳⠀⠀⠀⠸⡆⢸⠀⣧⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⠀⠘⠻⢿⣿⣿⣿⣿⡿⠞⠁⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⡆⠘⡄⠀⠀⠀⢻⣿⣿⠆⠀⠀⠀⢸⠀⠀⠀⣇⠘⡆⠀⢀⣀⣧⢸⢀⣿⣶⣤⣤⣤⣀⣀⣀⠀⢀⡏⠀⢀⣴⠟⠁⠀⠀⠈⢳⡀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠹⡄⠹⡄⠀⠀⠈⠉⠁⠀⠀⠀⣠⡾⠀⠀⠀⢹⢀⣿⣿⣿⡿⠃⢸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠟⠁⢰⣯⡏⠀⠀⠀⠀⠀⠀⡇⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢳⠀⠹⡄⠀⠀⠀⢀⣠⣴⣾⣿⠃⠀⠀⠀⠘⠿⠟⠛⠛⠁⠀⠀⠀⠉⠉⠉⠛⠛⠛⠿⠟⠁⠀⠀⢾⣿⣷⣄⡀⠀⠀⢀⡼⠃⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⢧⠀⢳⣴⣶⣿⣿⣿⣿⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⢿⣿⣿⣿⣿⡿⠟⠁⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⣦⣿⣿⡿⠟⠛⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀   ⠀⠀⠀⠀⠈⠉⠉⣀⠀⠀⠀⠀⠀⠀⠀
+"""

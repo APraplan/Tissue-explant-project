@@ -3,7 +3,7 @@ sys.path.append('c:/Users/APrap/Documents/CREATE/Pick-and-Place/Platform')
 import cv2
 from Communication.printer_communications import *
 
-anycubic = printer(descriptive_device_name="printer", port_name="COM10", baudrate=115200)
+anycubic = Printer(descriptive_device_name="printer", port_name="COM15", baudrate=115200)
 
 anycubic.connect()
 anycubic.homing()

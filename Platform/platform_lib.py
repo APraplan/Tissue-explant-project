@@ -2,7 +2,8 @@ import numpy as np
 import Platform.computer_vision as cv
 from vidgear.gears import VideoGear
 import cv2
-from Platform.platform_private import *
+from Platform.platform_private_sample import *
+from Platform.platform_private_gel import *
 from Platform.Communication.dynamixel_controller import *
 from Platform.Communication.printer_communications import *
 
@@ -17,13 +18,18 @@ class platform_pick_and_place:
         
         # GUI
         self.gui_menu = 0
-        self.gui_menu_label = np.array(['Pick height', 'Drop height', 'Slow speed', 'Medium speed', 'Fast speed', 'Pumping Volume', 'Pumping speed', 'Dropping volume', 'Dropping speed'])
+        self.gui_menu_label = np.array(['Pick height', 'Drop height', 'Slow speed', 'Medium speed',
+                                        'Fast speed', 'Pumping Volume', 'Pumping speed', 'Dropping volume',
+                                        'Dropping speed', 'Solution pumping height', 'Solution A pumping speed',
+                                        'Solution A dropping speed', 'Solution A pumping volume', 'Solution B pumping speed',
+                                        'Solution B dropping speed', 'Solution B pumping volume', 'Number of mix',
+                                        'Number of wash'])
 
         # FSM
         self.chrono_set = False
         self.chrono = 0
         self.state = 'pause'
-        self.last_state = 'reset'
+        self.last_state = 'homming'
         self.sub_state = 'go to position'
         self.com_state = 'not send'
         
@@ -34,13 +40,14 @@ class platform_pick_and_place:
         self.safe_height = 25
         self.pick_offset = 4
         self.detection_place = [75.0, 125, 50]
-        self.reset_pos = [70, 115, 10]
-        self.pipette_pos_px = [590, 463]
+        self.reset_pos = [60, 135, 10]
+        self.pipette_pos_px = [172, 402]
                 
         # Dropping zone
         self.drop_height = 2.6
         self.pipette_dropping_speed = 150
         self.pipette_dropping_volume = 1.5
+        self.tube_num = 0
         self.dropping_pos = [160, 115]
         
         # Anycubic
@@ -50,11 +57,12 @@ class platform_pick_and_place:
         self.slow_speed = 300
         
         # Dynamixel
-        self.dyna = Dynamixel(ID=[1], descriptive_device_name="XL430 test motor", series_name=["xl"], baudrate=57600,
+        self.dyna = Dynamixel(ID=[1,2,3], descriptive_device_name="XL430 test motor", series_name=["xl", "xl", "xl"], baudrate=57600,
                  port_name=com_dynamixel)
-        self.sum_error = 0
-        self.past_error = 0
-        self.pipette_pos = 0
+
+        self.tip_number = 1
+        self.pipette_1_pos = 0
+        self.pipette_2_pos = 0
         self.pipette_full = 0
         self.pipette_empty = 100
         
@@ -83,9 +91,9 @@ class platform_pick_and_place:
         self.max_attempt = 50
         
         # Camera 2
-        self.stream2 = VideoGear(source=1, logging=True).start() 
+        self.stream2 = VideoGear(source=cam_macro, logging=True).start() 
         self.macro_frame = self.stream2.read()
-        self.picture_pos = [0.0, 0.0]
+        self.picture_pos = 0.0
         
         # Tracker
         self.tracker = cv2.TrackerCSRT.create()       
@@ -95,11 +103,39 @@ class platform_pick_and_place:
         self.success = False
         self.offset_check = 0
         self.dist_check = 4
+        
+        # Well plate
+        self.solution_prep_num = 0
+        self.well_num = 0
+        self.solution_pumping_height = 4.0
+        self.solution_A_pumping_speed = 50
+        self.solution_A_dropping_speed = 35 
+        self.solution_A_pumping_volume = 30
+        self.solution_B_pumping_speed = 50
+        self.solution_B_dropping_speed = 35
+        self.solution_B_pumping_volume = 30
+        self.mix = 0
+        self.num_mix = 3
+        self.wash = 0
+        self.num_wash = 3
+        self.mixing_well = [well_plate('F3'), well_plate('E3'), well_plate('D3'), well_plate('F4'), well_plate('E4'), well_plate('D4')]
+        self.culture_well = [well_plate('F6'), well_plate('E6'), well_plate('D6'), well_plate('F7'), well_plate('E7'), well_plate('D7')]
+        self.solution_well = {'Sol A' : well_plate('A3'), 'Sol B' : well_plate('B3'), 'Washing' : well_plate('A4'), 'Dump' : well_plate('B4')}
 
     
     # Public methodes
     
-    def init(self):
+    def init(self):        
+        
+        self.dyna.begin_communication()
+        self.dyna.set_operating_mode("position", ID="all")
+        self.dyna.write_profile_velocity(100, ID="all")
+        self.dyna.set_position_gains(P_gain = 2700, I_gain = 70, D_gain = 5000, ID=1)
+        self.dyna.set_position_gains(P_gain = 2700, I_gain = 70, D_gain = 5000, ID=2)
+        self.dyna.set_position_gains(P_gain = 2500, I_gain = 40, D_gain = 5000, ID=3)
+        self.tip_number = 1
+        self.dyna.select_tip(tip_number=self.tip_number, ID=3)
+        
         self.anycubic.connect()
         self.anycubic.homing()
         # self.anycubic.set_home_pos(x=0, y=0, z=0)
@@ -107,9 +143,7 @@ class platform_pick_and_place:
         self.anycubic.max_y_feedrate(100)
         self.anycubic.max_z_feedrate(20)
         
-        self.dyna.begin_communication()
-        self.dyna.set_operating_mode("position", ID=1)
-        self.dyna.set_position_gains(P_gain = 2500, I_gain = 60, D_gain = 5000, ID = 1)
+
         # self.anycubic.move_home()
         # self.dyna.write_pipette(self.pipette_empty, ID=1)
         
@@ -164,7 +198,16 @@ class platform_pick_and_place:
         if self.track_on:
             self.success, self.bbox = self.tracker.update(self.frame) 
             
-        if self.state == 'detect':
+        if self.state == 'homming':
+            homming(self)
+          
+        elif   self.state == 'spreading solution A':
+            spreading_solution_A(self)
+            
+        elif self.state == 'preparing gel':
+            preparing_gel(self)
+                        
+        elif self.state == 'detect':
             detect(self)
             
         elif self.state == 'pick':
@@ -234,6 +277,9 @@ class platform_pick_and_place:
 
    
     def gui(self, key):
+        
+        if key == ord('c'):
+            cv2.imwrite("Pictures\Realsample\image_on_the_go.png", self.frame)
         
         if key == ord('p'):
             self.pause()

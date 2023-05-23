@@ -15,8 +15,10 @@ WIDHT_MM = 210
 HEIGHT_MM = 95.7
 RATIO_X = WIDHT_MM/WIDTH_PX # 0.1832 = 1/5.457
 RATIO_Y = HEIGHT_MM/HEIGHT_PX # 0.1805 = 1/5.538
-OFFSET_X = -10.4
-OFFSET_Y = 21.4
+# OFFSET_X = -12.4
+# OFFSET_Y = 20.4
+# ANGLE = 0.0175
+
 
 YELLOW = (0, 255, 255)
 GREEN = (0, 255, 0)
@@ -70,6 +72,7 @@ class Camera:
         dist = pickle.load(open('Platform/Calibration/dist.pkl', 'rb'))
         
         self.offset = pickle.load(open('Platform/Calibration/offset.pkl', 'rb'))
+        self.angle = pickle.load(open('Platform/Calibration/angle.pkl', 'rb'))
         self.z_offset = pickle.load(open('Platform/Calibration/z_offset.pkl', 'rb'))
         self.f = pickle.load(open('Platform/Calibration/f.pkl', 'rb'))
         
@@ -110,8 +113,11 @@ class Camera:
         
         coef_x = (position[2] + self.z_offset)/self.f[1]
         coef_y = (position[2] + self.z_offset)/self.f[0]
+        
+        x = position[0]+self.offset[0] + np.cos(self.angle)*((coord[1]-self.center[1])*coef_x)-np.sin(self.angle)*((coord[0]-self.center[0])*coef_y)
+        y = position[1]+self.offset[1] + np.sin(self.angle)*((coord[1]-self.center[1])*coef_x)+np.cos(self.angle)*((coord[0]-self.center[0])*coef_y)      
             
-        return [position[0]+self.offset[0]+(coord[1]-self.center[1])*coef_x, position[1]+self.offset[1]+(coord[0]-self.center[0])*coef_y]
+        return [x, y]
 
 
 def get_position2(image):
@@ -296,8 +302,8 @@ def create_sample_detector():
 
     # Filter by Area.
     params.filterByArea = True
-    params.minArea = 50
-    params.maxArea = 65
+    params.minArea = 60
+    params.maxArea = 75
 
     # Filter by Circularity
     params.filterByCircularity = False

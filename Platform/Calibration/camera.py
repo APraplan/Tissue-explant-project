@@ -49,7 +49,7 @@ while(True):
     # reads frames from a camera 
     _, frame = cap.read() 
     _, frame2 = cap2.read()
-    # frame = cam.undistort(frame)
+    frame = cam.undistort(frame)
     
     cv2.imshow('Camera', frame) 
     cv2.imshow('Macro cam', frame2)
@@ -80,7 +80,6 @@ while(True):
         # path = "C:\Users\APrap\Documents\CREATE\Pick-and-Place\Pictures\image" + str(num)
         cv2.imwrite("Pictures\Realsample\image" + str(num) + ".png", frame)
         num += 1
-        pass
     
     if k == 27: 
         break
