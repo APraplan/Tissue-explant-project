@@ -32,6 +32,8 @@ class platform_pick_and_place:
         self.last_state = 'homming'
         self.sub_state = 'go to position'
         self.com_state = 'not send'
+        self.calibration_point = [10, 10, 0]
+        self.offset = [0.0, 0.0, 0.0]
         
         # Picking zone
         self.pick_height = 2.8
@@ -156,9 +158,38 @@ class platform_pick_and_place:
         print(goodbye)
     
     
+    def calibrate(self):
+        
+        while True:
+        
+            frame = self.stream1.read() 
+            self.frame = self.cam.undistort(frame)
+            self.invert = cv.invert(self.frame)
+            self.imshow = self.frame
+            
+            self.macro_frame = self.stream2.read()
+             
+            # Inputs
+            key = cv2.waitKey(10) & 0xFF    
+            
+            self.calibration_process(key)
+            
+            if key == 13: #enter
+                break
+            
+            
+            cv2.imshow('Camera', self.imshow) 
+            cv2.imshow('Macro cam', self.macro_frame)
+                
+        cv2.destroyAllWindows()   
+    
     def run(self):
         
         # out = cv2.VideoWriter('video.mp4', -1, 25.0, (603,427))
+        
+        self.anycubic.move_axis(z=5, printMsg=False)
+        self.anycubic.move_axis(x=self.calibration_point[0], y=self.calibration_point[1])
+        self.anycubic.move_axis(x=self.calibration_point[0], y=self.calibration_point[1], z=self.calibration_point[2], printMsg=False)
            
         while True:
         
@@ -177,7 +208,6 @@ class platform_pick_and_place:
             self.gui(key)
             
             if key == 27: #esc
-                self.reset()
                 break
             
             self.print() 
@@ -304,3 +334,35 @@ class platform_pick_and_place:
             gui_parameter(self, 'down')
                         
         display(self, [20, 500])
+        
+        
+    def calibration_process(self, key):
+        
+        incr = 0.1
+                
+        if key == ord('a'):
+            self.offset[0] += incr
+            self.anycubic.move_axis(x=self.calibration_point[0]+self.offset[0],y=self.calibration_point[1]+self.offset[1], z=self.calibration_point[2]+self.offset[2], printMsg=False)
+            
+        if key == ord('d'):
+            self.offset[0] -= incr
+            self.anycubic.move_axis(x=self.calibration_point[0]+self.offset[0],y=self.calibration_point[1]+self.offset[1], z=self.calibration_point[2]+self.offset[2], printMsg=False)
+            
+        if key == ord('w'):
+            self.offset[1] += incr
+            self.anycubic.move_axis(x=self.calibration_point[0]+self.offset[0],y=self.calibration_point[1]+self.offset[1], z=self.calibration_point[2]+self.offset[2], printMsg=False)
+            
+        if key == ord('s'):
+            self.offset[1] -= incr
+            self.anycubic.move_axis(x=self.calibration_point[0]+self.offset[0],y=self.calibration_point[1]+self.offset[1], z=self.calibration_point[2]+self.offset[2], printMsg=False)
+            
+        if key == ord('e'):
+            self.offset[2] += incr
+            self.anycubic.move_axis(x=self.calibration_point[0]+self.offset[0],y=self.calibration_point[1]+self.offset[1], z=self.calibration_point[2]+self.offset[2], printMsg=False)
+
+        if key == ord('c'):
+            self.offset[2] -= incr
+            self.anycubic.move_axis(x=self.calibration_point[0]+self.offset[0],y=self.calibration_point[1]+self.offset[1], z=self.calibration_point[2]+self.offset[2], printMsg=False)
+            
+        if key == 13: # enter
+            self.anycubic.set_home_pos(self.offset[0], self.offset[1], self.offset[2])
