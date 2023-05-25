@@ -387,10 +387,10 @@ if camera_calibration:
             print('angle ', angle)
                         
         if key == ord('0'):
-            anycubic.move_axis(x=100, y=100, z=75, f = 2000)
+            anycubic.move_axis(x=100, y=100, z=50, f = 2000)
 
         if key == ord('1'): 
-            anycubic.move_axis(x=100, y=100, z=100, f = 2000)
+            anycubic.move_axis(x=100, y=100, z=75, f = 2000)
             
         if key == ord('2'): 
             anycubic.move_axis(x=100, y=100, z=125, f = 2000)
@@ -426,4 +426,5 @@ if camera_calibration:
     pickle.dump(angle, open('Platform/Calibration/angle.pkl', 'wb'))
     pickle.dump(z_offset, open('Platform/Calibration/z_offset.pkl', 'wb'))
     pickle.dump(f, open('Platform/Calibration/f.pkl', 'wb'))
+    print('Calibration done')
    

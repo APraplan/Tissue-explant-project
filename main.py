@@ -11,6 +11,5 @@ platform.run()
 
 platform.disconnect()
 
-# Changer l'angle !!!!!!!!!!!!!!!!!!!
 # Ajouter précise init
 # Ajouter detection deuxième cam

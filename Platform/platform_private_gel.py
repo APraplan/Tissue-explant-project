@@ -350,5 +350,6 @@ def homming(self):
             
         elif self.dyna.pipette_is_in_position(self.pipette_2_pos, ID = 2):
             self.state = 'spreading solution A'
+            self.state = 'detect'
             self.sub_state = 'go to position'
             self.com_state = 'not send'   

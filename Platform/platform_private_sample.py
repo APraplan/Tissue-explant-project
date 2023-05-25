@@ -44,18 +44,18 @@ def check_pickup(self):
     x, y, w, h = [int(i) for i in self.bbox]
     tracker_pos = [int(x+w/2), int(y+h/2)]
     
-    if (tracker_pos[0]-self.pipette_pos_px[0])**2+ (tracker_pos[1]-self.pipette_pos_px[1])**2 < 20**2:
+    if (tracker_pos[0]-self.pipette_pos_px[0])**2+ (tracker_pos[1]-self.pipette_pos_px[1])**2 < 30**2:
         return True
     else:
         return False
     
 def check_pickup_two(self):
     
-    number = len([entry for entry in os.listdir(r"Pictures\macro") if os.path.isfile(os.path.join(r"Pictures\macro", entry))])
+    id = time.time()    
+    cv2.imwrite("Pictures\macro\macro_image_" + str(id)  + ".png", self.macro_frame)
+    print(id)
     
-    cv2.imwrite("Pictures\macro\image" + str(number)  + ".png", self.macro_frame)
-    
-    return False
+    return True
 
 def delay(self, delay):
 
@@ -416,7 +416,7 @@ def gui_parameter(self, direction=None):
         if self.gui_menu == 13:
             return self.solution_B_pumping_speed
         if self.gui_menu == 14:
-            self.solution_B_dropping_speed
+            return self.solution_B_dropping_speed
         if self.gui_menu == 15:
             return self.solution_B_pumping_volume
         if self.gui_menu == 16:
@@ -440,7 +440,7 @@ def display(self, position):
                             fontScale, color, thickness, cv2.LINE_AA)  
     
     pos = position
-    pos[0] = pos[0] + 250 
+    pos[0] = pos[0] + 600 
     text = str(round(gui_parameter(self), 2))
     self.imshow = cv2.putText(self.imshow, text, position, font, 
                             fontScale, color, thickness, cv2.LINE_AA)     
@@ -459,15 +459,15 @@ def print_parameters(self):
     print('Pick height: ', self.pick_height)
     print('Pumping speed: ', self.pipette_pumping_speed)
     print('Pumping volume: ', self.pipette_pumping_volume)
-    print('Solution pumping height', self.solution_pumping_height)
-    print('Solution A pumping speed', self.solution_A_pumping_speed)
-    print('Solution A dropping speed', self.solution_A_dropping_speed)
-    print('Solution A pumping volume', self.solution_A_pumping_volume)
-    print('Solution B pumping speed', self.solution_B_pumping_speed)
-    print('Solution B dropping speed', self.solution_B_dropping_speed)
-    print('Solution B pumping volume', self.solution_B_pumping_volume)
-    print('Number of mix', self.num_mix)
-    print('Number of wash', self.num_wash)
+    print('Solution pumping height: ', self.solution_pumping_height)
+    print('Solution A pumping speed: ', self.solution_A_pumping_speed)
+    print('Solution A dropping speed: ', self.solution_A_dropping_speed)
+    print('Solution A pumping volume: ', self.solution_A_pumping_volume)
+    print('Solution B pumping speed: ', self.solution_B_pumping_speed)
+    print('Solution B dropping speed: ', self.solution_B_dropping_speed)
+    print('Solution B pumping volume: ', self.solution_B_pumping_volume)
+    print('Number of mix: ', self.num_mix)
+    print('Number of wash: ', self.num_wash)
     print('')
 
 goodbye ="""

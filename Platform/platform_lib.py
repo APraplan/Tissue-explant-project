@@ -39,12 +39,12 @@ class platform_pick_and_place:
         self.pipette_pumping_volume = 8
         self.safe_height = 25
         self.pick_offset = 4
-        self.detection_place = [75.0, 125, 50]
+        self.detection_place = [75.0, 125, 75]
         self.reset_pos = [60, 135, 10]
         self.pipette_pos_px = [172, 402]
                 
         # Dropping zone
-        self.drop_height = 2.6
+        self.drop_height = 5.0
         self.pipette_dropping_speed = 150
         self.pipette_dropping_volume = 1.5
         self.tube_num = 0
@@ -101,7 +101,6 @@ class platform_pick_and_place:
         self.track_on = False
         self.bbox = (0,0,0,0)
         self.success = False
-        self.offset_check = 0
         self.dist_check = 4
         
         # Well plate

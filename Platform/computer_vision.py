@@ -295,15 +295,15 @@ def create_sample_detector():
     # Setup SimpleBlobDetector parameters.
     params = cv2.SimpleBlobDetector_Params()
 
-    # Change thresholds
+        # Change thresholds
     params.minThreshold = 10
     params.maxThreshold = 200
 
 
     # Filter by Area.
     params.filterByArea = True
-    params.minArea = 60
-    params.maxArea = 75
+    params.minArea = 50
+    params.maxArea = 70
 
     # Filter by Circularity
     params.filterByCircularity = False
@@ -315,7 +315,7 @@ def create_sample_detector():
 
     # Filter by Inertia
     params.filterByInertia = True
-    params.minInertiaRatio = 0.6
+    params.minInertiaRatio = 0.3
 
     # Create a detector with the parameters
     # OLD: detector = cv2.SimpleBlobDetector(params)
@@ -462,12 +462,18 @@ def detection(self):
             
         
         optimal_angle = (optimal_angle + 3*math.pi) %  (2*math.pi) - math.pi
-            
-        if optimal_angle < -3.*math.pi/8.:
-            if optimal_angle < -3.*math.pi/4.:
+        
+        if optimal_angle < 0:
+            if optimal_angle < -math.pi/2.:
                 optimal_angle = math.pi
             else:
-                optimal_angle = -3.*math.pi/8.
+                optimal_angle = 0
+            
+        # if optimal_angle < -3.*math.pi/8.:
+        #     if optimal_angle < -3.*math.pi/4.:
+        #         optimal_angle = math.pi
+        #     else:
+        #         optimal_angle = -3.*math.pi/8.
 
         out = d_angles(out, keypoints[id_target], [optimal_angle], GREEN)   
         out = d_circle(out, [keypoints[id_target]], 5, GREEN)
