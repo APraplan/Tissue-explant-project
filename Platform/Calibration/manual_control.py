@@ -17,14 +17,18 @@ def commande(key, incr):
         print('Increment set to ', incr, ' mm')
     
     if key == ord("2"):
-        incr = 5
+        incr = 1
         print('Increment set to ', incr, ' mm')
         
     if key == ord("3"):
-        incr = 10
+        incr = 52
         print('Increment set to ', incr, ' mm')
         
     if key == ord("4"):
+        incr = 10
+        print('Increment set to ', incr, ' mm')
+    
+    if key == ord("5"):
         incr = 50
         print('Increment set to ', incr, ' mm')
     

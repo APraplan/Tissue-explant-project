@@ -98,8 +98,7 @@ class Camera:
             
         self.x = int(x+w/2-self.w/2)
         self.y = int(y+h/2-self.h/2)
-        # print('self.x ', self.x, ' self.y ', self.y)
-        
+        # print('self.x ', self.x, ' self.y ', self.y)        
 
     def undistort(self, img):
             
@@ -113,6 +112,9 @@ class Camera:
         
         coef_x = (position[2] + self.z_offset)/self.f[1]
         coef_y = (position[2] + self.z_offset)/self.f[0]
+        
+        # x = position[0]+self.offset[0] + (coord[1]-self.center[1])*coef_x
+        # y = position[1]+self.offset[1] + (coord[0]-self.center[0])*coef_y
         
         x = position[0]+self.offset[0] + np.cos(self.angle)*((coord[1]-self.center[1])*coef_x)-np.sin(self.angle)*((coord[0]-self.center[0])*coef_y)
         y = position[1]+self.offset[1] + np.sin(self.angle)*((coord[1]-self.center[1])*coef_x)+np.cos(self.angle)*((coord[0]-self.center[0])*coef_y)      
@@ -303,7 +305,7 @@ def create_sample_detector():
     # Filter by Area.
     params.filterByArea = True
     params.minArea = 50
-    params.maxArea = 70
+    params.maxArea = 60
 
     # Filter by Circularity
     params.filterByCircularity = False
@@ -431,6 +433,8 @@ def detection(self):
                 
         # If elements too close remove keypoint, else keep the close elements on the table 
         if nb_too_close <= 1:
+            angles.append(math.pi/2)
+            angles.append(-math.pi/2)
             angles.sort()
             close_angles.append(angles)
             smallest_distances.append(smallest_dist)
@@ -447,39 +451,29 @@ def detection(self):
     for i in range(len(keypoints)):
         out = d_angles(out, keypoints[i], close_angles[i], RED)  
                 
-        id_target = smallest_distances.index(max(smallest_distances))
-        angles = close_angles[id_target]
-        angles_diff = []
-        if len(angles) > 0:
-            for i in range(len(angles)-1):
-                angles_diff.append(angles[i+1]-angles[i])
-            angles_diff.append(2*math.pi+angles[0]-angles[-1])
+    id_target = smallest_distances.index(max(smallest_distances))
+    angles = close_angles[id_target]
+    angles_diff = []
 
-            id_angle = angles_diff.index(max(angles_diff))
-            optimal_angle = angles[id_angle]+angles_diff[id_angle]/2.0
+    for i in range(len(angles)-1):
+        angles_diff.append(angles[i+1]-angles[i])
+    angles_diff.append(2*math.pi+angles[0]-angles[-1])
+    
+    while True:
+        id_angle = angles_diff.index(max(angles_diff))
+        optimal_angle = angles[id_angle]+angles_diff[id_angle]/2.0
+        
+        if optimal_angle < math.pi/2 and optimal_angle > -math.pi/2:
+            angles_diff.remove(max(angles_diff))
+            angles.pop(id_angle)
         else:
-            optimal_angle = math.pi/4.0
-            
+            break                
+                
         
-        optimal_angle = (optimal_angle + 3*math.pi) %  (2*math.pi) - math.pi
-        
-        if optimal_angle < 0:
-            if optimal_angle < -math.pi/2.:
-                optimal_angle = math.pi
-            else:
-                optimal_angle = 0
-            
-        # if optimal_angle < -3.*math.pi/8.:
-        #     if optimal_angle < -3.*math.pi/4.:
-        #         optimal_angle = math.pi
-        #     else:
-        #         optimal_angle = -3.*math.pi/8.
-
-        out = d_angles(out, keypoints[id_target], [optimal_angle], GREEN)   
-        out = d_circle(out, [keypoints[id_target]], 5, GREEN)
+    out = d_angles(out, keypoints[id_target], [optimal_angle], GREEN)   
+    out = d_circle(out, [keypoints[id_target]], 5, GREEN)
         
     cv2.imwrite("Pictures\detection\image_detection.png", out)
-        
     return [keypoints[id_target].pt[0], keypoints[id_target].pt[1]], optimal_angle
         
     

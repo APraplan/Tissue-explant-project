@@ -3,6 +3,7 @@ import cv2
 import math
 import time
 import os
+import pickle
 
 class sample:
     
@@ -22,10 +23,17 @@ def destination(self):
     # 
     # return round(self.dropping_pos[0]-self.offset_pos*mod, 2), round(self.dropping_pos[1]-self.offset_pos*(self.nb_sample%self.nb_pos[1]), 2)
     
-    angle = math.pi/180.0*30*(self.nb_sample)
-    radius = 15
+    well_pos = [self.culture_well[self.well_num][0], self.culture_well[self.well_num][1]]
+    
+    radius = 3
+    if self.nb_sample == 0:
+        offset = [0, 0]
+    else: 
+        angle = (self.nb_sample-1)*2*math.pi/(self.nb_sample_well-1)
+        offset = [radius*math.cos(angle), radius*math.sin(angle)]
 
-    return [self.dropping_pos[0]+radius*math.cos(angle), self.dropping_pos[1]+radius*math.sin(angle)]
+    print(offset)
+    return [well_pos[0]+offset[0], well_pos[1]+offset[1]]
 
 def set_tracker(self, target_px):
     
@@ -44,16 +52,18 @@ def check_pickup(self):
     x, y, w, h = [int(i) for i in self.bbox]
     tracker_pos = [int(x+w/2), int(y+h/2)]
     
-    if (tracker_pos[0]-self.pipette_pos_px[0])**2+ (tracker_pos[1]-self.pipette_pos_px[1])**2 < 30**2:
+    if (tracker_pos[0]-self.pipette_pos_px[0])**2+ (tracker_pos[1]-self.pipette_pos_px[1])**2 < 20**2:
         return True
     else:
         return False
     
 def check_pickup_two(self):
     
-    id = time.time()    
-    cv2.imwrite("Pictures\macro\macro_image_" + str(id)  + ".png", self.macro_frame)
-    print(id)
+    self.macro_frame = self.stream2.read()
+    
+    _, _, files = next(os.walk(r"C:\Users\APrap\Documents\CREATE\Pick-and-Place\Pictures\macro"))
+    file_count = len(files)
+    cv2.imwrite("Pictures\macro\macro_image_" + str(file_count) + ".png", self.macro_frame)
     
     return True
 
@@ -174,7 +184,7 @@ def pick(self):
             
         elif self.anycubic.get_finish_flag():
             
-            print(check_pickup(self))
+            # print(check_pickup(self))
             
             if check_pickup(self):
                            
@@ -205,17 +215,17 @@ def picture(self):
             
         elif self.anycubic.get_finish_flag():
             
-            print(check_pickup_two(self))
-            
-            if check_pickup_two(self):
-                self.state = 'place'
-                self.sub_state = 'go to position'
-                self.com_state = 'not send' 
-                
-            else:
-                self.state = 'reset'
-                self.sub_state = 'go to position'
-                self.com_state = 'not send'            
+            # print(check_pickup_two(self))
+            if delay(self, 0.3):
+                if check_pickup_two(self):
+                    self.state = 'place'
+                    self.sub_state = 'go to position'
+                    self.com_state = 'not send' 
+                    
+                else:
+                    self.state = 'reset'
+                    self.sub_state = 'go to position'
+                    self.com_state = 'not send'            
                 
 def place(self):
 
@@ -298,9 +308,21 @@ def reset(self):
             self.com_state = 'send'
             
         elif self.dyna.pipette_is_in_position(self.pipette_1_pos, ID = 1):
-            self.state = 'detect'
-            self.sub_state = 'go to position'
-            self.com_state = 'not send'   
+            if self.nb_sample == self.nb_sample_well:
+                self.well_num += 1
+                self.nb_sample = 0
+                
+                if self.well_num == len(self.culture_well):
+                    self.state = 'Done'
+                else:
+                    
+                    self.state = 'preparing gel'
+                    self.sub_state = 'go to position'
+                    self.com_state = 'not send'   
+            else:
+                self.state = 'detect'
+                self.sub_state = 'go to position'
+                self.com_state = 'not send'   
             
 def gui_parameter(self, direction=None):
     
@@ -319,11 +341,11 @@ def gui_parameter(self, direction=None):
         if self.gui_menu == 5:
             self.pipette_pumping_volume += 0.5
         if self.gui_menu == 6:
-            self.pipette_pumping_speed += 10
+            self.pipette_pumping_speed += 1
         if self.gui_menu == 7:
             self.pipette_dropping_volume += 0.5
         if self.gui_menu == 8:
-            self.pipette_dropping_speed += 10 
+            self.pipette_dropping_speed += 1
             
         if self.gui_menu == 9:
             self.solution_pumping_height += 0.1
@@ -334,9 +356,9 @@ def gui_parameter(self, direction=None):
         if self.gui_menu == 12:
             self.solution_A_pumping_volume += 1
         if self.gui_menu == 13:
-            self.solution_B_pumping_speed += 10
+            self.solution_B_pumping_speed += 1
         if self.gui_menu == 14:
-            self.solution_B_dropping_speed += 10
+            self.solution_B_dropping_speed += 1
         if self.gui_menu == 15:
             self.solution_B_pumping_volume += 1
         if self.gui_menu == 16:
@@ -359,11 +381,11 @@ def gui_parameter(self, direction=None):
         if self.gui_menu == 5:
             self.pipette_pumping_volume -= 0.5
         if self.gui_menu == 6:
-            self.pipette_pumping_speed -= 10
+            self.pipette_pumping_speed -= 1
         if self.gui_menu == 7:
             self.pipette_dropping_volume -= 0.5
         if self.gui_menu == 8:
-            self.pipette_dropping_speed -= 10
+            self.pipette_dropping_speed -= 1
             
         if self.gui_menu == 9:
             self.solution_pumping_height -= 0.1
@@ -374,9 +396,9 @@ def gui_parameter(self, direction=None):
         if self.gui_menu == 12:
             self.solution_A_pumping_volume -= 1
         if self.gui_menu == 13:
-            self.solution_B_pumping_speed -= 10
+            self.solution_B_pumping_speed -= 1
         if self.gui_menu == 14:
-            self.solution_B_dropping_speed -= 10
+            self.solution_B_dropping_speed -= 1
         if self.gui_menu == 15:
             self.solution_B_pumping_volume -= 1
         if self.gui_menu == 16:
@@ -440,35 +462,60 @@ def display(self, position):
                             fontScale, color, thickness, cv2.LINE_AA)  
     
     pos = position
-    pos[0] = pos[0] + 600 
+    pos[0] = pos[0] + 363 
     text = str(round(gui_parameter(self), 2))
     self.imshow = cv2.putText(self.imshow, text, position, font, 
                             fontScale, color, thickness, cv2.LINE_AA)     
 
-def print_parameters(self):
+def save_parameters(self):
     
-    print('')
-    print('Parameters')
-    print('')
-    print('Fast speed: ', self.fast_speed)
-    print('Medium speed: ', self.medium_speed)
-    print('Slow speed: ', self.slow_speed)
-    print('Drop height: ', self.drop_height)
-    print('Dropping speed: ', self.pipette_dropping_speed)
-    print('Dropping volume: ', self.pipette_dropping_volume)
-    print('Pick height: ', self.pick_height)
-    print('Pumping speed: ', self.pipette_pumping_speed)
-    print('Pumping volume: ', self.pipette_pumping_volume)
-    print('Solution pumping height: ', self.solution_pumping_height)
-    print('Solution A pumping speed: ', self.solution_A_pumping_speed)
-    print('Solution A dropping speed: ', self.solution_A_dropping_speed)
-    print('Solution A pumping volume: ', self.solution_A_pumping_volume)
-    print('Solution B pumping speed: ', self.solution_B_pumping_speed)
-    print('Solution B dropping speed: ', self.solution_B_dropping_speed)
-    print('Solution B pumping volume: ', self.solution_B_pumping_volume)
-    print('Number of mix: ', self.num_mix)
-    print('Number of wash: ', self.num_wash)
-    print('')
+    params = []
+    params.append(self.fast_speed)
+    params.append(self.medium_speed)
+    params.append(self.slow_speed)
+    params.append(self.drop_height)
+    params.append(self.pipette_dropping_speed)
+    params.append(self.pipette_dropping_volume)
+    params.append(self.pick_height)
+    params.append(self.pipette_pumping_speed)
+    params.append(self.pipette_pumping_volume)
+    params.append(self.solution_pumping_height)
+    params.append(self.solution_A_pumping_speed)
+    params.append(self.solution_A_dropping_speed)
+    params.append(self.solution_A_pumping_volume)
+    params.append(self.solution_B_pumping_speed)
+    params.append(self.solution_B_dropping_speed)
+    params.append(self.solution_B_pumping_volume)
+    params.append(self.num_mix)
+    params.append(self.num_wash)
+    params.append(self.offset)
+                
+    pickle.dump(params, open('Platform/Calibration/parameters.pkl', 'wb'))
+    
+def load_parameters(self):
+
+    params = pickle.load(open('Platform/Calibration/parameters.pkl', 'rb'))
+    
+    self.fast_speed = params[0]
+    self.medium_speed = params[1]
+    self.slow_speed = params[2]
+    self.drop_height = params[3]
+    self.pipette_dropping_speed = params[4]
+    self.pipette_dropping_volume = params[5]
+    self.pick_height = params[6]
+    self.pipette_pumping_speed = params[7]
+    self.pipette_pumping_volume = params[8]
+    self.solution_pumping_height = params[9]
+    self.solution_A_pumping_speed = params[10]
+    self.solution_A_dropping_speed = params[11]
+    self.solution_A_pumping_volume = params[12]
+    self.solution_B_pumping_speed = params[13]
+    self.solution_B_dropping_speed = params[14]
+    self.solution_B_pumping_volume = params[15]
+    self.num_mix = params[16]
+    self.num_wash = params[17]
+    self.offset = params[18]
+
 
 goodbye ="""
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡤⠴⠒⠤⣄⡀⠀⠀⠀⠀⢠⣾⠉⠉⠉⠉⠑⠒⠦⢄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀

@@ -7,9 +7,11 @@ platform = platform_pick_and_place(com_printer='COM15', com_dynamixel='COM12', c
 
 platform.init()
 
+platform.calibrate()
+
 platform.run()
 
 platform.disconnect()
 
-# Ajouter précise init
 # Ajouter detection deuxième cam
+

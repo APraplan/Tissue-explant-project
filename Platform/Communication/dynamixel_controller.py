@@ -362,7 +362,7 @@ class Dynamixel:
         
         a_pos = self.read_position(ID = ID)
         
-        if abs(d_pos-a_pos) <= 3:
+        if abs(d_pos-a_pos) <= 4:
             return True
         else:
             return False

@@ -14,11 +14,11 @@ calibration_position = (100, 180)
 cam_number = 0
 printer_port = 'COM15'
 
-chessboard_calibration = False
-test_chessboard_calibration = False
+chessboard_calibration = True
+test_chessboard_calibration = True
 bed_leveling_calibration = False
 verticality_calibration = False
-offset_callibration = False
+offset_callibration = True
 camera_calibration = True
 
 
@@ -117,7 +117,32 @@ if chessboard_calibration:
 
     print( "total error: {}".format(mean_error/len(objpoints)) )
     
-cam = mcv.Camera(frame)
+        
+    h,  w = frame.shape[:2]
+    newCameraMatrix, roi = cv2.getOptimalNewCameraMatrix(cameraMatrix, dist, (w,h), 1, (w,h))
+    mapx, mapy = cv2.initUndistortRectifyMap(cameraMatrix, dist, None, newCameraMatrix, (w,h), 5)
+
+    def undistort(img):
+        
+        h,  w = img.shape[:2]
+        format = float(w)/float(h)
+        
+        x, y, w, h = roi     
+            
+        if w/h >= format:
+            _h = h
+            _w = int(h*format)
+        else:
+            _w = w
+            _h = int(w/format)
+            
+        x = int(x+w/2-_w/2)
+        y = int(y+h/2-_h/2)
+            
+        dst = cv2.remap(img, mapx, mapy, cv2.INTER_LINEAR)        
+        dst = dst[y:y+_h, x:x+_w]
+
+        return dst
     
 if test_chessboard_calibration:
         
@@ -125,7 +150,7 @@ if test_chessboard_calibration:
 
         # reads frames from a camera 
         _, frame = cap.read() 
-        imshow = cam.undistort(frame)
+        imshow = undistort(frame)
             
         cv2.imshow('Camera', frame) 
         cv2.imshow('Udistort', imshow) 
@@ -143,7 +168,7 @@ if verticality_calibration or offset_callibration or camera_calibration or bed_l
     anycubic.connect()
     anycubic.homing()
     anycubic.max_z_feedrate(20)
-
+    
 if bed_leveling_calibration:
     
     anycubic.move_axis(x=25, y=195, z=0, f = 8000)
@@ -152,7 +177,7 @@ if bed_leveling_calibration:
 
         # reads frames from a camera 
         _, frame = cap.read() 
-        imshow = cam.undistort(frame)
+        imshow = undistort(frame)
         
         markerSize = 15
         thickness = 1
@@ -191,7 +216,7 @@ if verticality_calibration:
 
         # reads frames from a camera 
         _, frame = cap.read() 
-        imshow = cam.undistort(frame)
+        imshow = undistort(frame)
         
         markerSize = 15
         thickness = 1
@@ -222,7 +247,7 @@ if offset_callibration:
 
         # reads frames from a camera 
         _, frame = cap.read() 
-        imshow = cam.undistort(frame)
+        imshow = undistort(frame)
         
         markerSize = 15
         thickness = 1
@@ -273,7 +298,7 @@ if camera_calibration:
         
         # reads frames from a camera 
         _, frame = cap.read() 
-        imshow = cam.undistort(frame)
+        imshow = undistort(frame)
         
         markerSize = 15
         thickness = 1
@@ -339,7 +364,7 @@ if camera_calibration:
         
         # reads frames from a camera 
         _, frame = cap.read() 
-        imshow = cam.undistort(frame)
+        imshow = undistort(frame)
         
         markerCorners, _, _ = detector.detectMarkers(imshow)
         try:
@@ -427,4 +452,5 @@ if camera_calibration:
     pickle.dump(z_offset, open('Platform/Calibration/z_offset.pkl', 'wb'))
     pickle.dump(f, open('Platform/Calibration/f.pkl', 'wb'))
     print('Calibration done')
+    
    

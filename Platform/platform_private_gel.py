@@ -2,8 +2,8 @@
 
 def well_plate(id):
     
-    position = [197.8, 193.3]
-    well_offset = 13.55
+    position = [195.5, 193.3]
+    well_offset = 13.45
     
     if id[0] == 'A':
         position[0] = position[0]
@@ -93,7 +93,7 @@ def spreading_solution_A(self):
             self.com_state = 'send'
             
         elif self.dyna.pipette_is_in_position(self.pipette_2_pos, ID = 2):
-            self.solution_prep_num += 10                                            # TEMP FOR DEBUG !!!!!!!!!!!!!!!!!!
+            self.solution_prep_num += 1
             
             if self.solution_prep_num < len(self.culture_well):
                 self.sub_state = 'go to sol A'
@@ -351,6 +351,5 @@ def homming(self):
             
         elif self.dyna.pipette_is_in_position(self.pipette_2_pos, ID = 2):
             self.state = 'spreading solution A'
-            self.state = 'detect'
             self.sub_state = 'go to position'
             self.com_state = 'not send'   
