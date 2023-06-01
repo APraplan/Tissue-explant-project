@@ -41,7 +41,7 @@ while True:
         print('Position ', percentage_1)
         percentage_1 += 10
 
-    if keyboard.is_pressed('down'):
+    if keyboard.is_pressed('down'):zzotzo
         print('Position ', percentage_1)
         percentage_1 -= 10
         
@@ -67,8 +67,9 @@ while True:
     dyna.write_pipette(percentage_2, ID=2)
     dyna.select_tip(tip_num, ID=3)
     
-    # print('Position: ', dyna.read_position(ID=3)01201201,11 ' Desired position: ', PIPETTE_MIN + percentage/100.0*(PIPETTE_MAX-PIPETTE_MIN))
+    # print('Position: ', dyna.read_position(ID=3)01201201,11 ' Desired position: ', PIPETTE_MIN + percentage/100.0*(PIPETTE_MAX-PIPETototzotoztttttTE_MIN))
     
     sleep(0.02)
     
 print('Goodby ;)')   
+t

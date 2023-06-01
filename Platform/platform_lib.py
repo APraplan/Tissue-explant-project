@@ -26,7 +26,7 @@ class platform_pick_and_place:
                                         'Dropping speed', 'Solution pumping height', 'Solution A pumping speed',
                                         'Solution A dropping speed', 'Solution A pumping volume', 'Solution B pumping speed',
                                         'Solution B dropping speed', 'Solution B pumping volume', 'Number of mix',
-                                        'Number of wash'])
+                                        'Number of wash', 'Max attempt'])
 
         # FSM
         self.chrono_set = False
@@ -47,13 +47,16 @@ class platform_pick_and_place:
         self.detection_place = [75.0, 125, 70]
         self.reset_pos = [60, 135, 10]
         self.pipette_pos_px = [272, 390]
+        self.pick_attempt = 0
+        self.max_attempt = 4
                 
         # Dropping zone
         # self.drop_height = 7.0
         # self.pipette_dropping_speed = 150
         # self.pipette_dropping_volume = 1.5
         self.tube_num = 0
-        self.dropping_pos = [160, 115]
+        self.petridish_pos = [60, 130]
+        self.petridish_radius = 75
         
         # Anycubic
         self.anycubic = Printer(descriptive_device_name="printer", port_name=com_printer, baudrate=115200)
@@ -94,7 +97,7 @@ class platform_pick_and_place:
         self.min_radius = 15
         self.max_radius = 38
         self.detect_attempt = 0
-        self.max_attempt = 50
+        self.max_detect_attempt = 50
         
         # Camera 2
         self.stream2 = VideoGear(source=cam_macro, logging=True).start() 
@@ -200,7 +203,7 @@ class platform_pick_and_place:
     def run(self):
         
         if self.record:
-            out = cv2.VideoWriter(r'C:\Users\APrap\Documents\CREATE\Pick-and-Place\Pictures\video_1.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 10, (self.frame.shape[1], self.frame.shape[0]))
+            out = cv2.VideoWriter(r'C:\Users\APrap\Documents\CREATE\Pick-and-Place\Pictures\video_3.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 10, (self.frame.shape[1], self.frame.shape[0]))
            
         while True:
         

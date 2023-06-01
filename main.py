@@ -13,5 +13,4 @@ platform.run()
 
 platform.disconnect()
 
-# Ajouter detection deuxième cam
-
+# last check

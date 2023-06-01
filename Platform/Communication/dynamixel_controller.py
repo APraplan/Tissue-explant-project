@@ -367,8 +367,34 @@ class Dynamixel:
         else:
             return False
         
+
+        
     def select_tip(self, tip_number, ID = None):
         selected_IDs = self.fetch_and_check_ID(ID)
         for selected_ID in selected_IDs:
             self.write_position(pos=TIP_POSITION[tip_number], ID = selected_ID)      
         
+        
+    def write_pipette_ul(self, volume_ul, ID = None):
+            
+        if volume_ul > 620:
+            volume_ul = 620
+        elif volume_ul < 0:
+            volume_ul = 0
+            
+        selected_IDs = self.fetch_and_check_ID(ID)
+        for selected_ID in selected_IDs:
+            pos = int(PIPETTE_MIN[selected_ID-1] + volume_ul/620.0*(PIPETTE_MAX[selected_ID-1]-PIPETTE_MIN[selected_ID-1]))
+            self.write_position(pos=pos, ID = selected_ID)
+            
+            
+    def pipette_is_in_position_ul(self, volume_ul, ID = None):
+        
+        d_pos = int(PIPETTE_MIN[ID-1] + volume_ul/620.0*(PIPETTE_MAX[ID-1]-PIPETTE_MIN[ID-1]))
+        
+        a_pos = self.read_position(ID = ID)
+        
+        if abs(d_pos-a_pos) <= 4:
+            return True
+        else:
+            return False

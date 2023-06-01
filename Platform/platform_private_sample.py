@@ -32,7 +32,6 @@ def destination(self):
         angle = (self.nb_sample-1)*2*math.pi/(self.nb_sample_well-1)
         offset = [radius*math.cos(angle), radius*math.sin(angle)]
 
-    print(offset)
     return [well_pos[0]+offset[0], well_pos[1]+offset[1]]
 
 def set_tracker(self, target_px):
@@ -119,7 +118,7 @@ def detect(self):
         else:
             self.detect_attempt += 1
             
-            if self.detect_attempt == self.max_attempt:
+            if self.detect_attempt == self.max_detect_attempt:
                 self.state = 'pause'
                 self.last_state = 'detect'
                 self.detect_attempt = 0
@@ -159,9 +158,17 @@ def pick(self):
             x, y, w, h = self.bbox
             target_px = [int(x+w/2), int(y+h/2)]
             self.target_pos = self.cam.cam_to_platform_space(target_px, (self.target_pos[0]+self.offset_check[0], self.target_pos[1]+self.offset_check[1], self.pick_height + self.pick_offset))
-            self.anycubic.move_axis_relative(x=self.target_pos[0], y=self.target_pos[1], z=self.pick_height, f=self.slow_speed)
-            self.anycubic.finish_request()
-            self.com_state = 'send'
+            
+            if (self.target_pos[0]-self.petridish_pos[0])**2+(self.target_pos[1]-self.petridish_pos[1])**2 > self.petridish_radius**2:
+                self.state = 'reset'
+                self.sub_state = 'go to position'
+                self.com_state = 'not send'         
+                self.pick_attempt = 0    
+            else:              
+                self.anycubic.move_axis_relative(x=self.target_pos[0], y=self.target_pos[1], z=self.pick_height+2, f=self.slow_speed)
+                self.anycubic.move_axis_relative(z=self.pick_height, f=self.slow_speed)
+                self.anycubic.finish_request()
+                self.com_state = 'send'
         
         elif self.anycubic.get_finish_flag():
             self.sub_state = 'suck'
@@ -199,15 +206,18 @@ def pick(self):
                 self.state = 'picture'
                 self.sub_state = 'go to position'
                 self.com_state = 'not send' 
+                self.pick_attempt = 0
                 
-            elif self.pipette_1_pos - self.pipette_pumping_volume >= 0:
+            elif self.pipette_1_pos - self.pipette_pumping_volume >= 0 and self.pick_attempt < self.max_attempt:
                 self.sub_state = 'correction'
                 self.com_state = 'not send'
+                self.pick_attempt += 1
             else:
                 release_tracker(self)
                 self.state = 'reset'
                 self.sub_state = 'go to position'
-                self.com_state = 'not send'             
+                self.com_state = 'not send'         
+                self.pick_attempt = 0    
 
 def picture(self):
     
@@ -285,10 +295,10 @@ def place(self):
             self.com_state = 'send'
         
         elif self.anycubic.get_finish_flag():
-            self.state = 'reset'
+            self.state = 'picture'
             self.sub_state = 'go to position'
             self.com_state = 'not send'        
-
+              
 def reset(self):
     
     if self.sub_state == 'go to position':
@@ -357,9 +367,9 @@ def gui_parameter(self, direction=None):
         if self.gui_menu == 9:
             self.solution_pumping_height += 0.1
         if self.gui_menu == 10:
-            self.solution_A_pumping_speed += 10
+            self.solution_A_pumping_speed += 1
         if self.gui_menu == 11:
-            self.solution_A_dropping_speed += 10
+            self.solution_A_dropping_speed += 1
         if self.gui_menu == 12:
             self.solution_A_pumping_volume += 1
         if self.gui_menu == 13:
@@ -372,6 +382,8 @@ def gui_parameter(self, direction=None):
             self.num_mix  += 1
         if self.gui_menu == 17:
             self.num_wash += 1
+        if self.gui_menu == 18:
+            self.max_attempt += 1
     
     if direction == 'down':
         
@@ -397,9 +409,9 @@ def gui_parameter(self, direction=None):
         if self.gui_menu == 9:
             self.solution_pumping_height -= 0.1
         if self.gui_menu == 10:
-            self.solution_A_pumping_speed -= 10
+            self.solution_A_pumping_speed -= 1
         if self.gui_menu == 11:
-            self.solution_A_dropping_speed -= 10
+            self.solution_A_dropping_speed -= 1
         if self.gui_menu == 12:
             self.solution_A_pumping_volume -= 1
         if self.gui_menu == 13:
@@ -412,6 +424,8 @@ def gui_parameter(self, direction=None):
             self.num_mix  -= 1
         if self.gui_menu == 17:
             self.num_wash -= 1
+        if self.gui_menu == 18:
+            self.max_attempt -= 1
             
     if direction is None:
         
@@ -452,8 +466,8 @@ def gui_parameter(self, direction=None):
             return self.num_mix
         if self.gui_menu == 17:
             return self.num_wash
-        
-        
+        if self.gui_menu == 18:
+            return self.max_attempt       
         
     
 def display(self, position):
@@ -496,6 +510,7 @@ def save_parameters(self):
     params.append(self.num_mix)
     params.append(self.num_wash)
     params.append(self.offset)
+    params.append(self.max_attempt)
                 
     pickle.dump(params, open('Platform/Calibration/parameters.pkl', 'wb'))
     
@@ -522,6 +537,7 @@ def load_parameters(self):
     self.num_mix = params[16]
     self.num_wash = params[17]
     self.offset = params[18]
+    self.max_attempt = params[19]
 
 
 goodbye ="""
