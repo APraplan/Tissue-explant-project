@@ -129,3 +129,8 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+TEP_convNN_92/fingerprint.pb
+TEP_convNN_92/keras_metadata.pb
+TEP_convNN_92/saved_model.pb
+TEP_convNN_92/variables/variables.data-00000-of-00001
+TEP_convNN_92/variables/variables.index
