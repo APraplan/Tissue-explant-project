@@ -29,21 +29,21 @@ while True:
     
     if keyboard.is_pressed('right'):
         print('Position ', percentage_2)
-        # position += 10
-        percentage_2 = 0
+        percentage_2 += 10
+        # percentage_2 = 0
 
     if keyboard.is_pressed('left'):
         print('Position ', percentage_2)
-        # position -= 10
-        percentage_2 = 100
+        percentage_2 -= 10
+        # percentage_2 = 100
         
     if keyboard.is_pressed('up'):
         print('Position ', percentage_1)
-        percentage_1 = 0
+        percentage_1 += 10
 
     if keyboard.is_pressed('down'):
         print('Position ', percentage_1)
-        percentage_1 = 100
+        percentage_1 -= 10
         
     if keyboard.is_pressed("z"):
         print('Tip ', tip_num)

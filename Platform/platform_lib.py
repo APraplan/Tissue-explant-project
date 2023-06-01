@@ -2,6 +2,8 @@ import numpy as np
 import Platform.computer_vision as cv
 from vidgear.gears import VideoGear
 import cv2
+import tensorflow as tf
+from keras.models import load_model
 from Platform.platform_private_sample import *
 from Platform.platform_private_gel import *
 from Platform.Communication.dynamixel_controller import *
@@ -15,6 +17,7 @@ class platform_pick_and_place:
         # Temp
         self.save = 0
         self.counter = 0
+        self.record = True
         
         # GUI
         self.gui_menu = 0
@@ -98,6 +101,9 @@ class platform_pick_and_place:
         self.macro_frame = self.stream2.read()
         self.picture_pos = 0.0
         
+        # NN
+        self.NN = load_model(r'C:\Users\APrap\Documents\CREATE\Pick-and-Place\TEP_convNN_92')
+        
         # Tracker
         self.tracker = cv2.TrackerCSRT.create()       
         self.roi_size = 25
@@ -140,7 +146,7 @@ class platform_pick_and_place:
         self.dyna.begin_communication()
         self.dyna.set_operating_mode("position", ID="all")
         self.dyna.write_profile_velocity(100, ID="all")
-        self.dyna.set_position_gains(P_gain = 2700, I_gain = 70, D_gain = 5000, ID=1)
+        self.dyna.set_position_gains(P_gain = 2700, I_gain = 50, D_gain = 5000, ID=1)
         self.dyna.set_position_gains(P_gain = 2700, I_gain = 90, D_gain = 5000, ID=2)
         self.dyna.set_position_gains(P_gain = 2500, I_gain = 40, D_gain = 5000, ID=3)
         self.tip_number = 1
@@ -193,7 +199,8 @@ class platform_pick_and_place:
     
     def run(self):
         
-        # out = cv2.VideoWriter('video.mp4', -1, 25.0, (603,427))
+        if self.record:
+            out = cv2.VideoWriter(r'C:\Users\APrap\Documents\CREATE\Pick-and-Place\Pictures\video_1.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 10, (self.frame.shape[1], self.frame.shape[0]))
            
         while True:
         
@@ -201,6 +208,9 @@ class platform_pick_and_place:
             self.frame = self.cam.undistort(frame)
             self.invert = cv.invert(self.frame)
             self.imshow = self.frame
+            
+            if self.record:
+                out.write(self.frame)
             
             # self.macro_frame = self.stream2.read()
             
@@ -222,7 +232,8 @@ class platform_pick_and_place:
     
         self.stream1.stop()
         self.stream2.stop()
-        # out.release()
+        if self.record:
+            out.release()
         cv2.destroyAllWindows()
         
     

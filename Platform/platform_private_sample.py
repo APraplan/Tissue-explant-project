@@ -65,7 +65,14 @@ def check_pickup_two(self):
     file_count = len(files)
     cv2.imwrite("Pictures\macro\macro_image_" + str(file_count) + ".png", self.macro_frame)
     
-    return True
+    res = self.NN.predict(cv2.cvtColor(self.macro_frame, cv2.COLOR_BGR2RGB).reshape(1, 480, 640, 3))
+    print(f"🔮 Prediciton results {res[0, 0]}")
+    
+    if res > 0.5:
+        return True
+    else:
+        return False
+    
 
 def delay(self, delay):
 
