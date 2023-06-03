@@ -6,6 +6,7 @@ import tensorflow as tf
 from keras.models import load_model
 from Platform.platform_private_sample import *
 from Platform.platform_private_gel import *
+from Platform.platform_private_gui import *
 from Platform.Communication.dynamixel_controller import *
 from Platform.Communication.printer_communications import *
 
@@ -20,6 +21,8 @@ class platform_pick_and_place:
         self.record = True
         
         # GUI
+        self.background = cv2.imread(r'C:\Users\APrap\Documents\CREATE\Pick-and-Place\Pictures\Utils\Backgroud.png')
+        self.round_edges_mask = cv2.imread(r'C:\Users\APrap\Documents\CREATE\Pick-and-Place\Pictures\Utils\mask_rounded_edges.png')
         self.gui_menu = 0
         self.gui_menu_label = np.array([['Pick height', 'mm'],
                                         ['Drop height', 'mm'],
@@ -36,7 +39,8 @@ class platform_pick_and_place:
                                         ['Solution A pumping volume', 'ul'],
                                         ['Solution B pumping speed', ''],
                                         ['Solution B dropping speed', ''],
-                                        ['Solution B pumping volume', 'ul'], ['Number of mix', ''],
+                                        ['Solution B pumping volume', 'ul'], 
+                                        ['Number of mix', ''],
                                         ['Number of wash', ''],
                                         ['Max attempt', ''],
                                         ['Well prepatation', ''],
@@ -105,7 +109,6 @@ class platform_pick_and_place:
         self.cam = cv.Camera(frame)
         self.frame = self.cam.undistort(frame)
         self.invert = cv.invert(self.frame)
-        self.imshow = self.frame
         self.mask = cv.create_mask(200, self.frame.shape[0:2], (self.frame.shape[1]//2, self.frame.shape[0]//2))
         self.intruder_detector = cv.create_intruder_detector()
         self.sample_detector = cv.create_sample_detector() 
@@ -195,7 +198,7 @@ class platform_pick_and_place:
             frame = self.stream1.read() 
             self.frame = self.cam.undistort(frame)
             self.invert = cv.invert(self.frame)
-            self.imshow = self.frame
+            imshow = self.frame.copy()
             
             # self.macro_frame = self.stream2.read()
              
@@ -208,7 +211,7 @@ class platform_pick_and_place:
                 break
             
             
-            cv2.imshow('Camera', self.imshow) 
+            cv2.imshow('Camera', imshow) 
             # cv2.imshow('Macro cam', self.macro_frame)
             
         self.anycubic.move_axis_relative(z=25, printMsg=False)
@@ -219,14 +222,15 @@ class platform_pick_and_place:
     def run(self):
         
         if self.record:
-            out = cv2.VideoWriter(r'C:\Users\APrap\Documents\CREATE\Pick-and-Place\Pictures\video_3.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 10, (self.frame.shape[1], self.frame.shape[0]))
+            _, _, files = next(os.walk(r"C:\Users\APrap\Documents\CREATE\Pick-and-Place\Pictures\Videos"))
+            id = len(files)
+            out = cv2.VideoWriter(r'C:\Users\APrap\Documents\CREATE\Pick-and-Place\Pictures\Videos\video_' + str(id) + '.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 10, (self.frame.shape[1], self.frame.shape[0]))
            
         while True:
         
             frame = self.stream1.read() 
             self.frame = self.cam.undistort(frame)
             self.invert = cv.invert(self.frame)
-            self.imshow = self.frame
             
             if self.record:
                 out.write(self.frame)
@@ -238,14 +242,12 @@ class platform_pick_and_place:
             # Inputs
             key = cv2.waitKey(10) & 0xFF    
             
-            self.gui(key)
-            
             if key == 27: #esc
                 break
             
-            self.print() 
+            imshow = display(self, key)
             
-            cv2.imshow('Camera', self.imshow) 
+            cv2.imshow('Camera', imshow) 
             # cv2.imshow('Macro cam', self.macro_frame)
                 
     
@@ -309,73 +311,6 @@ class platform_pick_and_place:
         self.state = 'reset'
         self.sub_state = 'go to position'
         self.com_state = 'not send'
-    
-    
-    def print(self):
-        
-        font = cv2.FONT_HERSHEY_SIMPLEX
-        fontScale = 0.8
-        color = (255, 255, 255) #BGR
-        thickness = 2
-        
-        # Print state
-        text = self.state
-        position = (20, 20)
-        # size, _ = cv2.getTextSize(text, font, fontScale, thickness)
-        self.imshow = cv2.putText(self.imshow, text, position, font, 
-                   fontScale, color, thickness, cv2.LINE_AA)    
-        
-        text = self.sub_state
-        position = (20, 50)
-        # size, _ = cv2.getTextSize(text, font, fontScale, thickness)
-        self.imshow = cv2.putText(self.imshow, text, position, font, 
-                   fontScale, color, thickness, cv2.LINE_AA)   
-        
-        text = 'Nb well : ' + str(self.well_num) 
-        position = (20, 110)   
-        self.imshow = cv2.putText(self.imshow, text, position, font, 
-                   fontScale, color, thickness, cv2.LINE_AA)
-        
-        text = 'Nb sample : ' + str(self.nb_sample) 
-        position = (20, 80)   
-        self.imshow = cv2.putText(self.imshow, text, position, font, 
-                   fontScale, color, thickness, cv2.LINE_AA)
-        
-        if self.success:
-            x, y, w, h = [int(i) for i in self.bbox]
-            cv2.circle(self.imshow, (int(x+w/2), int(y+h/2)), int((w+h)/4), (255, 0, 0), 2)
-            # cv2.rectangle(imshow, (x, y), (x + w, y + h), (0, 0, 255), 2)
-
-   
-    def gui(self, key):
-        
-        if key == ord('c'):
-            cv2.imwrite("Pictures\Realsample\image_on_the_go.png", self.frame)
-        
-        if key == ord('p'):
-            self.pause()
-        if key == 13: # enter
-            self.resume()
-        if key == ord('r'):
-            self.reset()
-        
-        if key == ord('a'):
-            self.gui_menu += 1
-            if self.gui_menu == len(self.gui_menu_label):
-                self.gui_menu = 0
-                
-        if key == ord('d'):
-            self.gui_menu -= 1
-            if self.gui_menu < 0:
-                self.gui_menu = len(self.gui_menu_label)-1
-                
-        if key == ord('w'):
-            gui_parameter(self, 'up')
-            
-        if key == ord('s'):
-            gui_parameter(self, 'down')
-                        
-        display(self, [20, 500])
         
         
     def calibration_process(self, key):
