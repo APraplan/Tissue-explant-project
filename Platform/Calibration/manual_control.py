@@ -8,6 +8,10 @@ anycubic = Printer(descriptive_device_name="printer", port_name="COM15", baudrat
 anycubic.connect()
 anycubic.homing()
 
+anycubic.max_x_feedrate(300)
+anycubic.max_y_feedrate(300)
+anycubic.max_z_feedrate(20)
+
 
 def commande(key, incr):
     
@@ -21,7 +25,7 @@ def commande(key, incr):
         print('Increment set to ', incr, ' mm')
         
     if key == ord("3"):
-        incr = 52
+        incr = 5
         print('Increment set to ', incr, ' mm')
         
     if key == ord("4"):
@@ -37,26 +41,26 @@ def commande(key, incr):
         anycubic.read_position(printMsg=True)
         
     if key == ord('a'):
-        anycubic.move_axis_incremental(x=-incr, printMsg=False)
+        anycubic.move_axis_incremental(x=-incr, f = 10000, printMsg=False)
         
     if key == ord('d'):
-        anycubic.move_axis_incremental(x=incr, printMsg=False)
+        anycubic.move_axis_incremental(x=incr, f = 10000, printMsg=False)
         
     if key == ord('w'):
-        anycubic.move_axis_incremental(y=incr, printMsg=False)
+        anycubic.move_axis_incremental(y=incr, f = 10000, printMsg=False)
         
     if key == ord('s'):
-        anycubic.move_axis_incremental(y=-incr, printMsg=False)
+        anycubic.move_axis_incremental(y=-incr, f = 10000, printMsg=False)
         
     if key == ord('e'):
-        anycubic.move_axis_incremental(z=incr, printMsg=False)
+        anycubic.move_axis_incremental(z=incr, f = 10000, printMsg=False)
 
     if key == ord('c'):
-        anycubic.move_axis_incremental(z=-incr, printMsg=False)
+        anycubic.move_axis_incremental(z=-incr, f = 10000, printMsg=False)
         
     
     if key == ord('0'):
-        anycubic.move_axis(x=75.0, y=125, z=50, f = 8000)
+        anycubic.move_axis(x=75.0, y=125, z=50, f = 10000)
         
     
     return incr

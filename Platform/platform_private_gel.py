@@ -62,10 +62,10 @@ def spreading_solution_A(self):
         if self.com_state == 'not send':
             self.dyna.write_profile_velocity(self.solution_A_pumping_speed, ID = 2)
             self.pipette_2_pos -= self.solution_A_pumping_volume
-            self.dyna.write_pipette(self.pipette_2_pos, ID = 2)
+            self.dyna.write_pipette_ul(self.pipette_2_pos, ID = 2)
             self.com_state = 'send'
             
-        elif self.dyna.pipette_is_in_position(self.pipette_2_pos, ID = 2):
+        elif self.dyna.pipette_is_in_position_ul(self.pipette_2_pos, ID = 2):
             self.sub_state = 'fill well'
             self.com_state = 'not send'   
             
@@ -89,13 +89,13 @@ def spreading_solution_A(self):
         if self.com_state == 'not send':
             self.dyna.write_profile_velocity(self.solution_A_dropping_speed, ID = 2)
             self.pipette_2_pos = self.pipette_empty
-            self.dyna.write_pipette(self.pipette_2_pos, ID = 2)
+            self.dyna.write_pipette_ul(self.pipette_2_pos, ID = 2)
             self.com_state = 'send'
             
-        elif self.dyna.pipette_is_in_position(self.pipette_2_pos, ID = 2):
+        elif self.dyna.pipette_is_in_position_ul(self.pipette_2_pos, ID = 2):
             self.solution_prep_num += 1
             
-            if self.solution_prep_num < len(self.culture_well):
+            if self.solution_prep_num < len(self.culture_well) and self.solution_prep_num < self.number_of_well:
                 self.sub_state = 'go to sol A'
                 self.com_state = 'not send'
                 
@@ -140,10 +140,10 @@ def preparing_gel(self):
         if self.com_state == 'not send':
             self.dyna.write_profile_velocity(self.solution_B_pumping_speed, ID = 2)
             self.pipette_2_pos -= self.solution_B_pumping_volume
-            self.dyna.write_pipette(self.pipette_2_pos, ID = 2)
+            self.dyna.write_pipette_ul(self.pipette_2_pos, ID = 2)
             self.com_state = 'send'
             
-        elif self.dyna.pipette_is_in_position(self.pipette_2_pos, ID = 2):
+        elif self.dyna.pipette_is_in_position_ul(self.pipette_2_pos, ID = 2):
             self.sub_state = 'fill well'
             self.com_state = 'not send'   
             
@@ -168,10 +168,10 @@ def preparing_gel(self):
         if self.com_state == 'not send':
             self.dyna.write_profile_velocity(self.solution_B_pumping_speed, ID = 2)
             self.pipette_2_pos = self.pipette_empty
-            self.dyna.write_pipette(self.pipette_2_pos, ID = 2)
+            self.dyna.write_pipette_ul(self.pipette_2_pos, ID = 2)
             self.com_state = 'send'  
             
-        elif self.dyna.pipette_is_in_position(self.pipette_2_pos, ID = 2):
+        elif self.dyna.pipette_is_in_position_ul(self.pipette_2_pos, ID = 2):
             self.sub_state = 'mix up'
             self.com_state = 'not send'
             
@@ -181,10 +181,10 @@ def preparing_gel(self):
         if self.com_state == 'not send':
             self.dyna.write_profile_velocity(self.solution_B_pumping_speed, ID = 2)
             self.pipette_2_pos = self.pipette_empty - self.solution_A_pumping_volume - self.solution_B_pumping_volume
-            self.dyna.write_pipette(self.pipette_2_pos, ID = 2)
+            self.dyna.write_pipette_ul(self.pipette_2_pos, ID = 2)
             self.com_state = 'send'  
             
-        elif self.dyna.pipette_is_in_position(self.pipette_2_pos, ID = 2):
+        elif self.dyna.pipette_is_in_position_ul(self.pipette_2_pos, ID = 2):
             self.mix += 1
             
             if self.mix > self.num_mix:
@@ -214,10 +214,10 @@ def preparing_gel(self):
         if self.com_state == 'not send':
             self.dyna.write_profile_velocity(self.solution_B_pumping_speed, ID = 2)
             self.pipette_2_pos = self.pipette_2_pos + self.solution_A_pumping_volume + self.solution_B_pumping_volume
-            self.dyna.write_pipette(self.pipette_2_pos, ID = 2)
+            self.dyna.write_pipette_ul(self.pipette_2_pos, ID = 2)
             self.com_state = 'send'  
             
-        elif self.dyna.pipette_is_in_position(self.pipette_2_pos, ID = 2):
+        elif self.dyna.pipette_is_in_position_ul(self.pipette_2_pos, ID = 2):
             self.sub_state = 'washing'
             self.com_state = 'not send'
 
@@ -242,10 +242,10 @@ def preparing_gel(self):
         if self.com_state == 'not send':
             self.dyna.write_profile_velocity(self.solution_B_pumping_speed, ID = 2)
             self.pipette_2_pos = self.pipette_empty
-            self.dyna.write_pipette(self.pipette_2_pos, ID = 2)
+            self.dyna.write_pipette_ul(self.pipette_2_pos, ID = 2)
             self.com_state = 'send'  
             
-        elif self.dyna.pipette_is_in_position(self.pipette_2_pos, ID = 2):
+        elif self.dyna.pipette_is_in_position_ul(self.pipette_2_pos, ID = 2):
             
             if self.wash > self.num_wash:
                 self.state = 'detect'
@@ -261,10 +261,10 @@ def preparing_gel(self):
         if self.com_state == 'not send':
             self.dyna.write_profile_velocity(self.solution_B_pumping_speed, ID = 2)
             self.pipette_2_pos = self.pipette_full
-            self.dyna.write_pipette(self.pipette_2_pos, ID = 2)
+            self.dyna.write_pipette_ul(self.pipette_2_pos, ID = 2)
             self.com_state = 'send'  
             
-        elif self.dyna.pipette_is_in_position(self.pipette_2_pos, ID = 2):
+        elif self.dyna.pipette_is_in_position_ul(self.pipette_2_pos, ID = 2):
             self.wash += 1
                 
             self.sub_state = 'wash down'
@@ -305,10 +305,10 @@ def homming(self):
         if self.com_state == 'not send':
             self.dyna.write_profile_velocity(self.pipette_dropping_speed, ID = 1)
             self.pipette_1_pos = self.pipette_empty
-            self.dyna.write_pipette(self.pipette_1_pos, ID = 1)
+            self.dyna.write_pipette_ul(self.pipette_1_pos, ID = 1)
             self.com_state = 'send'
             
-        elif self.dyna.pipette_is_in_position(self.pipette_1_pos, ID = 1):
+        elif self.dyna.pipette_is_in_position_ul(self.pipette_1_pos, ID = 1):
             self.sub_state = 'go to second position'
             self.com_state = 'not send'   
             
@@ -346,11 +346,13 @@ def homming(self):
         if self.com_state == 'not send':
             self.dyna.write_profile_velocity(self.pipette_dropping_speed, ID = 1)
             self.pipette_2_pos = self.pipette_empty
-            self.dyna.write_pipette(self.pipette_2_pos, ID = 2)
+            self.dyna.write_pipette_ul(self.pipette_2_pos, ID = 2)
             self.com_state = 'send'
             
-        elif self.dyna.pipette_is_in_position(self.pipette_2_pos, ID = 2):
-            # self.state = 'spreading solution A'
-            self.state = 'detect'
+        elif self.dyna.pipette_is_in_position_ul(self.pipette_2_pos, ID = 2):
+            if self.well_preparation:
+                self.state = 'spreading solution A'
+            else:
+                self.state = 'detect'
             self.sub_state = 'go to position'
             self.com_state = 'not send'   

@@ -12,5 +12,3 @@ platform.calibrate()
 platform.run()
 
 platform.disconnect()
-
-# last check

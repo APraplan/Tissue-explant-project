@@ -115,7 +115,7 @@ class Printer:
         if f is not None:
             command = command + " F" + str(float(f))
 
-        self.send_gcode(command, wait_until_completion=True, printMsg=printMsg)
+        self.send_gcode(command, wait_until_completion=False, printMsg=printMsg)
 
     def move_axis(self, x = None, y = None, z = None, e = None, f = None, printMsg = False):
         self._finish = False
@@ -130,7 +130,6 @@ class Printer:
         if e is not None:
             command = command + " E" + str(e)
         if f is not None:
-    
             command = command + " F" + str(float(f))
 
         self.send_gcode(command, wait_until_completion=False, printMsg=printMsg)

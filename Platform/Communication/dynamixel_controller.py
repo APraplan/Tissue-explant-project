@@ -377,8 +377,8 @@ class Dynamixel:
         
     def write_pipette_ul(self, volume_ul, ID = None):
             
-        if volume_ul > 620:
-            volume_ul = 620
+        if volume_ul > 625:
+            volume_ul = 625
         elif volume_ul < 0:
             volume_ul = 0
             

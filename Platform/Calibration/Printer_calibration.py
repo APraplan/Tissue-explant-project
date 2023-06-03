@@ -191,19 +191,19 @@ if bed_leveling_calibration:
         if key == ord('0'):
             anycubic.move_axis(z=5, f = 8000)
             anycubic.move_axis(x=25, y=200, f = 8000)
-            anycubic.move_axis(z=0, f = 8000)
+            anycubic.move_axis(z=1, f = 8000)
         if key == ord('1'):
             anycubic.move_axis(z=5, f = 8000)
             anycubic.move_axis(x=175, y=200, f = 8000)
-            anycubic.move_axis(z=0, f = 8000)        
+            anycubic.move_axis(z=1, f = 8000)        
         if key == ord('2'):
             anycubic.move_axis(z=5, f = 8000)
             anycubic.move_axis(x=175, y=75, f = 8000)
-            anycubic.move_axis(z=0, f = 8000)        
+            anycubic.move_axis(z=1, f = 8000)        
         if key == ord('3'):
             anycubic.move_axis(z=5, f = 8000)
             anycubic.move_axis(x=25, y=75, f = 8000)
-            anycubic.move_axis(z=0, f = 8000)        
+            anycubic.move_axis(z=1, f = 8000)        
         if key == 27: 
             cv2.destroyAllWindows()
             break

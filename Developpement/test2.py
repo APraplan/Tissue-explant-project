@@ -21,29 +21,29 @@ PIPETTE_MIN = 280
 PIPETTE_MAX = 2800
 
 tip_num = 0
-percentage_1 = 0
-percentage_2 = 0
-# pos = 0121221212
+percentage = 0
 
 while True:
     
-    if keyboard.is_pressed('right'):
-        print('Position ', percentage_2)
-        percentage_2 += 10
-        # percentage_2 = 0
+    if keyboard.is_pressed('1'):
+        print('Position ', percentage)
+        percentage = 0
 
-    if keyboard.is_pressed('left'):
-        print('Position ', percentage_2)
-        percentage_2 -= 10
-        # percentage_2 = 100
+    if keyboard.is_pressed('2'):
+        print('Position ', percentage)
+        percentage = 5/625*100
         
-    if keyboard.is_pressed('up'):
-        print('Position ', percentage_1)
-        percentage_1 += 10
+    if keyboard.is_pressed('3'):
+        print('Position ', percentage)
+        percentage = 50
 
-    if keyboard.is_pressed('down'):zzotzo
-        print('Position ', percentage_1)
-        percentage_1 -= 10
+    if keyboard.is_pressed('4'):
+        print('Position ', percentage)
+        percentage = 75
+        
+    if keyboard.is_pressed('5'):
+        print('Position ', percentage)
+        percentage = 100
         
     if keyboard.is_pressed("z"):
         print('Tip ', tip_num)
@@ -52,19 +52,20 @@ while True:
     if keyboard.is_pressed("o"):
         tip_num = 1
         print('Tip ', tip_num)
-        # pos += 10
 
     if keyboard.is_pressed("t"):
         tip_num = 2
         print('Tip ', tip_num)
-        # pos -= 10
                 
     if keyboard.is_pressed('esc'):
         break
     
     # dyna.write_position(pos, ID=3)
-    dyna.write_pipette(percentage_1, ID=1)
-    dyna.write_pipette(percentage_2, ID=2)
+    if tip_num == 1:
+        dyna.write_pipette(percentage, ID=1)
+    if tip_num == 2:
+        dyna.write_pipette(percentage, ID=2)
+        
     dyna.select_tip(tip_num, ID=3)
     
     # print('Position: ', dyna.read_position(ID=3)01201201,11 ' Desired position: ', PIPETTE_MIN + percentage/100.0*(PIPETTE_MAX-PIPETototzotoztttttTE_MIN))
@@ -72,4 +73,3 @@ while True:
     sleep(0.02)
     
 print('Goodby ;)')   
-t

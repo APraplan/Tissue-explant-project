@@ -21,12 +21,27 @@ class platform_pick_and_place:
         
         # GUI
         self.gui_menu = 0
-        self.gui_menu_label = np.array(['Pick height', 'Drop height', 'Slow speed', 'Medium speed',
-                                        'Fast speed', 'Pumping Volume', 'Pumping speed', 'Dropping volume',
-                                        'Dropping speed', 'Solution pumping height', 'Solution A pumping speed',
-                                        'Solution A dropping speed', 'Solution A pumping volume', 'Solution B pumping speed',
-                                        'Solution B dropping speed', 'Solution B pumping volume', 'Number of mix',
-                                        'Number of wash', 'Max attempt'])
+        self.gui_menu_label = np.array([['Pick height', 'mm'],
+                                        ['Drop height', 'mm'],
+                                        ['Slow speed', 'mm/s'],
+                                        ['Medium speed', 'mm/s'],
+                                        ['Fast speed', 'mm/s'],
+                                        ['Pumping Volume', 'ul'],
+                                        ['Pumping speed', ''],
+                                        ['Dropping volume', 'ul'],
+                                        ['Dropping speed', ''],
+                                        ['Solution pumping height', 'mm'],
+                                        ['Solution A pumping speed', ''],
+                                        ['Solution A dropping speed', ''],
+                                        ['Solution A pumping volume', 'ul'],
+                                        ['Solution B pumping speed', ''],
+                                        ['Solution B dropping speed', ''],
+                                        ['Solution B pumping volume', 'ul'], ['Number of mix', ''],
+                                        ['Number of wash', ''],
+                                        ['Max attempt', ''],
+                                        ['Well prepatation', ''],
+                                        ['Number of sample per well', ''],
+                                        ['Number of well', '']])
 
         # FSM
         self.chrono_set = False
@@ -44,19 +59,19 @@ class platform_pick_and_place:
         # self.pipette_pumping_volume = 8
         self.safe_height = 25
         self.pick_offset = 4
-        self.detection_place = [75.0, 125, 70]
+        self.detection_place = [75.0, 125, 65]
         self.reset_pos = [60, 135, 10]
         self.pipette_pos_px = [272, 390]
         self.pick_attempt = 0
-        self.max_attempt = 4
+        # self.max_attempt = 4
                 
         # Dropping zone
         # self.drop_height = 7.0
         # self.pipette_dropping_speed = 150
         # self.pipette_dropping_volume = 1.5
         self.tube_num = 0
-        self.petridish_pos = [60, 130]
-        self.petridish_radius = 75
+        self.petridish_pos = [60, 145]
+        self.petridish_radius = 45
         
         # Anycubic
         self.anycubic = Printer(descriptive_device_name="printer", port_name=com_printer, baudrate=115200)
@@ -72,12 +87,12 @@ class platform_pick_and_place:
         self.pipette_1_pos = 0
         self.pipette_2_pos = 0
         self.pipette_full = 0
-        self.pipette_empty = 100
+        self.pipette_empty = 625
         
         # Tissues
         self.target_pos = (0,0)
         self.nb_sample = 0
-        self.nb_sample_well = 6
+        # self.nb_sample_well = 6
         
         # Camera 1 
         options = {
@@ -116,8 +131,10 @@ class platform_pick_and_place:
         self.dist_check = 5
         
         # Well plate
+        # self.well_preparation = False
         self.solution_prep_num = 0
         self.well_num = 0
+        # self.number_of_well = 6
         # self.solution_pumping_height = 4.0
         # self.solution_A_pumping_speed = 50
         # self.solution_A_dropping_speed = 35 
@@ -142,9 +159,9 @@ class platform_pick_and_place:
         self.anycubic.connect()
         self.anycubic.homing()
         # self.anycubic.set_home_pos(x=0, y=0, z=0)
-        self.anycubic.max_x_feedrate(500)
-        self.anycubic.max_y_feedrate(150)
-        self.anycubic.max_z_feedrate(20)
+        self.anycubic.max_x_feedrate(300)
+        self.anycubic.max_y_feedrate(300)
+        self.anycubic.max_z_feedrate(25)
         
         self.dyna.begin_communication()
         self.dyna.set_operating_mode("position", ID="all")
@@ -156,7 +173,6 @@ class platform_pick_and_place:
         self.dyna.select_tip(tip_number=self.tip_number, ID=3)
 
         # self.anycubic.move_home()
-        # self.dyna.write_pipette(self.pipette_empty, ID=1)
         
         
     def disconnect(self):
@@ -268,6 +284,9 @@ class platform_pick_and_place:
             
         elif self.state == 'reset':
             reset(self)  
+            
+        elif self.state == 'second picture':
+            second_picture(self)
         
      
     def pause(self):
