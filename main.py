@@ -13,4 +13,3 @@ platform.run()
 
 platform.disconnect()
 
-# add sampple size choice in gui

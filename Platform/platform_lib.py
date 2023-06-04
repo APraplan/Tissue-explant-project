@@ -1,16 +1,19 @@
 import numpy as np
-import Platform.computer_vision as cv
-# from vidgear.gears import E
 import cv2
 from loguru import logger
-import tensorflow as tf
-from keras.models import load_model
+import Platform.computer_vision as cv
 from Platform.platform_private_sample import *
 from Platform.platform_private_gel import *
 from Platform.platform_private_gui import *
-# from Platform.Communication.dynamixel_controller import *
-# from Platform.Communication.printer_communications import *
-from Platform.Communication.fake_communication import *
+
+debug = True
+
+if debug:
+    from Platform.Communication.fake_communication import *
+else:
+    from vidgear.gears import VideoGear
+    from Platform.Communication.dynamixel_controller import *
+    from Platform.Communication.printer_communications import *
 
 
 class platform_pick_and_place:
@@ -30,33 +33,23 @@ class platform_pick_and_place:
         self.sub_state = 'go to position'
         self.com_state = 'not send'
         self.calibration_point = [35, 75, 0]
-        # self.offset = [0.0, 0.0, 0.0]
         
         # Picking zone
-        # self.pick_height = 3.1
-        # self.pipette_pumping_speed = 100
-        # self.pipette_pumping_volume = 8
         self.safe_height = 25
         self.pick_offset = 4
         self.detection_place = [75.0, 125, 65]
         self.reset_pos = [60, 135, 10]
         self.pipette_pos_px = [272, 390]
+        self.petridish_pos = [60, 145]
+        self.petridish_radius = 45
         self.pick_attempt = 0
         # self.max_attempt = 4
                 
         # Dropping zone
-        # self.drop_height = 7.0
-        # self.pipette_dropping_speed = 150
-        # self.pipette_dropping_volume = 1.5
         self.tube_num = 0
-        self.petridish_pos = [60, 145]
-        self.petridish_radius = 45
         
         # Anycubic
         self.anycubic = Printer(descriptive_device_name="printer", port_name=com_printer, baudrate=115200)
-        # self.fast_speed = 5000
-        # self.medium_speed = 2000
-        # self.slow_speed = 350
         
         # Dynamixel
         self.dyna = Dynamixel(ID=[1,2,3], descriptive_device_name="XL430 test motor", series_name=["xl", "xl", "xl"], baudrate=57600,
@@ -71,7 +64,6 @@ class platform_pick_and_place:
         # Tissues
         self.target_pos = (0,0)
         self.nb_sample = 0
-        # self.nb_sample_well = 6
         
         # Camera 1 
         options = {
@@ -95,10 +87,7 @@ class platform_pick_and_place:
         self.stream2 = VideoGear(source=cam_macro, logging=True).start() 
         self.macro_frame = self.stream2.read()
         self.picture_pos = 0.0
-        
-        # NN
-        self.NN = load_model(r'C:\Users\APrap\Documents\CREATE\Pick-and-Place\TEP_convNN_92')
-        
+                
         # Tracker
         self.tracker = cv2.TrackerCSRT.create()       
         self.roi_size = 25
@@ -108,21 +97,11 @@ class platform_pick_and_place:
         self.dist_check = 5
         
         # Well plate
-        # self.well_preparation = False
         self.solution_prep_num = 0
         self.well_num = 0
-        # self.number_of_well = 6
-        # self.solution_pumping_height = 4.0
-        # self.solution_A_pumping_speed = 50
-        # self.solution_A_dropping_speed = 35 
-        # self.solution_A_pumping_volume = 30
-        # self.solution_B_pumping_speed = 50
-        # self.solution_B_dropping_speed = 35
-        # self.solution_B_pumping_volume = 30
         self.mix = 0
-        # self.num_mix = 3
         self.wash = 0
-        # self.num_wash = 3
+
         self.mixing_well = [well_plate('F3'), well_plate('E3'), well_plate('D3'), well_plate('F4'), well_plate('E4'), well_plate('D4')]
         self.culture_well = [well_plate('F6'), well_plate('E6'), well_plate('D6'), well_plate('F7'), well_plate('E7'), well_plate('D7')]
         self.solution_well = {'Sol A' : well_plate('A3'), 'Sol B' : well_plate('B3'), 'Washing' : well_plate('A4'), 'Dump' : well_plate('B4')}
@@ -177,7 +156,7 @@ class platform_pick_and_place:
             # self.macro_frame = self.stream2.read()
              
             # Inputs
-            key = cv2.waitKey() & 0xFF 
+            key = cv2.waitKey(5) & 0xFF 
             
             self.calibration_process(key)
             

@@ -1,6 +1,8 @@
 import cv2
 import numpy as np
 import pickle
+import tensorflow as tf
+from keras.models import load_model
 
     
 def gui_parameter(self, direction=None):
@@ -291,7 +293,7 @@ def display(self, key):
     
     cam = self.frame.copy()
     cam = cv2.resize(cam, (640, 360))
-    cam[self.round_edges_mask==1] = 0.2*255
+    cam[self.round_edges_mask==255] = 0.2*255
     
     offset = 165, 500
     size = cam.shape
@@ -337,6 +339,8 @@ def save_parameters(self):
     
 def load_parameters(self):
     
+    self.NN = load_model(r'C:\Users\APrap\Documents\CREATE\Pick-and-Place\TEP_convNN_96')
+
     self.background = cv2.imread(r'C:\Users\APrap\Documents\CREATE\Pick-and-Place\Pictures\Utils\Backgroud.png')
     self.round_edges_mask = cv2.imread(r'C:\Users\APrap\Documents\CREATE\Pick-and-Place\Pictures\Utils\mask_rounded_edges.png')
     self.gui_menu = 0
