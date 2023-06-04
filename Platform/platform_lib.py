@@ -2,6 +2,7 @@ import numpy as np
 import Platform.computer_vision as cv
 from vidgear.gears import VideoGear
 import cv2
+from loguru import logger
 import tensorflow as tf
 from keras.models import load_model
 from Platform.platform_private_sample import *
@@ -9,6 +10,7 @@ from Platform.platform_private_gel import *
 from Platform.platform_private_gui import *
 from Platform.Communication.dynamixel_controller import *
 from Platform.Communication.printer_communications import *
+# from Platform.Communication.fake_communication import *
 
 
 class platform_pick_and_place:
@@ -294,6 +296,7 @@ class platform_pick_and_place:
     def pause(self):
     
         if self.state != 'pause':
+            logger.info('🚦 Paused')
             self.last_state = self.state
             self.state = 'pause'
             
@@ -301,16 +304,20 @@ class platform_pick_and_place:
     def resume(self):
         
         if self.state == 'pause':
+            logger.info('🧫 Resumed')
             self.state = self.last_state
                 
 
     def reset(self):
         
-        # if self.state != 'reset':
-        self.nb_sample = 0
-        self.state = 'reset'
-        self.sub_state = 'go to position'
-        self.com_state = 'not send'
+        if not (self.state == 'homming' or self.state == 'spreading solution A' or self.state == 'preparing gel'):
+        
+            logger.info('⚡ Soft reset')
+            self.pick_attempt = 0
+            self.detect_attempt = 0
+            self.state = 'reset'
+            self.sub_state = 'go to position'
+            self.com_state = 'not send'
         
         
     def calibration_process(self, key):
