@@ -3,7 +3,6 @@ import cv2
 import math
 import time
 import os
-import pickle
 from loguru import logger
 
 class sample:
@@ -85,7 +84,6 @@ def delay(self, delay):
     return False        
 
 def detect(self):
-    
 
     if self.sub_state == 'go to position':
         
@@ -98,6 +96,7 @@ def detect(self):
         elif self.anycubic.get_finish_flag():
             self.tip_number = 1
             self.dyna.select_tip(tip_number=self.tip_number, ID=3)
+            self.sample_detector = cv.create_sample_detector(self.min_size, self.max_size) 
             self.sub_state = 'analyse picture'
             self.com_state = 'not send'
             
@@ -372,60 +371,3 @@ def reset(self):
                 self.sub_state = 'go to position'
                 self.com_state = 'not send'   
             
-
-def save_parameters(self):
-    
-    params = []
-    params.append(self.fast_speed)
-    params.append(self.medium_speed)
-    params.append(self.slow_speed)
-    params.append(self.drop_height)
-    params.append(self.pipette_dropping_speed)
-    params.append(self.pipette_dropping_volume)
-    params.append(self.pick_height)
-    params.append(self.pipette_pumping_speed)
-    params.append(self.pipette_pumping_volume)
-    params.append(self.solution_pumping_height)
-    params.append(self.solution_A_pumping_speed)
-    params.append(self.solution_A_dropping_speed)
-    params.append(self.solution_A_pumping_volume)
-    params.append(self.solution_B_pumping_speed)
-    params.append(self.solution_B_dropping_speed)
-    params.append(self.solution_B_pumping_volume)
-    params.append(self.num_mix)
-    params.append(self.num_wash)
-    params.append(self.offset)
-    params.append(self.max_attempt)
-    params.append(self.well_preparation)
-    params.append(self.nb_sample_well)
-    params.append(self.number_of_well)
-                
-    pickle.dump(params, open('Platform/Calibration/parameters.pkl', 'wb'))
-    
-def load_parameters(self):
-
-    params = pickle.load(open('Platform/Calibration/parameters.pkl', 'rb'))
-    
-    self.fast_speed = params[0]
-    self.medium_speed = params[1]
-    self.slow_speed = params[2]
-    self.drop_height = params[3]
-    self.pipette_dropping_speed = params[4]
-    self.pipette_dropping_volume = params[5]
-    self.pick_height = params[6]
-    self.pipette_pumping_speed = params[7]
-    self.pipette_pumping_volume = params[8]
-    self.solution_pumping_height = params[9]
-    self.solution_A_pumping_speed = params[10]
-    self.solution_A_dropping_speed = params[11]
-    self.solution_A_pumping_volume = params[12]
-    self.solution_B_pumping_speed = params[13]
-    self.solution_B_dropping_speed = params[14]
-    self.solution_B_pumping_volume = params[15]
-    self.num_mix = params[16]
-    self.num_wash = params[17]
-    self.offset = params[18]
-    self.max_attempt = params[19]
-    self.well_preparation = params[20]
-    self.nb_sample_well = params[21]
-    self.number_of_well = params[22]

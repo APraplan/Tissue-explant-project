@@ -197,20 +197,19 @@ class Printer:
         
         if x is not None:
             command = command + " X" + str(x + self.home_pos.x)
+            self.position.x = self.home_pos.x + x
         if y is not None:
             command = command + " Y" + str(y + self.home_pos.y)
+            self.position.y = self.home_pos.y + y  
         if z is not None:
             command = command + " Z" + str(z + self.home_pos.z)
+            self.position.z = self.home_pos.z + z   
         if e is not None:
             command = command + " E" + str(e)
         if f is not None:
             command = command + " F" + str(float(f))
 
-        self.send_gcode(command, wait_until_completion=False, printMsg=printMsg)
-        
-        self.position.x = self.home_pos.x + x
-        self.position.y = self.home_pos.y + y
-        self.position.z = self.home_pos.z + z  
+        self.send_gcode(command, wait_until_completion=False, printMsg=printMsg) 
 
     def move_axis(self, x = None, y = None, z = None, e = None, f = None, printMsg = False):
         self._finish = False
@@ -218,20 +217,19 @@ class Printer:
         
         if x is not None:
             command = command + " X" + str(x)
+            self.position.x = x
         if y is not None:
             command = command + " Y" + str(y)
+            self.position.y = y
         if z is not None:
             command = command + " Z" + str(z)
+            self.position.z = z
         if e is not None:
             command = command + " E" + str(e)
         if f is not None:
             command = command + " F" + str(float(f))
 
         self.send_gcode(command, wait_until_completion=False, printMsg=printMsg)
-    
-        self.position.x = x
-        self.position.y = y
-        self.position.z = z
 
     def move_axis_incremental(self, x = None, y = None, z = None, e = None, f = None, printMsg = False):
         self._finish = False
@@ -240,20 +238,19 @@ class Printer:
         
         if x is not None:
             command = command + " X" + str(x + position[0])
+            self.position.x = position.x + x
         if y is not None:
             command = command + " Y" + str(y + position[1])
+            self.position.y = position.y + y
         if z is not None:
             command = command + " Z" + str(z + position[2])
+            self.position.z = position.z + z
         if e is not None:
             command = command + " E" + str(e)
         if f is not None:
             command = command + " F" + str(float(f))
 
         self.send_gcode(command, wait_until_completion=True, printMsg=printMsg)
-        
-        self.position.x = position.x + x
-        self.position.y = position.y + y
-        self.position.z = position.z + z
 
     def read_position(self, printMsg=False):
         return self.position                
@@ -286,9 +283,26 @@ class position:
         self.e = e
         self.f = f
 
-anycubic = Printer(descriptive_device_name="Xplant", port_name='COM12', baudrate=115200)
-anycubic.connect()
+import cv2
 
-anycubic.move_axis_relative(x=100, y=100, z=0, e=0, f=1000, printMsg=True)
-anycubic.finish_request()
-anycubic.read_position_relative(printMsg=True)
+class VideoGear:
+    def __init__(self, source, logging, **options):
+        self.source = source
+        self.options = {}
+        for op in options:
+            self.options[op] = options[op]
+            
+    
+    def start(self):
+        logger.debug(f"Starting video stream {self.source}")
+        return self
+        
+    def read(self):
+        if self.source == 0:
+            return cv2.imread(r'C:\Users\APrap\Documents\CREATE\Pick-and-Place\Pictures\calibration\image14.png')
+        else:
+            return cv2.imread(r'C:\Users\APrap\Documents\CREATE\Pick-and-Place\Pictures\macro\macro_image_0.png')
+    
+    def stop(self):
+        logger.debug(f"Stopping video stream {self.source}")
+        

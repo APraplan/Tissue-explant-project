@@ -1,6 +1,6 @@
 import numpy as np
 import Platform.computer_vision as cv
-from vidgear.gears import VideoGear
+# from vidgear.gears import E
 import cv2
 from loguru import logger
 import tensorflow as tf
@@ -8,9 +8,9 @@ from keras.models import load_model
 from Platform.platform_private_sample import *
 from Platform.platform_private_gel import *
 from Platform.platform_private_gui import *
-from Platform.Communication.dynamixel_controller import *
-from Platform.Communication.printer_communications import *
-# from Platform.Communication.fake_communication import *
+# from Platform.Communication.dynamixel_controller import *
+# from Platform.Communication.printer_communications import *
+from Platform.Communication.fake_communication import *
 
 
 class platform_pick_and_place:
@@ -21,33 +21,6 @@ class platform_pick_and_place:
         self.save = 0
         self.counter = 0
         self.record = True
-        
-        # GUI
-        self.background = cv2.imread(r'C:\Users\APrap\Documents\CREATE\Pick-and-Place\Pictures\Utils\Backgroud.png')
-        self.round_edges_mask = cv2.imread(r'C:\Users\APrap\Documents\CREATE\Pick-and-Place\Pictures\Utils\mask_rounded_edges.png')
-        self.gui_menu = 0
-        self.gui_menu_label = np.array([['Pick height', 'mm'],
-                                        ['Drop height', 'mm'],
-                                        ['Slow speed', 'mm/s'],
-                                        ['Medium speed', 'mm/s'],
-                                        ['Fast speed', 'mm/s'],
-                                        ['Pumping Volume', 'ul'],
-                                        ['Pumping speed', ''],
-                                        ['Dropping volume', 'ul'],
-                                        ['Dropping speed', ''],
-                                        ['Solution pumping height', 'mm'],
-                                        ['Solution A pumping speed', ''],
-                                        ['Solution A dropping speed', ''],
-                                        ['Solution A pumping volume', 'ul'],
-                                        ['Solution B pumping speed', ''],
-                                        ['Solution B dropping speed', ''],
-                                        ['Solution B pumping volume', 'ul'], 
-                                        ['Number of mix', ''],
-                                        ['Number of wash', ''],
-                                        ['Max attempt', ''],
-                                        ['Well prepatation', ''],
-                                        ['Number of sample per well', ''],
-                                        ['Number of well', '']])
 
         # FSM
         self.chrono_set = False
@@ -113,7 +86,6 @@ class platform_pick_and_place:
         self.invert = cv.invert(self.frame)
         self.mask = cv.create_mask(200, self.frame.shape[0:2], (self.frame.shape[1]//2, self.frame.shape[0]//2))
         self.intruder_detector = cv.create_intruder_detector()
-        self.sample_detector = cv.create_sample_detector() 
         self.min_radius = 15
         self.max_radius = 38
         self.detect_attempt = 0
@@ -205,13 +177,12 @@ class platform_pick_and_place:
             # self.macro_frame = self.stream2.read()
              
             # Inputs
-            key = cv2.waitKey(10) & 0xFF    
+            key = cv2.waitKey() & 0xFF 
             
             self.calibration_process(key)
             
             if key == 13: #enter
                 break
-            
             
             cv2.imshow('Camera', imshow) 
             # cv2.imshow('Macro cam', self.macro_frame)
@@ -242,7 +213,7 @@ class platform_pick_and_place:
             self.update() 
              
             # Inputs
-            key = cv2.waitKey(10) & 0xFF    
+            key = cv2.waitKey(5) & 0xFF 
             
             if key == 27: #esc
                 break

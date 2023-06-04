@@ -152,7 +152,7 @@ def get_position2(image):
     # cv2.imshow('Dilated', labels)
     cv2.waitKey(0) 
 
-image = cv2.imread('Pictures/image6.png')
+# image = cv2.imread('Pictures/image6.png')
 
 
 def invert(image):
@@ -292,7 +292,7 @@ def create_detector():
     
     return detector 
 
-def create_sample_detector():
+def create_sample_detector(min_size, max_size):
     
     # Setup SimpleBlobDetector parameters.
     params = cv2.SimpleBlobDetector_Params()
@@ -304,8 +304,8 @@ def create_sample_detector():
 
     # Filter by Area.
     params.filterByArea = True
-    params.minArea = 50
-    params.maxArea = 60
+    params.minArea = min_size
+    params.maxArea = max_size
 
     # Filter by Circularity
     params.filterByCircularity = False

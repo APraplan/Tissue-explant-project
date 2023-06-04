@@ -113,7 +113,7 @@ class Printer:
         if e is not None:
             command = command + " E" + str(e)
         if f is not None:
-            command = command + " F" + str(float(f))
+            command = command + " F" + str(float(100*f))
 
         self.send_gcode(command, wait_until_completion=False, printMsg=printMsg)
 
@@ -130,7 +130,7 @@ class Printer:
         if e is not None:
             command = command + " E" + str(e)
         if f is not None:
-            command = command + " F" + str(float(f))
+            command = command + " F" + str(float(100*f))
 
         self.send_gcode(command, wait_until_completion=False, printMsg=printMsg)
 
@@ -148,7 +148,7 @@ class Printer:
         if e is not None:
             command = command + " E" + str(e)
         if f is not None:
-            command = command + " F" + str(float(f))
+            command = command + " F" + str(float(100*f))
 
         self.send_gcode(command, wait_until_completion=True, printMsg=printMsg)
 

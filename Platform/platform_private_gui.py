@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import pickle
 
     
 def gui_parameter(self, direction=None):
@@ -11,11 +12,11 @@ def gui_parameter(self, direction=None):
         if self.gui_menu == 1:
             self.drop_height += 0.1
         if self.gui_menu == 2:
-            self.slow_speed += 50
+            self.slow_speed += 1
         if self.gui_menu == 3:
-            self.medium_speed += 50
+            self.medium_speed += 1
         if self.gui_menu == 4:
-            self.fast_speed += 50     
+            self.fast_speed += 1    
         if self.gui_menu == 5:
             self.pipette_pumping_volume += 1
         if self.gui_menu == 6:
@@ -26,31 +27,39 @@ def gui_parameter(self, direction=None):
             self.pipette_dropping_speed += 1
             
         if self.gui_menu == 9:
-            self.solution_pumping_height += 0.1
-        if self.gui_menu == 10:
             self.solution_A_pumping_speed += 1
-        if self.gui_menu == 11:
+        if self.gui_menu == 10:
             self.solution_A_dropping_speed += 1
-        if self.gui_menu == 12:
+        if self.gui_menu == 11:
             self.solution_A_pumping_volume += 1
-        if self.gui_menu == 13:
+        if self.gui_menu == 12:
             self.solution_B_pumping_speed += 1
-        if self.gui_menu == 14:
+        if self.gui_menu == 13:
             self.solution_B_dropping_speed += 1
-        if self.gui_menu == 15:
+        if self.gui_menu == 14:
             self.solution_B_pumping_volume += 1
+        if self.gui_menu == 15:
+            self.solution_pumping_height += 0.1
         if self.gui_menu == 16:
-            self.num_mix  += 1
+            if self.num_mix < 10:
+                self.num_mix  += 1
         if self.gui_menu == 17:
-            self.num_wash += 1
+            if self.num_wash < 10:
+                self.num_wash += 1
         if self.gui_menu == 18:
             self.max_attempt += 1
         if self.gui_menu == 19:
-            self.well_preparation = True
+            if self.min_size < self.max_size:
+                self.min_size += 1
         if self.gui_menu == 20:
+            if self.max_size < 200:
+                self.max_size += 1
+        if self.gui_menu == 21:
+            self.well_preparation = True
+        if self.gui_menu == 22:
             if self.nb_sample_well < 8:
                 self.nb_sample_well += 1
-        if self.gui_menu == 21:
+        if self.gui_menu == 23:
             if self.number_of_well < 6:
                 self.number_of_well += 1
     
@@ -61,11 +70,11 @@ def gui_parameter(self, direction=None):
         if self.gui_menu == 1:
             self.drop_height -= 0.1
         if self.gui_menu == 2:
-            self.slow_speed -= 50
+            self.slow_speed -= 1
         if self.gui_menu == 3:
-            self.medium_speed -= 50
+            self.medium_speed -= 1
         if self.gui_menu == 4:
-            self.fast_speed -= 50     
+            self.fast_speed -= 1    
         if self.gui_menu == 5:
             self.pipette_pumping_volume -= 1
         if self.gui_menu == 6:
@@ -76,31 +85,39 @@ def gui_parameter(self, direction=None):
             self.pipette_dropping_speed -= 1
             
         if self.gui_menu == 9:
-            self.solution_pumping_height -= 0.1
-        if self.gui_menu == 10:
             self.solution_A_pumping_speed -= 1
-        if self.gui_menu == 11:
+        if self.gui_menu == 10:
             self.solution_A_dropping_speed -= 1
-        if self.gui_menu == 12:
+        if self.gui_menu == 11:
             self.solution_A_pumping_volume -= 1
-        if self.gui_menu == 13:
+        if self.gui_menu == 12:
             self.solution_B_pumping_speed -= 1
-        if self.gui_menu == 14:
+        if self.gui_menu == 13:
             self.solution_B_dropping_speed -= 1
-        if self.gui_menu == 15:
+        if self.gui_menu == 14:
             self.solution_B_pumping_volume -= 1
+        if self.gui_menu == 15:
+            self.solution_pumping_height -= 0.1 
         if self.gui_menu == 16:
-            self.num_mix  -= 1
+            if self.num_mix > 0:
+                self.num_mix  -= 1
         if self.gui_menu == 17:
-            self.num_wash -= 1
+            if self.num_wash > 0:
+                self.num_wash -= 1
         if self.gui_menu == 18:
             self.max_attempt -= 1
         if self.gui_menu == 19:
-            self.well_preparation = False
+            if self.min_size > 0:
+                self.min_size -= 1
         if self.gui_menu == 20:
+            if self.max_size > self.min_size:
+                self.max_size -= 1
+        if self.gui_menu == 21:
+            self.well_preparation = False
+        if self.gui_menu == 22:
             if self.nb_sample_well > 1:
                 self.nb_sample_well -= 1
-        if self.gui_menu == 21:
+        if self.gui_menu == 23:
             if self.number_of_well > 1:
                 self.number_of_well -= 1
             
@@ -126,84 +143,38 @@ def gui_parameter(self, direction=None):
             return self.pipette_dropping_speed
         
         if self.gui_menu == 9:
-            return self.solution_pumping_height
-        if self.gui_menu == 10:
             return self.solution_A_pumping_speed
-        if self.gui_menu == 11:
+        if self.gui_menu == 10:
             return self.solution_A_dropping_speed
-        if self.gui_menu == 12:
+        if self.gui_menu == 11:
             return self.solution_A_pumping_volume
-        if self.gui_menu == 13:
+        if self.gui_menu == 12:
             return self.solution_B_pumping_speed
-        if self.gui_menu == 14:
+        if self.gui_menu == 13:
             return self.solution_B_dropping_speed
-        if self.gui_menu == 15:
+        if self.gui_menu == 14:
             return self.solution_B_pumping_volume
+        if self.gui_menu == 15:
+            return self.solution_pumping_height
         if self.gui_menu == 16:
             return self.num_mix
         if self.gui_menu == 17:
             return self.num_wash
         if self.gui_menu == 18:
-            return self.max_attempt       
+            return self.max_attempt  
         if self.gui_menu == 19:
+            return self.min_size
+        if self.gui_menu == 20:
+            return self.max_size     
+        if self.gui_menu == 21:
             if self.well_preparation:
                 return 'yes'
             else:
                 return 'no'
-        if self.gui_menu == 20:
+        if self.gui_menu == 22:
             return self.nb_sample_well
-        if self.gui_menu == 21:
+        if self.gui_menu == 23:
             return self.number_of_well
-
-
-def display_state_from_dev(imshow, position):
-    
-    state = 'Idle'
-    sub_state = 'Idle'
-    well_num = 0
-    nb_sample = 0
-    nb_sample_remaning = 345
-    success = True
-    bbox = (0, 0, 2, 2)
-    
-    font = cv2.FONT_HERSHEY_SIMPLEX
-    fontScale = 0.8
-    color = (0.9*250, 0.9*250, 0.9*250) #BGR
-    thickness = 1
-    
-    # Print state
-    text = state
-    pos = list(position)
-    # size, _ = cv2.getTextSize(text, font, fontScale, thickness)
-    imshow = cv2.putText(imshow, text, pos, font, 
-                fontScale, color, thickness, cv2.LINE_AA)    
-    
-    text = sub_state
-    pos[1] += 40
-    # size, _ = cv2.getTextSize(text, font, fontScale, thickness)
-    imshow = cv2.putText(imshow, text, pos, font, 
-                fontScale, color, thickness, cv2.LINE_AA)   
-    
-    text = 'Number of well ' + str(well_num) 
-    pos[1] += 40
-    imshow = cv2.putText(imshow, text, pos, font, 
-                fontScale, color, thickness, cv2.LINE_AA)
-    
-    text = 'Number of sample ' + str(nb_sample) 
-    pos[1] += 40
-    imshow = cv2.putText(imshow, text, pos, font, 
-                fontScale, color, thickness, cv2.LINE_AA)
-    
-    # text = 'Remaning samples ' + str(nb_sample_remaning) 
-    # pos[1] += 40
-    # imshow = cv2.putText(imshow, text, pos, font, 
-    #             fontScale, color, thickness, cv2.LINE_AA)
-    
-    if success:
-        x, y, w, h = [int(i) for i in bbox]
-        offset = 500, 165
-        cv2.circle(imshow, (int(x+w/2+offset[0]), int(y+h/2+offset[1])), int((w+h)/4), (255, 0, 0), 2)
-        # cv2.rectangle(imshow, (x, y), (x + w, y + h), (0, 0, 255), 2)
 
 
 def display_state(self, imshow, position):
@@ -255,13 +226,19 @@ def display_gui_txt(self, imshow, position):
     
     pos = list(position)
     
-    name, unit = self.gui_menu_label[(self.gui_menu)%len(self.gui_menu_label), 0], self.gui_menu_label[(self.gui_menu)%len(self.gui_menu_label), 1]
+    cat, name, unit = self.gui_menu_label[(self.gui_menu)%len(self.gui_menu_label), 0], self.gui_menu_label[(self.gui_menu)%len(self.gui_menu_label), 1], self.gui_menu_label[(self.gui_menu)%len(self.gui_menu_label), 2]
+    
+    imshow = cv2.putText(imshow, cat, pos, font, 
+                            fontScale, color, thickness, cv2.LINE_AA) 
+    
+    pos[1] += 40
     imshow = cv2.putText(imshow, name, pos, font, 
                             fontScale, color, thickness, cv2.LINE_AA)  
     
-    pos[0] += 355 
+    size, _ = cv2.getTextSize(name, font, fontScale, thickness)
+    pos[0] += size[0] + 7
     
-    if self.gui_menu == 19:
+    if self.gui_menu == 21:
         val = gui_parameter(self)
     else:
         val = str(round(gui_parameter(self), 2))
@@ -288,16 +265,16 @@ def display_gui(self, imshow, key, position):
         self.resume()
     if key == ord('r'):
         self.reset()
-    
+        
     if key == ord('a'):
-        self.gui_menu += 1
-        if self.gui_menu == len(self.gui_menu_label):
-            self.gui_menu = 0
-            
-    if key == ord('d'):
         self.gui_menu -= 1
         if self.gui_menu < 0:
             self.gui_menu = len(self.gui_menu_label)-1
+    
+    if key == ord('d'):
+        self.gui_menu += 1
+        if self.gui_menu == len(self.gui_menu_label):
+            self.gui_menu = 0
             
     if key == ord('w'):
         gui_parameter(self, 'up')
@@ -320,10 +297,88 @@ def display(self, key):
     size = cam.shape
     imshow[offset[0]:offset[0]+size[0], offset[1]:offset[1]+size[1], :] = cam
     
-    imshow = display_gui(self, imshow, key, (25, 400))
+    imshow = display_gui(self, imshow, key, (25, 360))
     imshow = display_state(self, imshow, (25, 200))
     
     return imshow
+     
+     
+def save_parameters(self):
+    
+    params = []
+    params.append(self.fast_speed)
+    params.append(self.medium_speed)
+    params.append(self.slow_speed)
+    params.append(self.drop_height)
+    params.append(self.pipette_dropping_speed)
+    params.append(self.pipette_dropping_volume)
+    params.append(self.pick_height)
+    params.append(self.pipette_pumping_speed)
+    params.append(self.pipette_pumping_volume)
+    params.append(self.solution_A_pumping_speed)
+    params.append(self.solution_A_dropping_speed)
+    params.append(self.solution_A_pumping_volume)
+    params.append(self.solution_B_pumping_speed)
+    params.append(self.solution_B_dropping_speed)
+    params.append(self.solution_B_pumping_volume)
+    params.append(self.solution_pumping_height)
+    params.append(self.num_mix)
+    params.append(self.num_wash)
+    params.append(self.offset)
+    params.append(self.max_attempt)
+    params.append(self.min_size)
+    params.append(self.max_size)
+    params.append(self.well_preparation)
+    params.append(self.nb_sample_well)
+    params.append(self.number_of_well)
+                
+    pickle.dump(params, open('Platform/Calibration/parameters.pkl', 'wb'))
+    
+    
+def load_parameters(self):
+    
+    self.background = cv2.imread(r'C:\Users\APrap\Documents\CREATE\Pick-and-Place\Pictures\Utils\Backgroud.png')
+    self.round_edges_mask = cv2.imread(r'C:\Users\APrap\Documents\CREATE\Pick-and-Place\Pictures\Utils\mask_rounded_edges.png')
+    self.gui_menu = 0
+    
+    self.gui_menu_label = np.array([['Position', 'Pick height', 'mm'], ['Position', 'Drop height', 'mm'],
+                                    ['Speed', 'Slow speed', 'mm/s'], ['Speed', 'Medium speed', 'mm/s'], ['Speed', 'Fast speed', 'mm/s'],
+                                    ['Tissues', 'Pumping Volume', 'ul'], ['Tissues', 'Pumping speed', ''], ['Tissues', 'Dropping volume', 'ul'], ['Tissues', 'Dropping speed', ''],
+                                    ['Solution A', 'Pumping speed', ''], ['Solution A', 'Dropping speed', ''], ['Solution A', 'Pumping volume', 'ul'],
+                                    ['Solution B', 'Pumping speed', ''], ['Solution B', 'Dropping speed', ''], ['Solution B', 'Pumping volume', 'ul'], 
+                                    ['Gel', 'Solution pumping height', 'mm'], ['Gel', 'Number of mix', ''], ['Gel', 'Number of wash', ''],
+                                    ['Detection', 'Max attempt', ''],['Detection', 'Size min', ''], ['Detection', 'Size max', ''],
+                                    ['Well', 'Well prepatation', ''],
+                                    ['Well', 'Number of sample per well', ''],
+                                    ['Well', 'Number of well', '']])
+
+    params = pickle.load(open('Platform/Calibration/parameters.pkl', 'rb'))
+    
+    self.fast_speed = params[0]
+    self.medium_speed = params[1]
+    self.slow_speed = params[2]
+    self.drop_height = params[3]
+    self.pipette_dropping_speed = params[4]
+    self.pipette_dropping_volume = params[5]
+    self.pick_height = params[6]
+    self.pipette_pumping_speed = params[7]
+    self.pipette_pumping_volume = params[8]
+    self.solution_A_pumping_speed = params[9]
+    self.solution_A_dropping_speed = params[10]
+    self.solution_A_pumping_volume = params[11]
+    self.solution_B_pumping_speed = params[12]
+    self.solution_B_dropping_speed = params[13]
+    self.solution_B_pumping_volume = params[14]
+    self.solution_pumping_height = params[15]
+    self.num_mix = params[16]
+    self.num_wash = params[17]
+    self.offset = params[18]
+    self.max_attempt = params[19]
+    self.min_size = params[20]
+    self.max_size = params[21]
+    self.well_preparation = params[22]
+    self.nb_sample_well = params[23]
+    self.number_of_well = params[24]
      
     
 goodbye ="""
