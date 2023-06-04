@@ -208,12 +208,6 @@ def display_state(self, imshow, position):
     pos[1] += 40  
     imshow = cv2.putText(imshow, text, pos, font, 
                 fontScale, color, thickness, cv2.LINE_AA)
-    
-    if self.success:
-        x, y, w, h = [int(i) for i in self.bbox]
-        offset = 500, 165
-        cv2.circle(imshow, (int(x+w/2+offset[0]), int(y+h/2+offset[1])), int((w+h)/4), (255, 0, 0), 2)
-        # cv2.rectangle(imshow, (x, y), (x + w, y + h), (0, 0, 255), 2)
         
     return imshow
 
@@ -292,6 +286,12 @@ def display(self, key):
     imshow = self.background.copy()
     
     cam = self.frame.copy()
+    
+    if self.success:
+        x, y, w, h = [int(i) for i in self.bbox]
+        cv2.circle(cam, (int(x+w/2), int(y+h/2)), int((w+h)/4), (255, 0, 0), 2)
+        # cv2.rectangle(imshow, (x, y), (x + w, y + h), (0, 0, 255), 2)
+    
     cam = cv2.resize(cam, (640, 360))
     cam[self.round_edges_mask==255] = 0.2*255
     

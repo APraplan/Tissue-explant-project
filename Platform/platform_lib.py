@@ -142,6 +142,28 @@ class platform_pick_and_place:
     
     def calibrate(self):
         
+        # Macro camera calibration
+        self.anycubic.move_axis(z=self.safe_height, printMsg=False)
+        self.anycubic.move_axis(x=self.picture_pos, printMsg=False)
+        
+        while True:
+        
+            self.macro_frame = self.stream2.read()            
+
+            # Inputs
+            key = cv2.waitKey(5) & 0xFF 
+            
+            self.calibration_process(key)
+            
+            if key == 13: #enter
+                break
+            
+            cv2.imshow('Macro camera', self.macro_frame) 
+            
+        cv2.destroyAllWindows()  
+            
+            
+        # Offset calibration
         self.anycubic.move_axis(z=5, printMsg=False)
         self.anycubic.move_axis(x=self.calibration_point[0]+self.offset[0],y=self.calibration_point[1]+self.offset[1], printMsg=False)
         self.anycubic.move_axis(x=self.calibration_point[0]+self.offset[0],y=self.calibration_point[1]+self.offset[1], z=self.calibration_point[2]+self.offset[2], printMsg=False)
@@ -164,7 +186,6 @@ class platform_pick_and_place:
                 break
             
             cv2.imshow('Camera', imshow) 
-            # cv2.imshow('Macro cam', self.macro_frame)
             
         self.anycubic.move_axis_relative(z=25, printMsg=False)
         self.anycubic.move_axis_relative(x=0, y=200, printMsg=False)
@@ -241,8 +262,10 @@ class platform_pick_and_place:
             
         elif self.state == 'second picture':
             second_picture(self)
-        
-     
+            
+        elif self.state == 'done':
+            done(self)
+                   
     def pause(self):
     
         if self.state != 'pause':

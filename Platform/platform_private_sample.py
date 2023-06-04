@@ -308,7 +308,7 @@ def second_picture(self):
         if self.com_state == 'not send':
             dest = destination(self)
             self.anycubic.move_axis_relative(z=self.safe_height, f=self.fast_speed)
-            self.anycubic.move_axis_relative(x=self.picture_pos, y=dest[1], f=self.fast_speed)
+            self.anycubic.move_axis_relative(x=self.safe_height, y=dest[1], f=self.fast_speed)
             self.anycubic.finish_request()
             self.com_state = 'send'
             
@@ -358,7 +358,8 @@ def reset(self):
                 self.nb_sample = 0
                 
                 if self.well_num == len(self.culture_well) or self.well_num == self.number_of_well:
-                    self.state = 'Done'
+                    self.state = 'done'
+                    self.com_state = 'not send'
                 else:
                     if self.well_preparation:
                         self.state = 'preparing gel'
@@ -369,5 +370,13 @@ def reset(self):
             else:
                 self.state = 'detect'
                 self.sub_state = 'go to position'
-                self.com_state = 'not send'   
-            
+                self.com_state = 'not send'
+                
+                
+def done(self):
+    
+    if self.com_state == 'not send':
+        self.anycubic.move_axis_relative(z=25, printMsg=False)
+        self.anycubic.move_axis_relative(x=0, y=200, printMsg=False)
+        logger.info('🦾 Done')
+        self.com_state = 'send'  
