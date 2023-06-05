@@ -1,19 +1,19 @@
 import numpy as np
 import cv2
 from loguru import logger
-import Platform.computer_vision as cv
-from Platform.platform_private_sample import *
-from Platform.platform_private_gel import *
-from Platform.platform_private_gui import *
+import computer_vision as cv
+from platform_private_sample import *
+from platform_private_gel import *
+from platform_private_gui import *
 
-debug = False
+debug = True
 
 if debug:
-    from Platform.Communication.fake_communication import *
+    from Communication.fake_communication import *
 else:
     from vidgear.gears import VideoGear
-    from Platform.Communication.dynamixel_controller import *
-    from Platform.Communication.printer_communications import *
+    from Communication.dynamixel_controller import *
+    from Communication.printer_communications import *
 
 
 class platform_pick_and_place:
@@ -195,9 +195,9 @@ class platform_pick_and_place:
     def run(self):
         
         if self.record:
-            _, _, files = next(os.walk(r"C:\Users\APrap\Documents\CREATE\Pick-and-Place\Pictures\Videos"))
+            _, _, files = next(os.walk(r"Pictures\Videos"))
             id = len(files)
-            out = cv2.VideoWriter(r'C:\Users\APrap\Documents\CREATE\Pick-and-Place\Pictures\Videos\video_' + str(id) + '.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 10, (self.frame.shape[1], self.frame.shape[0]))
+            out = cv2.VideoWriter(r'Pictures\Videos\video_' + str(id) + '.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 10, (self.frame.shape[1], self.frame.shape[0]))
            
         while True:
         

@@ -3,7 +3,7 @@ import numpy as np
 import pickle
 import glob
 import sys
-sys.path.append('c:/Users/APrap/Documents/CREATE/Pick-and-Place/Platform')
+sys.path.append('Platform')
 import computer_vision as mcv
 from Communication.printer_communications import *
 
@@ -46,7 +46,6 @@ if chessboard_calibration:
                 
         key = cv2.waitKey(5) & 0xFF
         if key == ord('p'):
-            # path = "C:\Users\APrap\Documents\CREATE\Pick-and-Place\Pictures\image" + str(num)
             cv2.imwrite("Pictures\calibration\image" + str(num) + ".png", frame)
             num += 1
             pass

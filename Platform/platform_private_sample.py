@@ -60,7 +60,7 @@ def check_pickup_two(self):
     
     self.macro_frame = self.stream2.read()
     
-    _, _, files = next(os.walk(r"C:\Users\APrap\Documents\CREATE\Pick-and-Place\Pictures\macro"))
+    _, _, files = next(os.walk(r"Pictures\macro"))
     file_count = len(files)
     cv2.imwrite("Pictures\macro\macro_image_" + str(file_count) + ".png", self.macro_frame)
     

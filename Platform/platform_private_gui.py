@@ -339,10 +339,10 @@ def save_parameters(self):
     
 def load_parameters(self):
     
-    self.NN = load_model(r'C:\Users\APrap\Documents\CREATE\Pick-and-Place\TEP_convNN_92')
+    self.NN = load_model(r'TEP_convNN_92')
 
-    self.background = cv2.imread(r'C:\Users\APrap\Documents\CREATE\Pick-and-Place\Pictures\Utils\Backgroud.png')
-    self.round_edges_mask = cv2.imread(r'C:\Users\APrap\Documents\CREATE\Pick-and-Place\Pictures\Utils\mask_rounded_edges.png')
+    self.background = cv2.imread(r'Pictures\Utils\Backgroud.png')
+    self.round_edges_mask = cv2.imread(r'Pictures\Utils\mask_rounded_edges.png')
     self.gui_menu = 0
     
     self.gui_menu_label = np.array([['Position', 'Pick height', 'mm'], ['Position', 'Drop height', 'mm'],

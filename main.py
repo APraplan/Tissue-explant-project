@@ -1,5 +1,7 @@
 import sys
-sys.path.append('c:/Users/APrap/Documents/CREATE/Pick-and-Place/Platform')
+sys.path.append('Platform')
+sys.path.append('Pictures')
+sys.path.append('TEP_convNN_92')
 from Platform.platform_lib import platform_pick_and_place
 
 
