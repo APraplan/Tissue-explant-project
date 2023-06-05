@@ -299,9 +299,9 @@ class VideoGear:
         
     def read(self):
         if self.source == 0:
-            return cv2.imread(r'Pictures\calibration\image14.png')
+            return cv2.imread(r'Pictures\Utils\image14.png')
         else:
-            return cv2.imread(r'Pictures\macro\macro_image_0.png')
+            return cv2.imread(r'Pictures\Utils\macro_image_0.png')
     
     def stop(self):
         logger.debug(f"Stopping video stream {self.source}")
