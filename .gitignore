@@ -6,7 +6,6 @@ __pycache__/
 # C extensions
 *.so
 .mp4
-Pictures/
 
 # Distribution / packaging
 .Python
@@ -132,5 +131,7 @@ dmypy.json
 TEP_convNN_92/
 outpy.avi
 TEP_convNN_96/
+Pictures/macro
+Pictures/Videos
 
 .gitignore
