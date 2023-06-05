@@ -308,7 +308,7 @@ def second_picture(self):
         if self.com_state == 'not send':
             dest = destination(self)
             self.anycubic.move_axis_relative(z=self.safe_height, f=self.fast_speed)
-            self.anycubic.move_axis_relative(x=self.safe_height, y=dest[1], f=self.fast_speed)
+            self.anycubic.move_axis_relative(x=self.picture_pos, y=dest[1], f=self.fast_speed)
             self.anycubic.finish_request()
             self.com_state = 'send'
             

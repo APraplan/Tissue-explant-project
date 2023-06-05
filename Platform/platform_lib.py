@@ -6,7 +6,7 @@ from Platform.platform_private_sample import *
 from Platform.platform_private_gel import *
 from Platform.platform_private_gui import *
 
-debug = True
+debug = False
 
 if debug:
     from Platform.Communication.fake_communication import *
