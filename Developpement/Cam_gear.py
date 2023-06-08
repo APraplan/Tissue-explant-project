@@ -31,8 +31,8 @@ while True:
         #if True break the infinite loop
         break
     
-    out1.write(self.frameA)
-    out2.write(self.frameB)
+    out1.write(frameA)
+    out2.write(frameB)
     
     # do something with both frameA and frameB here
     cv2.imshow("Output Frame1", frameA)
