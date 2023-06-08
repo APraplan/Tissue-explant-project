@@ -376,7 +376,7 @@ def reset(self):
 def done(self):
     
     if self.com_state == 'not send':
-        self.anycubic.move_axis_relative(z=25, printMsg=False)
-        self.anycubic.move_axis_relative(x=0, y=200, printMsg=False)
+        self.anycubic.move_axis_relative(z=self.safe_height, printMsg=False)
+        self.anycubic.move_axis_relative(x=0, y=220, printMsg=False)
         logger.info('🦾 Done')
         self.com_state = 'send'  

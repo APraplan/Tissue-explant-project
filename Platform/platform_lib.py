@@ -6,7 +6,7 @@ from platform_private_sample import *
 from platform_private_gel import *
 from platform_private_gui import *
 
-debug = True
+debug = False
 
 if debug:
     from Communication.fake_communication import *
@@ -102,9 +102,10 @@ class platform_pick_and_place:
         self.mix = 0
         self.wash = 0
 
-        self.mixing_well = [well_plate('F3'), well_plate('E3'), well_plate('D3'), well_plate('F4'), well_plate('E4'), well_plate('D4')]
-        self.culture_well = [well_plate('F6'), well_plate('E6'), well_plate('D6'), well_plate('F7'), well_plate('E7'), well_plate('D7')]
-        self.solution_well = {'Sol A' : well_plate('A3'), 'Sol B' : well_plate('B3'), 'Washing' : well_plate('A4'), 'Dump' : well_plate('B4')}
+        well_type = '12'
+        self.mixing_well = [tube('A'), tube('B'), tube('C'), tube('D'), tube('E'), tube('F')]
+        self.culture_well = [well_plate('A1', well_type), well_plate('A2', well_type), well_plate('A3', well_type), well_plate('B1', well_type), well_plate('B2', well_type), well_plate('B3', well_type)]
+        self.solution_well = {'Sol A' : vial('A'), 'Sol B' : vial('B'), 'Washing' : well_plate('A4', well_type), 'Dump' : well_plate('A2', well_type)}
         
         load_parameters(self)
 
@@ -188,7 +189,7 @@ class platform_pick_and_place:
             cv2.imshow('Camera', imshow) 
             
         self.anycubic.move_axis_relative(z=25, printMsg=False)
-        self.anycubic.move_axis_relative(x=0, y=200, printMsg=False)
+        self.anycubic.move_axis_relative(x=0, y=220, printMsg=False)
                 
         cv2.destroyAllWindows()   
     

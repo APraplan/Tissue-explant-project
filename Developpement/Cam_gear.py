@@ -11,22 +11,28 @@ options = {
 }
 stream1 = VideoGear(source=0, logging=True, **options).start() 
 
-# define and start the stream on second source ( For e.g #1 index device)
-stream2 = VideoGear(source=1, logging=True).start() 
+stream2 = VideoGear(source=1, logging=True, **options).start() 
+
+frameA = stream1.read()
+frameB = stream2.read()
+
+out1 = cv2.VideoWriter(r'Pictures\Videos\video_exp_1.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 10, (frameA.shape[1], frameA.shape[0]))
+out2 = cv2.VideoWriter(r'Pictures\Videos\video_exp_0.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 10, (frameB.shape[1], frameB.shape[0]))
 
 # infinite loop
 while True:
     
     frameA = stream1.read()
-    # read frames from stream1
 
     frameB = stream2.read()
-    # read frames from stream2
 
     # check if any of two frame is None
     if frameA is None or frameB is None:
         #if True break the infinite loop
         break
+    
+    out1.write(self.frameA)
+    out2.write(self.frameB)
     
     # do something with both frameA and frameB here
     cv2.imshow("Output Frame1", frameA)
@@ -38,15 +44,14 @@ while True:
     if key == ord("q"):
         #if 'q' key-pressed break out
         break
-
-    if key == ord("w"):
-        #if 'w' key-pressed save both frameA and frameB at same time
-        cv2.imwrite("Image-1.jpg", frameA)
-        cv2.imwrite("Image-2.jpg", frameB)
-        #break   #uncomment this line to break out after taking images
+    
 
 cv2.destroyAllWindows()
 # close output window
+
+out1.release()
+out2.release()
+
 
 # safely close both video streams
 stream1.stop()
