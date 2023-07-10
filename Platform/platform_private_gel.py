@@ -31,13 +31,13 @@ def tube(name):
 def well_plate(id, type='48'):
     
     if type == '48':
-        position = [195.5, 193.3, 25]
+        position = [161, 117, 25] # need to be changed
         well_offset = 13.45
     elif type == '24':
-        position = [193, 194, 25]
+        position = [193, 194, 25] # need to be changed
         well_offset = 97/5
     elif type == '12':
-        position = [187, 183.5, 25]
+        position = [187, 183.5, 25] # need to be changed
         well_offset = 74/3
     elif type == '6':
         position = [195.5, 193.3, 25] # need to be changed
@@ -72,7 +72,7 @@ def spreading_solution_A(self):
     if self.sub_state == 'go to position':
         
         if self.com_state == 'not send':
-            self.anycubic.move_axis_relative(z=self.safe_height, f=self.fast_speed)
+            self.anycubic.move_axis_relative(z=self.safe_height, f=self.fast_speed, offset=self.offset_tip_two)
             self.anycubic.finish_request() 
             self.com_state = 'send'  
             
@@ -87,9 +87,9 @@ def spreading_solution_A(self):
     elif self.sub_state == 'go to sol A':
         
         if self.com_state == 'not send':
-            self.anycubic.move_axis_relative(z=self.solution_well['Sol A'][2], f=self.fast_speed)
-            self.anycubic.move_axis_relative(x=self.solution_well['Sol A'][0], y=self.solution_well['Sol A'][1], f=self.fast_speed)
-            self.anycubic.move_axis_relative(z=self.solution_pumping_height, f=self.fast_speed) 
+            self.anycubic.move_axis_relative(z=self.solution_well['Sol A'][2], f=self.fast_speed, offset=self.offset_tip_two)
+            self.anycubic.move_axis_relative(x=self.solution_well['Sol A'][0], y=self.solution_well['Sol A'][1], f=self.fast_speed, offset=self.offset_tip_two)
+            self.anycubic.move_axis_relative(z=self.solution_pumping_height, f=self.fast_speed, offset=self.offset_tip_two) 
             self.anycubic.finish_request() 
             self.com_state = 'send'  
             
@@ -114,9 +114,9 @@ def spreading_solution_A(self):
     elif self.sub_state == 'fill well':
         
         if self.com_state == 'not send':
-            self.anycubic.move_axis_relative(z=self.mixing_well[self.solution_prep_num][2], f=self.fast_speed)
-            self.anycubic.move_axis_relative(x=self.mixing_well[self.solution_prep_num][0], y=self.mixing_well[self.solution_prep_num][1], f=self.fast_speed)
-            self.anycubic.move_axis_relative(z=self.solution_pumping_height, f=self.fast_speed) 
+            self.anycubic.move_axis_relative(z=self.mixing_well[self.solution_prep_num][2], f=self.fast_speed, offset=self.offset_tip_two)
+            self.anycubic.move_axis_relative(x=self.mixing_well[self.solution_prep_num][0], y=self.mixing_well[self.solution_prep_num][1], f=self.fast_speed, offset=self.offset_tip_two)
+            self.anycubic.move_axis_relative(z=self.solution_pumping_height, f=self.fast_speed, offset=self.offset_tip_two) 
             self.anycubic.finish_request() 
             self.com_state = 'send'  
             
@@ -151,7 +151,7 @@ def preparing_gel(self):
     if self.sub_state == 'go to position':
         
         if self.com_state == 'not send':
-            self.anycubic.move_axis_relative(z=self.safe_height, f=self.fast_speed)
+            self.anycubic.move_axis_relative(z=self.safe_height, f=self.fast_speed, offset=self.offset_tip_two)
             self.anycubic.finish_request() 
             self.com_state = 'send'  
             
@@ -166,9 +166,9 @@ def preparing_gel(self):
     elif self.sub_state == 'go to sol B':
         
         if self.com_state == 'not send':
-            self.anycubic.move_axis_relative(z=self.solution_well['Sol B'][2], f=self.fast_speed)
-            self.anycubic.move_axis_relative(x=self.solution_well['Sol B'][0], y=self.solution_well['Sol B'][1], f=self.fast_speed)
-            self.anycubic.move_axis_relative(z=self.solution_pumping_height, f=self.fast_speed) 
+            self.anycubic.move_axis_relative(z=self.solution_well['Sol B'][2], f=self.fast_speed, offset=self.offset_tip_two)
+            self.anycubic.move_axis_relative(x=self.solution_well['Sol B'][0], y=self.solution_well['Sol B'][1], f=self.fast_speed, offset=self.offset_tip_two)
+            self.anycubic.move_axis_relative(z=self.solution_pumping_height, f=self.fast_speed, offset=self.offset_tip_two) 
             self.anycubic.finish_request() 
             self.com_state = 'send'  
             
@@ -193,9 +193,9 @@ def preparing_gel(self):
     elif self.sub_state == 'fill well':
         
         if self.com_state == 'not send':
-            self.anycubic.move_axis_relative(z=self.mixing_well[self.well_num][2], f=self.fast_speed)
-            self.anycubic.move_axis_relative(x=self.mixing_well[self.well_num][0], y=self.mixing_well[self.well_num][1], f=self.fast_speed)
-            self.anycubic.move_axis_relative(z=self.solution_pumping_height, f=self.fast_speed) 
+            self.anycubic.move_axis_relative(z=self.mixing_well[self.well_num][2], f=self.fast_speed, offset=self.offset_tip_two)
+            self.anycubic.move_axis_relative(x=self.mixing_well[self.well_num][0], y=self.mixing_well[self.well_num][1], f=self.fast_speed, offset=self.offset_tip_two)
+            self.anycubic.move_axis_relative(z=self.solution_pumping_height, f=self.fast_speed, offset=self.offset_tip_two) 
             self.anycubic.finish_request() 
             self.com_state = 'send'  
             
@@ -240,9 +240,9 @@ def preparing_gel(self):
     elif self.sub_state == 'place gel':
         
         if self.com_state == 'not send':
-            self.anycubic.move_axis_relative(z=self.mixing_well[self.well_num][2], f=self.fast_speed)
-            self.anycubic.move_axis_relative(x=self.culture_well[self.well_num][0], y=self.culture_well[self.well_num][1], f=self.fast_speed)
-            self.anycubic.move_axis_relative(z=self.solution_pumping_height, f=self.fast_speed) 
+            self.anycubic.move_axis_relative(z=self.mixing_well[self.well_num][2], f=self.fast_speed, offset=self.offset_tip_two)
+            self.anycubic.move_axis_relative(x=self.culture_well[self.well_num][0], y=self.culture_well[self.well_num][1], f=self.fast_speed, offset=self.offset_tip_two)
+            self.anycubic.move_axis_relative(z=self.solution_pumping_height, f=self.fast_speed, offset=self.offset_tip_two) 
             self.anycubic.finish_request() 
             self.com_state = 'send'  
             
@@ -269,9 +269,9 @@ def preparing_gel(self):
     elif self.sub_state == 'washing':
         
         if self.com_state == 'not send':
-            self.anycubic.move_axis_relative(z=self.solution_well['Washing'][2], f=self.fast_speed)
-            self.anycubic.move_axis_relative(x=self.solution_well['Washing'][0], y=self.solution_well['Washing'][1], f=self.fast_speed)
-            self.anycubic.move_axis_relative(z=self.solution_pumping_height, f=self.fast_speed) 
+            self.anycubic.move_axis_relative(z=self.solution_well['Washing'][2], f=self.fast_speed, offset=self.offset_tip_two)
+            self.anycubic.move_axis_relative(x=self.solution_well['Washing'][0], y=self.solution_well['Washing'][1], f=self.fast_speed, offset=self.offset_tip_two)
+            self.anycubic.move_axis_relative(z=self.solution_pumping_height, f=self.fast_speed, offset=self.offset_tip_two) 
             self.anycubic.finish_request() 
             self.com_state = 'send'  
             
@@ -320,7 +320,7 @@ def homming(self):
     if self.sub_state == 'go to position':
         
         if self.com_state == 'not send':
-            self.anycubic.move_axis_relative(z=self.safe_height, f=self.fast_speed)
+            self.anycubic.move_axis_relative(z=self.safe_height, f=self.fast_speed, offset=self.offset_tip_one)
             self.anycubic.finish_request() 
             self.com_state = 'send'  
             
@@ -334,8 +334,8 @@ def homming(self):
     elif self.sub_state == 'go to petridish':
         
         if self.com_state == 'not send':
-            self.anycubic.move_axis_relative(x=self.reset_pos[0], y=self.reset_pos[1], f=self.fast_speed)
-            self.anycubic.move_axis_relative(z=self.reset_pos[2], f=self.fast_speed) 
+            self.anycubic.move_axis_relative(x=self.reset_pos[0], y=self.reset_pos[1], f=self.fast_speed, offset=self.offset_tip_one)
+            self.anycubic.move_axis_relative(z=self.reset_pos[2], f=self.fast_speed, offset=self.offset_tip_one) 
             self.anycubic.finish_request() 
             self.com_state = 'send'  
             
@@ -360,7 +360,7 @@ def homming(self):
     elif self.sub_state == 'go to second position':
             
         if self.com_state == 'not send':
-            self.anycubic.move_axis_relative(z=self.safe_height, f=self.fast_speed)
+            self.anycubic.move_axis_relative(z=self.safe_height, f=self.fast_speed, offset=self.offset_tip_one)
             self.anycubic.finish_request() 
             self.com_state = 'send'  
             
@@ -374,9 +374,9 @@ def homming(self):
     elif self.sub_state == 'go to dump':
         
         if self.com_state == 'not send':
-            self.anycubic.move_axis_relative(z=self.solution_well['Dump'][2], f=self.fast_speed)
-            self.anycubic.move_axis_relative(x=self.solution_well['Dump'][0], y=self.solution_well['Dump'][1], f=self.fast_speed)
-            self.anycubic.move_axis_relative(z=self.solution_pumping_height, f=self.fast_speed) 
+            self.anycubic.move_axis_relative(z=self.solution_well['Dump'][2], f=self.fast_speed, offset=self.offset_tip_two)
+            self.anycubic.move_axis_relative(x=self.solution_well['Dump'][0], y=self.solution_well['Dump'][1], f=self.fast_speed, offset=self.offset_tip_two)
+            self.anycubic.move_axis_relative(z=self.solution_pumping_height, f=self.fast_speed, offset=self.offset_tip_two) 
             self.anycubic.finish_request() 
             self.com_state = 'send'  
             

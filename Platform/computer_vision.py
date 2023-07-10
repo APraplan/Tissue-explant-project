@@ -116,10 +116,23 @@ class Camera:
         # x = position[0]+self.offset[0] + (coord[1]-self.center[1])*coef_x
         # y = position[1]+self.offset[1] + (coord[0]-self.center[0])*coef_y
         
-        x = position[0]+self.offset[0] + np.cos(self.angle)*((coord[1]-self.center[1])*coef_x)-np.sin(self.angle)*((coord[0]-self.center[0])*coef_y)
-        y = position[1]+self.offset[1] + np.sin(self.angle)*((coord[1]-self.center[1])*coef_x)+np.cos(self.angle)*((coord[0]-self.center[0])*coef_y)      
-            
+        # x = position[0]+self.offset[0] + np.cos(self.angle)*((coord[1]-self.center[1])*coef_x)-np.sin(self.angle)*((coord[0]-self.center[0])*coef_y)
+        # y = position[1]+self.offset[1] + np.sin(self.angle)*((coord[1]-self.center[1])*coef_x)+np.cos(self.angle)*((coord[0]-self.center[0])*coef_y)      
+        
+        x = position[0] + np.cos(self.angle)*((coord[1]-self.center[1])*coef_x)-np.sin(self.angle)*((coord[0]-self.center[0])*coef_y)
+        y = position[1] + np.sin(self.angle)*((coord[1]-self.center[1])*coef_x)+np.cos(self.angle)*((coord[0]-self.center[0])*coef_y)      
+          
         return [x, y]
+    
+    def platform_space_to_cam(self, position, cam_position):
+        
+        coef_x = (cam_position-position + self.z_offset)/self.f[1]
+        coef_y = (cam_position-position + self.z_offset)/self.f[0]
+        
+        px = (position[1]-cam_position[1]-np.sin(self.angle)/np.sin(self.angle)*(position[0]-cam_position[0]))/(coef_y*(np.sqrt(np.sin(self.angle))/np.cos(self.angle)+np.cos(self.angle)))+self.center[0]
+        py = (position[1]-cam_position[1]-np.cos(self.angle)*(px-self.center[0])*coef_y)/(np.sin(self.angle)*coef_x)+self.center[1]
+        
+        return [px, py]
 
 
 def get_position2(image):

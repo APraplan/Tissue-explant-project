@@ -88,8 +88,8 @@ def detect(self):
     if self.sub_state == 'go to position':
         
         if self.com_state == 'not send':
-            self.anycubic.move_axis_relative(z=self.safe_height, f=self.fast_speed)
-            self.anycubic.move_axis_relative(x=self.detection_place[0], y=self.detection_place[1], z=self.detection_place[2], f=self.fast_speed)
+            self.anycubic.move_axis_relative(z=self.safe_height, f=self.fast_speed, offset=self.offset_cam)
+            self.anycubic.move_axis_relative(x=self.detection_place[0], y=self.detection_place[1], z=self.detection_place[2], f=self.fast_speed, offset=self.offset_cam)
             self.anycubic.finish_request()
             self.com_state = 'send'
             
@@ -143,7 +143,7 @@ def pick(self):
     elif self.sub_state == 'go to position':
         
         if self.com_state == 'not send':
-            self.anycubic.move_axis_relative(x=self.target_pos[0]+self.offset_check[0], y=self.target_pos[1]+self.offset_check[1], z=self.pick_height + self.pick_offset, f=self.medium_speed)
+            self.anycubic.move_axis_relative(x=self.target_pos[0]+self.offset_check[0], y=self.target_pos[1]+self.offset_check[1], z=self.pick_height + self.pick_offset, f=self.medium_speed, offset=self.offset_tip_one)
             self.anycubic.finish_request()
             self.com_state = 'send'
             
@@ -157,15 +157,18 @@ def pick(self):
         if self.com_state == 'not send':
             x, y, w, h = self.bbox
             target_px = [int(x+w/2), int(y+h/2)]
-            self.target_pos = self.cam.cam_to_platform_space(target_px, (self.target_pos[0]+self.offset_check[0], self.target_pos[1]+self.offset_check[1], self.pick_height + self.pick_offset))
-            
+            print("target pos", self.target_pos)
+            cam_pos = (self.target_pos[0]+self.offset_check[0]-self.offset_cam[0]+self.offset_tip_one[0], self.target_pos[1]+self.offset_check[1]-self.offset_cam[1]+self.offset_tip_one[1], self.pick_height + self.pick_offset-self.offset_cam[2]+self.offset_tip_one[2])
+            print("cam pos", cam_pos)
+            self.target_pos = self.cam.cam_to_platform_space(target_px, cam_pos)
+            print("new target pos", self.target_pos)
             if (self.target_pos[0]-self.petridish_pos[0])**2+(self.target_pos[1]-self.petridish_pos[1])**2 > self.petridish_radius**2:
                 self.state = 'reset'
                 self.sub_state = 'go to position'
                 self.com_state = 'not send'         
                 self.pick_attempt = 0    
             else:              
-                self.anycubic.move_axis_relative(x=self.target_pos[0], y=self.target_pos[1], z=self.pick_height, f=self.slow_speed)
+                self.anycubic.move_axis_relative(x=self.target_pos[0], y=self.target_pos[1], z=self.pick_height, f=self.slow_speed, offset=self.offset_tip_one)
                 # indirect move to go on top
                 # self.anycubic.move_axis_relative(x=self.target_pos[0], y=self.target_pos[1], z=self.pick_height+2, f=self.slow_speed)
                 # self.anycubic.move_axis_relative(z=self.pick_height, f=self.slow_speed)
@@ -193,8 +196,8 @@ def pick(self):
     elif self.sub_state == 'check':
         
         if self.com_state == 'not send':
-            self.anycubic.move_axis_relative(z=self.pick_height + self.pick_offset, f=self.slow_speed)
-            self.anycubic.move_axis_relative(x=self.target_pos[0]+self.offset_check[0], y=self.target_pos[1]+self.offset_check[1], f=self.slow_speed)
+            self.anycubic.move_axis_relative(z=self.pick_height + self.pick_offset, f=self.slow_speed, offset=self.offset_tip_one)
+            self.anycubic.move_axis_relative(x=self.target_pos[0]+self.offset_check[0], y=self.target_pos[1]+self.offset_check[1], f=self.slow_speed, offset=self.offset_tip_one)
             self.anycubic.finish_request()
             self.com_state = 'send'
             
@@ -228,8 +231,8 @@ def picture(self):
         
         if self.com_state == 'not send':
             dest = destination(self)
-            self.anycubic.move_axis_relative(z=self.safe_height, f=self.fast_speed)
-            self.anycubic.move_axis_relative(x=self.picture_pos, y=dest[1], f=self.fast_speed)
+            self.anycubic.move_axis_relative(z=self.safe_height, f=self.fast_speed, offset=self.offset_tip_one)
+            self.anycubic.move_axis_relative(x=self.picture_pos, y=dest[1], f=self.fast_speed, offset=self.offset_tip_one)
             self.anycubic.finish_request()
             self.com_state = 'send'
             
@@ -252,9 +255,9 @@ def place(self):
     if self.sub_state == 'go to position':
         
         if self.com_state == 'not send':
-            self.anycubic.move_axis_relative(z=self.safe_height, f=self.fast_speed)
+            self.anycubic.move_axis_relative(z=self.safe_height, f=self.fast_speed, offset=self.offset_tip_one)
             dest = destination(self)
-            self.anycubic.move_axis_relative(x=dest[0], y=dest[1], f=self.fast_speed)
+            self.anycubic.move_axis_relative(x=dest[0], y=dest[1], f=self.fast_speed, offset=self.offset_tip_one)
             self.anycubic.finish_request()
             self.com_state = 'send'
             
@@ -266,7 +269,7 @@ def place(self):
     elif self.sub_state == 'go down':
         
         if self.com_state == 'not send':
-            self.anycubic.move_axis_relative(z=self.drop_height, f=self.fast_speed)
+            self.anycubic.move_axis_relative(z=self.drop_height, f=self.fast_speed, offset=self.offset_tip_one)
             self.anycubic.finish_request()
             self.com_state = 'send'
             
@@ -292,7 +295,7 @@ def place(self):
     elif self.sub_state == 'go up':
         
         if self.com_state == 'not send':
-            self.anycubic.move_axis_relative(z=self.safe_height, f=self.fast_speed)
+            self.anycubic.move_axis_relative(z=self.safe_height, f=self.fast_speed, offset=self.offset_tip_one)
             self.anycubic.finish_request()
             self.com_state = 'send'
         
@@ -307,8 +310,8 @@ def second_picture(self):
         
         if self.com_state == 'not send':
             dest = destination(self)
-            self.anycubic.move_axis_relative(z=self.safe_height, f=self.fast_speed)
-            self.anycubic.move_axis_relative(x=self.picture_pos, y=dest[1], f=self.fast_speed)
+            self.anycubic.move_axis_relative(z=self.safe_height, f=self.fast_speed, offset=self.offset_tip_one)
+            self.anycubic.move_axis_relative(x=self.picture_pos, y=dest[1], f=self.fast_speed, offset=self.offset_tip_one)
             self.anycubic.finish_request()
             self.com_state = 'send'
             
@@ -333,9 +336,9 @@ def reset(self):
         
         if self.com_state == 'not send':
             release_tracker(self)
-            self.anycubic.move_axis_relative(z=self.safe_height, f=self.fast_speed)
-            self.anycubic.move_axis_relative(x=self.reset_pos[0], y=self.reset_pos[1], f=self.fast_speed)
-            self.anycubic.move_axis_relative(z=self.reset_pos[2], f=self.fast_speed) 
+            self.anycubic.move_axis_relative(z=self.safe_height, f=self.fast_speed, offset=self.offset_tip_one)
+            self.anycubic.move_axis_relative(x=self.reset_pos[0], y=self.reset_pos[1], f=self.fast_speed, offset=self.offset_tip_one)
+            self.anycubic.move_axis_relative(z=self.reset_pos[2], f=self.fast_speed, offset=self.offset_tip_one) 
             self.anycubic.finish_request() 
             self.com_state = 'send'  
             
@@ -376,7 +379,7 @@ def reset(self):
 def done(self):
     
     if self.com_state == 'not send':
-        self.anycubic.move_axis_relative(z=self.safe_height, printMsg=False)
-        self.anycubic.move_axis_relative(x=0, y=220, printMsg=False)
+        self.anycubic.move_axis_relative(z=self.safe_height, printMsg=False, offset=self.offset_tip_one)
+        self.anycubic.move_axis_relative(x=0, y=220, printMsg=False, offset=self.offset_tip_one)
         logger.info('🦾 Done')
         self.com_state = 'send'  

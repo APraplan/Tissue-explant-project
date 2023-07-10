@@ -1,5 +1,5 @@
 import sys
-sys.path.append('c:/Users/APrap/Documents/CREATE/Pick-and-Place')
+sys.path.append(r"C:\Users\APrap\Documents\CREATE\Tissue-explant-project")
 
 from Platform.Communication.dynamixel_controller import Dynamixel
 from time import sleep
@@ -7,7 +7,7 @@ import keyboard
 import math
 
 dyna = Dynamixel(ID=[1,2,3], descriptive_device_name="XL430 test motor", series_name=["xl", "xl", "xl"], baudrate=57600,
-                 port_name="COM12")
+                 port_name="COM5")
 
 dyna.begin_communication()
 # dyna.set_operating_mode("position", ID=1)

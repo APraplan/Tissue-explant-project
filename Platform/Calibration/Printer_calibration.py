@@ -11,8 +11,8 @@ chessboardSize = (9, 6)
 size_of_chessboard_squares_mm = 10
 calibration_position = (100, 180)
 
-cam_number = 0
-printer_port = 'COM15'
+cam_number = 1
+printer_port = 'COM8'
 
 chessboard_calibration = True
 test_chessboard_calibration = True

@@ -38,15 +38,14 @@ class platform_pick_and_place:
         self.last_state = 'homming'
         self.sub_state = 'go to position'
         self.com_state = 'not send'
-        self.calibration_point = [35, 75, 0]
         
         # Picking zone
         self.safe_height = 25
         self.pick_offset = 4
-        self.detection_place = [75.0, 125, 65]
-        self.reset_pos = [60, 135, 10]
+        self.detection_place = [27.0, 71, 65]
+        self.reset_pos = [27, 71, 10]
         self.pipette_pos_px = [272, 390]
-        self.petridish_pos = [60, 145]
+        self.petridish_pos = [27, 71]
         self.petridish_radius = 45
         self.pick_attempt = 0
         # self.max_attempt = 4
@@ -108,7 +107,7 @@ class platform_pick_and_place:
         self.mix = 0
         self.wash = 0
 
-        well_type = '12'
+        well_type = '48'
         self.mixing_well = [tube('A'), tube('B'), tube('C'), tube('D'), tube('E'), tube('F')]
         self.culture_well = [well_plate('A1', well_type), well_plate('A2', well_type), well_plate('A3', well_type), well_plate('B1', well_type), well_plate('B2', well_type), well_plate('B3', well_type)]
         self.solution_well = {'Sol A' : vial('A'), 'Sol B' : vial('B'), 'Washing' : well_plate('A4', well_type), 'Dump' : well_plate('A2', well_type)}
@@ -150,8 +149,8 @@ class platform_pick_and_place:
     def calibrate(self):
         
         # Macro camera calibration
-        self.anycubic.move_axis(z=self.safe_height, printMsg=False)
-        self.anycubic.move_axis(x=self.picture_pos, printMsg=False)
+        self.anycubic.move_axis_relative(z=self.safe_height, offset=self.offset_tip_one)
+        self.anycubic.move_axis_relative(x=self.picture_pos, offset=self.offset_tip_one)
         
         while True:
         
@@ -159,8 +158,6 @@ class platform_pick_and_place:
 
             # Inputs
             key = cv2.waitKey(5) & 0xFF 
-            
-            self.calibration_process(key)
             
             if key == 13: #enter
                 break
@@ -170,10 +167,10 @@ class platform_pick_and_place:
         cv2.destroyAllWindows()  
             
             
-        # Offset calibration
-        self.anycubic.move_axis(z=5, printMsg=False)
-        self.anycubic.move_axis(x=self.calibration_point[0]+self.offset[0],y=self.calibration_point[1]+self.offset[1], printMsg=False)
-        self.anycubic.move_axis(x=self.calibration_point[0]+self.offset[0],y=self.calibration_point[1]+self.offset[1], z=self.calibration_point[2]+self.offset[2], printMsg=False)
+        # Offset first tip calibration
+        self.anycubic.move_axis_relative(z=5, offset=self.offset_tip_one)
+        self.anycubic.move_axis_relative(x=0,y=0, offset=self.offset_tip_one)
+        self.anycubic.move_axis_relative(z=0, offset=self.offset_tip_one)
         
         while True:
         
@@ -187,15 +184,100 @@ class platform_pick_and_place:
             # Inputs
             key = cv2.waitKey(5) & 0xFF 
             
-            self.calibration_process(key)
+            self.offset_tip_one = calibration_process(self, key, self.offset_tip_one)
             
             if key == 13: #enter
+                print("Offset tip one: ", self.offset_tip_one)
                 break
             
             cv2.imshow('Camera', imshow) 
             
-        self.anycubic.move_axis_relative(z=25, printMsg=False)
-        self.anycubic.move_axis_relative(x=0, y=220, printMsg=False)
+            
+        # Change tip
+        self.anycubic.move_axis_relative(z=self.safe_height, offset=self.offset_tip_one)
+        self.anycubic.finish_request()
+        while not self.anycubic.get_finish_flag():
+            frame = self.stream1.read() 
+            self.frame = self.cam.undistort(frame)
+            imshow = self.frame.copy()
+
+            cv2.imshow('Camera', imshow) 
+            
+        self.tip_number = 2
+        self.dyna.select_tip(tip_number=self.tip_number, ID=3)
+            
+              
+        # Offset second tip calibration
+        self.anycubic.move_axis_relative(x=0,y=0, offset=self.offset_tip_two)
+        self.anycubic.move_axis_relative(z=0, offset=self.offset_tip_two)
+        
+        while True:
+        
+            frame = self.stream1.read() 
+            self.frame = self.cam.undistort(frame)
+            self.invert = cv.invert(self.frame)
+            imshow = self.frame.copy()
+            
+            # self.macro_frame = self.stream2.read()
+             
+            # Inputs
+            key = cv2.waitKey(5) & 0xFF 
+            
+            self.offset_tip_two = calibration_process(self, key, self.offset_tip_two)
+            
+            if key == 13: #enter
+                print("Offset tip two: ", self.offset_tip_two)
+                break
+                
+            cv2.imshow('Camera', imshow) 
+            
+        # Change tip
+        self.anycubic.move_axis_relative(z=self.safe_height, offset=self.offset_tip_one)
+        self.anycubic.finish_request()
+        while not self.anycubic.get_finish_flag():
+            frame = self.stream1.read() 
+            self.frame = self.cam.undistort(frame)
+            imshow = self.frame.copy()
+
+            cv2.imshow('Camera', imshow) 
+            
+        self.tip_number = 1
+        self.dyna.select_tip(tip_number=self.tip_number, ID=3)
+            
+        # Offset camera calibration
+        self.anycubic.move_axis_relative(x=0,y=0, offset=self.offset_cam)
+        self.anycubic.move_axis_relative(z=self.safe_height, offset=self.offset_cam)
+        
+        while True:
+        
+            frame = self.stream1.read() 
+            self.frame = self.cam.undistort(frame)
+            self.invert = cv.invert(self.frame)
+            imshow = self.frame.copy()
+            
+            # self.macro_frame = self.stream2.read()
+             
+            # Inputs
+            key = cv2.waitKey(5) & 0xFF 
+            
+            offset = self.offset_cam + np.array([0, 0, self.safe_height])
+            offset = calibration_process(self, key, offset)
+            self.offset_cam = offset - np.array([0, 0, self.safe_height])
+            
+            if key == 13: #enter
+                print("Offset cam: ", self.offset_cam)
+                break
+            
+            markerSize = 15
+            thickness = 1
+            center = (imshow.shape[1]//2, imshow.shape[0]//2)
+            imshow = cv2.drawMarker(imshow, center, (255, 0, 0), cv2.MARKER_CROSS, markerSize, thickness)
+            
+            cv2.imshow('Camera', imshow) 
+
+            
+        self.anycubic.move_axis_relative(z=self.safe_height, offset=self.offset_tip_one)
+        self.anycubic.move_axis_relative(x=0, y=220, offset=self.offset_tip_one)
                 
         cv2.destroyAllWindows()   
     
@@ -305,36 +387,6 @@ class platform_pick_and_place:
             self.com_state = 'not send'
         
         
-    def calibration_process(self, key):
-        
-        incr = 0.1
-                
-        if key == ord('a'):
-            self.offset[0] -= incr
-            self.anycubic.move_axis(x=self.calibration_point[0]+self.offset[0],y=self.calibration_point[1]+self.offset[1], z=self.calibration_point[2]+self.offset[2], printMsg=False)
-            
-        if key == ord('d'):
-            self.offset[0] += incr
-            self.anycubic.move_axis(x=self.calibration_point[0]+self.offset[0],y=self.calibration_point[1]+self.offset[1], z=self.calibration_point[2]+self.offset[2], printMsg=False)
-            
-        if key == ord('w'):
-            self.offset[1] += incr
-            self.anycubic.move_axis(x=self.calibration_point[0]+self.offset[0],y=self.calibration_point[1]+self.offset[1], z=self.calibration_point[2]+self.offset[2], printMsg=False)
-            
-        if key == ord('s'):
-            self.offset[1] -= incr
-            self.anycubic.move_axis(x=self.calibration_point[0]+self.offset[0],y=self.calibration_point[1]+self.offset[1], z=self.calibration_point[2]+self.offset[2], printMsg=False)
-            
-        if key == ord('e'):
-            self.offset[2] += incr
-            self.anycubic.move_axis(x=self.calibration_point[0]+self.offset[0],y=self.calibration_point[1]+self.offset[1], z=self.calibration_point[2]+self.offset[2], printMsg=False)
-
-        if key == ord('c'):
-            self.offset[2] -= incr
-            self.anycubic.move_axis(x=self.calibration_point[0]+self.offset[0],y=self.calibration_point[1]+self.offset[1], z=self.calibration_point[2]+self.offset[2], printMsg=False)
-            
-        if key == 13: # enter
-            self.anycubic.set_home_pos(self.offset[0], self.offset[1], self.offset[2])
             
             
             

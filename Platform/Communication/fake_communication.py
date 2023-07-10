@@ -140,7 +140,7 @@ import sys
 
 class Printer:
     def __init__(self, descriptive_device_name, port_name, baudrate):
-        logger.debug("Initializing printer " + descriptive_device_name + " on port " + port_name + " with baudrate " + str(baudrate))
+        logger.debug("Initializing printer " + descriptive_device_name + " on port " + str(port_name) + " with baudrate " + str(baudrate))
         self.descriptive_device_name = descriptive_device_name
         self.position = position(0,0,0)
         
@@ -191,25 +191,29 @@ class Printer:
     def move_home(self, f = 1000, printMsg=False):
         self.move_axis(x = self.home_pos[0], y = self.home_pos[1], z = self.home_pos[2], f = f, printMsg=printMsg)
 
-    def move_axis_relative(self, x = None, y = None, z = None, e = None, f = None, printMsg = False):
-        self._finish = False
-        command = "G0"
-        
-        if x is not None:
-            command = command + " X" + str(x + self.home_pos.x)
-            self.position.x = self.home_pos.x + x
-        if y is not None:
-            command = command + " Y" + str(y + self.home_pos.y)
-            self.position.y = self.home_pos.y + y  
-        if z is not None:
-            command = command + " Z" + str(z + self.home_pos.z)
-            self.position.z = self.home_pos.z + z   
-        if e is not None:
-            command = command + " E" + str(e)
-        if f is not None:
-            command = command + " F" + str(float(f))
+    def move_axis_relative(self, x = None, y = None, z = None, e = None, f = None, printMsg = False, offset = None):
+            self._finish = False
+            if offset is None:
+                offset = [0, 0, 0]
+                
+            offset[0] = offset[0] + self.home_pos.x
+            offset[1] = offset[1] + self.home_pos.y
+            offset[2] = offset[2] + self.home_pos.z
+                
+            command = "G0"
+            
+            if x is not None:
+                command = command + " X" + str(x + offset[0])
+            if y is not None:
+                command = command + " Y" + str(y + offset[1])
+            if z is not None:
+                command = command + " Z" + str(z + offset[2])
+            if e is not None:
+                command = command + " E" + str(e)
+            if f is not None:
+                command = command + " F" + str(float(100*f))
 
-        self.send_gcode(command, wait_until_completion=False, printMsg=printMsg) 
+            self.send_gcode(command, wait_until_completion=False, printMsg=printMsg)
 
     def move_axis(self, x = None, y = None, z = None, e = None, f = None, printMsg = False):
         self._finish = False

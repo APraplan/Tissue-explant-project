@@ -303,8 +303,40 @@ def display(self, key):
     imshow = display_state(self, imshow, (25, 200))
     
     return imshow
-     
-     
+
+def calibration_process(self, key, offset):
+    
+    incr = 0.1
+            
+    if key == ord('a'):
+        offset[0] -= incr
+        self.anycubic.move_axis(x=offset[0],y=offset[1], z=offset[2], printMsg=False)
+        
+    if key == ord('d'):
+        offset[0] += incr
+        self.anycubic.move_axis(x=offset[0],y=offset[1], z=offset[2], printMsg=False)
+        
+    if key == ord('w'):
+        offset[1] += incr
+        self.anycubic.move_axis(x=offset[0],y=offset[1], z=offset[2], printMsg=False)
+        
+    if key == ord('s'):
+        offset[1] -= incr
+        self.anycubic.move_axis(x=offset[0],y=offset[1], z=offset[2], printMsg=False)
+        
+    if key == ord('e'):
+        offset[2] += incr
+        self.anycubic.move_axis(x=offset[0],y=offset[1], z=offset[2], printMsg=False)
+
+    if key == ord('c'):
+        offset[2] -= incr
+        if offset[2] < 0:
+            offset[2] = 0
+        self.anycubic.move_axis(x=offset[0],y=offset[1], z=offset[2], printMsg=False)
+        
+    return offset
+    
+    
 def save_parameters(self):
     
     params = []
@@ -326,13 +358,15 @@ def save_parameters(self):
     params.append(self.solution_pumping_height)
     params.append(self.num_mix)
     params.append(self.num_wash)
-    params.append(self.offset)
     params.append(self.max_attempt)
     params.append(self.min_size)
     params.append(self.max_size)
     params.append(self.well_preparation)
     params.append(self.nb_sample_well)
     params.append(self.number_of_well)
+    params.append(self.offset_tip_one)
+    params.append(self.offset_tip_two)
+    params.append(self.offset_cam)
                 
     pickle.dump(params, open('Platform/Calibration/parameters.pkl', 'wb'))
     
@@ -376,13 +410,15 @@ def load_parameters(self):
     self.solution_pumping_height = params[15]
     self.num_mix = params[16]
     self.num_wash = params[17]
-    self.offset = params[18]
-    self.max_attempt = params[19]
-    self.min_size = params[20]
-    self.max_size = params[21]
-    self.well_preparation = params[22]
-    self.nb_sample_well = params[23]
-    self.number_of_well = params[24]
+    self.max_attempt = params[18]
+    self.min_size = params[19]
+    self.max_size = params[20]
+    self.well_preparation = params[21]
+    self.nb_sample_well = params[22]
+    self.number_of_well = params[23]
+    self.offset_tip_one = params[24]
+    self.offset_tip_two = params[25]
+    self.offset_cam = params[26]
      
     
 goodbye ="""

@@ -100,16 +100,23 @@ class Printer:
     def move_home(self, f = 1000, printMsg=False):
         self.move_axis(x = self.home_pos[0], y = self.home_pos[1], z = self.home_pos[2], f = f, printMsg=printMsg)
 
-    def move_axis_relative(self, x = None, y = None, z = None, e = None, f = None, printMsg = False):
+    def move_axis_relative(self, x = None, y = None, z = None, e = None, f = None, printMsg = False, offset = None):
         self._finish = False
+        if offset is None:
+            offset = [0, 0, 0]
+            
+        offset[0] = offset[0] + self.home_pos[0]
+        offset[1] = offset[1] + self.home_pos[1]
+        offset[2] = offset[2] + self.home_pos[2]
+            
         command = "G0"
         
         if x is not None:
-            command = command + " X" + str(x + self.home_pos[0])
+            command = command + " X" + str(x + offset[0])
         if y is not None:
-            command = command + " Y" + str(y + self.home_pos[1])
+            command = command + " Y" + str(y + offset[1])
         if z is not None:
-            command = command + " Z" + str(z + self.home_pos[2])
+            command = command + " Z" + str(z + offset[2])
         if e is not None:
             command = command + " E" + str(e)
         if f is not None:
