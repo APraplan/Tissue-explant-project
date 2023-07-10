@@ -339,7 +339,7 @@ def save_parameters(self):
     
 def load_parameters(self):
     
-    self.NN = load_model(r'TEP_convNN_92')
+    self.NN = load_model(r'TEP_convNN_BW')
 
     self.background = cv2.imread(r'Pictures\Utils\Backgroud.png')
     self.round_edges_mask = cv2.imread(r'Pictures\Utils\mask_rounded_edges.png')

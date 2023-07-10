@@ -5,6 +5,7 @@ import computer_vision as cv
 from platform_private_sample import *
 from platform_private_gel import *
 from platform_private_gui import *
+from Communication.ports_gestion import *
 
 debug = False
 
@@ -18,7 +19,12 @@ else:
 
 class platform_pick_and_place:
     
-    def __init__(self, com_printer, com_dynamixel, cam_head, cam_macro):
+    def __init__(self):
+        
+        com_ports = get_com_ports(["USB Serial Port", "USB-SERIAL CH340"])
+        cam_ports = get_cam_ports(["USB2.0 UVC PC Camera", "TV Camera"])
+        print(com_ports)
+        print(cam_ports)
         
         # Temp
         self.save = 0
@@ -49,11 +55,11 @@ class platform_pick_and_place:
         self.tube_num = 0
         
         # Anycubic
-        self.anycubic = Printer(descriptive_device_name="printer", port_name=com_printer, baudrate=115200)
+        self.anycubic = Printer(descriptive_device_name="printer", port_name=com_ports.get("USB-SERIAL CH340"), baudrate=115200)
         
         # Dynamixel
         self.dyna = Dynamixel(ID=[1,2,3], descriptive_device_name="XL430 test motor", series_name=["xl", "xl", "xl"], baudrate=57600,
-                 port_name=com_dynamixel)
+                 port_name=com_ports.get("USB Serial Port"))
 
         self.tip_number = 1
         self.pipette_1_pos = 0
@@ -71,7 +77,7 @@ class platform_pick_and_place:
             "CAP_PROP_FRAME_HEIGHT": 720,
             "CAP_PROP_FPS": 30,
         }
-        self.stream1 = VideoGear(source=cam_head, logging=True, **options).start() 
+        self.stream1 = VideoGear(source=cam_ports.get("TV Camera"), logging=True, **options).start() 
         frame = self.stream1.read() 
         self.cam = cv.Camera(frame)
         self.frame = self.cam.undistort(frame)
@@ -84,7 +90,7 @@ class platform_pick_and_place:
         self.max_detect_attempt = 50
         
         # Camera 2
-        self.stream2 = VideoGear(source=cam_macro, logging=True).start() 
+        self.stream2 = VideoGear(source=cam_ports.get("USB2.0 UVC PC Camera"), logging=True).start() 
         self.macro_frame = self.stream2.read()
         self.picture_pos = 0.0
                 
@@ -196,8 +202,13 @@ class platform_pick_and_place:
     def run(self):
         
         if self.record:
-            _, _, files = next(os.walk(r"Pictures\Videos"))
-            id = len(files)
+            try :
+                _, _, files = next(os.walk(r"Pictures\Videos"))
+                id = len(files)
+            except:
+                os.mkdir(r"Pictures\Videos")
+                id = 0
+                
             out = cv2.VideoWriter(r'Pictures\Videos\video_' + str(id) + '.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 10, (self.frame.shape[1], self.frame.shape[0]))
            
         while True:
