@@ -21,10 +21,7 @@ class platform_pick_and_place:
     
     def __init__(self):
         
-        com_ports = get_com_ports(["USB Serial Port", "USB-SERIAL CH340"])
-        cam_ports = get_cam_ports(["USB2.0 UVC PC Camera", "TV Camera"])
-        print(com_ports)
-        print(cam_ports)
+        load_parameters(self)
         
         # Temp
         self.save = 0
@@ -42,23 +39,21 @@ class platform_pick_and_place:
         # Picking zone
         self.safe_height = 25
         self.pick_offset = 4
-        self.detection_place = [27.0, 71, 65]
-        self.reset_pos = [27, 71, 10]
-        self.pipette_pos_px = [272, 390]
-        self.petridish_pos = [27, 71]
+        self.detection_place = [30, 50, 65]
+        self.reset_pos = [30, 50, 10]
+        self.petridish_pos = [30, 50]
         self.petridish_radius = 45
         self.pick_attempt = 0
-        # self.max_attempt = 4
                 
         # Dropping zone
         self.tube_num = 0
         
         # Anycubic
-        self.anycubic = Printer(descriptive_device_name="printer", port_name=com_ports.get("USB-SERIAL CH340"), baudrate=115200)
+        self.anycubic = Printer(descriptive_device_name="printer", port_name=get_com_port("1A86", "7523"), baudrate=115200)
         
         # Dynamixel
         self.dyna = Dynamixel(ID=[1,2,3], descriptive_device_name="XL430 test motor", series_name=["xl", "xl", "xl"], baudrate=57600,
-                 port_name=com_ports.get("USB Serial Port"))
+                 port_name=get_com_port("0403", "6014"))
 
         self.tip_number = 1
         self.pipette_1_pos = 0
@@ -76,7 +71,7 @@ class platform_pick_and_place:
             "CAP_PROP_FRAME_HEIGHT": 720,
             "CAP_PROP_FPS": 30,
         }
-        self.stream1 = VideoGear(source=cam_ports.get("TV Camera"), logging=True, **options).start() 
+        self.stream1 = VideoGear(source=get_cam_index("TV Camera"), logging=True, **options).start() 
         frame = self.stream1.read() 
         self.cam = cv.Camera(frame)
         self.frame = self.cam.undistort(frame)
@@ -89,9 +84,9 @@ class platform_pick_and_place:
         self.max_detect_attempt = 50
         
         # Camera 2
-        self.stream2 = VideoGear(source=cam_ports.get("USB2.0 UVC PC Camera"), logging=True).start() 
+        self.stream2 = VideoGear(source=get_cam_index("USB2.0 UVC PC Camera"), logging=True).start() 
         self.macro_frame = self.stream2.read()
-        self.picture_pos = 0.0
+        self.picture_pos = -self.settings["Offset"]["Tip one"][0]
                 
         # Tracker
         self.tracker = cv2.TrackerCSRT.create()       
@@ -106,13 +101,6 @@ class platform_pick_and_place:
         self.well_num = 0
         self.mix = 0
         self.wash = 0
-
-        well_type = '48'
-        self.mixing_well = [tube('A'), tube('B'), tube('C'), tube('D'), tube('E'), tube('F')]
-        self.culture_well = [well_plate('A1', well_type), well_plate('A2', well_type), well_plate('A3', well_type), well_plate('B1', well_type), well_plate('B2', well_type), well_plate('B3', well_type)]
-        self.solution_well = {'Sol A' : vial('A'), 'Sol B' : vial('B'), 'Washing' : well_plate('A4', well_type), 'Dump' : well_plate('A2', well_type)}
-        
-        load_parameters(self)
 
     # Public methodes
     
@@ -148,138 +136,15 @@ class platform_pick_and_place:
     
     def calibrate(self):
         
-        # Macro camera calibration
-        self.anycubic.move_axis_relative(z=self.safe_height, offset=self.offset_tip_one)
-        self.anycubic.move_axis_relative(x=self.picture_pos, offset=self.offset_tip_one)
+        calibration_sequence(self)
+            
+        self.anycubic.move_axis_relative(z=self.safe_height, offset=self.settings["Offset"]["Tip one"])
+        self.anycubic.move_axis_relative(x=220, y=220, offset=self.settings["Offset"]["Tip one"])
         
-        while True:
-        
-            self.macro_frame = self.stream2.read()            
-
-            # Inputs
-            key = cv2.waitKey(5) & 0xFF 
-            
-            if key == 13: #enter
-                break
-            
-            cv2.imshow('Macro camera', self.macro_frame) 
-            
-        cv2.destroyAllWindows()  
-            
-            
-        # Offset first tip calibration
-        self.anycubic.move_axis_relative(z=5, offset=self.offset_tip_one)
-        self.anycubic.move_axis_relative(x=0,y=0, offset=self.offset_tip_one)
-        self.anycubic.move_axis_relative(z=0, offset=self.offset_tip_one)
-        
-        while True:
-        
-            frame = self.stream1.read() 
-            self.frame = self.cam.undistort(frame)
-            self.invert = cv.invert(self.frame)
-            imshow = self.frame.copy()
-            
-            # self.macro_frame = self.stream2.read()
-             
-            # Inputs
-            key = cv2.waitKey(5) & 0xFF 
-            
-            self.offset_tip_one = calibration_process(self, key, self.offset_tip_one)
-            
-            if key == 13: #enter
-                print("Offset tip one: ", self.offset_tip_one)
-                break
-            
-            cv2.imshow('Camera', imshow) 
-            
-            
-        # Change tip
-        self.anycubic.move_axis_relative(z=self.safe_height, offset=self.offset_tip_one)
-        self.anycubic.finish_request()
-        while not self.anycubic.get_finish_flag():
-            frame = self.stream1.read() 
-            self.frame = self.cam.undistort(frame)
-            imshow = self.frame.copy()
-
-            cv2.imshow('Camera', imshow) 
-            
-        self.tip_number = 2
-        self.dyna.select_tip(tip_number=self.tip_number, ID=3)
-            
-              
-        # Offset second tip calibration
-        self.anycubic.move_axis_relative(x=0,y=0, offset=self.offset_tip_two)
-        self.anycubic.move_axis_relative(z=0, offset=self.offset_tip_two)
-        
-        while True:
-        
-            frame = self.stream1.read() 
-            self.frame = self.cam.undistort(frame)
-            self.invert = cv.invert(self.frame)
-            imshow = self.frame.copy()
-            
-            # self.macro_frame = self.stream2.read()
-             
-            # Inputs
-            key = cv2.waitKey(5) & 0xFF 
-            
-            self.offset_tip_two = calibration_process(self, key, self.offset_tip_two)
-            
-            if key == 13: #enter
-                print("Offset tip two: ", self.offset_tip_two)
-                break
-                
-            cv2.imshow('Camera', imshow) 
-            
-        # Change tip
-        self.anycubic.move_axis_relative(z=self.safe_height, offset=self.offset_tip_one)
-        self.anycubic.finish_request()
-        while not self.anycubic.get_finish_flag():
-            frame = self.stream1.read() 
-            self.frame = self.cam.undistort(frame)
-            imshow = self.frame.copy()
-
-            cv2.imshow('Camera', imshow) 
-            
-        self.tip_number = 1
-        self.dyna.select_tip(tip_number=self.tip_number, ID=3)
-            
-        # Offset camera calibration
-        self.anycubic.move_axis_relative(x=0,y=0, offset=self.offset_cam)
-        self.anycubic.move_axis_relative(z=self.safe_height, offset=self.offset_cam)
-        
-        while True:
-        
-            frame = self.stream1.read() 
-            self.frame = self.cam.undistort(frame)
-            self.invert = cv.invert(self.frame)
-            imshow = self.frame.copy()
-            
-            # self.macro_frame = self.stream2.read()
-             
-            # Inputs
-            key = cv2.waitKey(5) & 0xFF 
-            
-            offset = self.offset_cam + np.array([0, 0, self.safe_height])
-            offset = calibration_process(self, key, offset)
-            self.offset_cam = offset - np.array([0, 0, self.safe_height])
-            
-            if key == 13: #enter
-                print("Offset cam: ", self.offset_cam)
-                break
-            
-            markerSize = 15
-            thickness = 1
-            center = (imshow.shape[1]//2, imshow.shape[0]//2)
-            imshow = cv2.drawMarker(imshow, center, (255, 0, 0), cv2.MARKER_CROSS, markerSize, thickness)
-            
-            cv2.imshow('Camera', imshow) 
-
-            
-        self.anycubic.move_axis_relative(z=self.safe_height, offset=self.offset_tip_one)
-        self.anycubic.move_axis_relative(x=0, y=220, offset=self.offset_tip_one)
+        self.tip_pos_px = self.cam.platform_space_to_cam(self.settings["Offset"]["Tip one"], self.settings["Offset"]["Camera"]) + np.array([5, -5]) # small correction   
                 
         cv2.destroyAllWindows()   
+        
     
     def run(self):
         
@@ -311,8 +176,9 @@ class platform_pick_and_place:
             
             if key == 27: #esc
                 break
+          
             
-            imshow = display(self, key)
+            imshow = display(self, key)     
             
             cv2.imshow('Camera', imshow) 
             # cv2.imshow('Macro cam', self.macro_frame)

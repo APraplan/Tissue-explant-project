@@ -21,81 +21,81 @@ class platform_pick_and_place_gui:
         self.gui_menu = 0
         self.gui_menu_label = np.array(['Pick height', 'Drop height', 'Slow speed', 'Medium speed', 'Fast speed', 'Pumping Volume', 'Pumping speed', 'Dropping volume', 'Dropping speed'])
 
-        self.pick_height = 2.5
-        self.drop_height = 2.5
-        self.fast_speed = 5000
-        self.medium_speed = 2000
-        self.slow_speed = 300
+        self.settings["Position"]["Pick height"] = 2.5
+        self.settings["Position"]["Drop height"] = 2.5
+        self.settings["Speed"]["Fast speed"]= 5000
+        self.settings["Speed"]["Medium speed"] = 2000
+        self.settings["Speed"]["Slow speed"] = 300
 
-        self.pipette_dropping_speed = 40
-        self.pipette_dropping_volume = 10
-        self.pipette_pumping_speed = 10
-        self.pipette_pumping_volume = 20
+        self.settings["Tissues"]["Dropping speed"] = 40
+        self.settings["Tissues"]["Dropping volume"] = 10
+        self.settings["Tissues"]["Pumping speed"] = 10
+        self.settings["Tissues"]["Pumping Volume"] = 20
         
     def gui_parameter(self, direction=None):
         
         if direction == 'up':
             
             if self.gui_menu == 0:
-                self.pick_height += 0.1
+                self.settings["Position"]["Pick height"] += 0.1
             if self.gui_menu == 1:
-                self.drop_height += 0.1
+                self.settings["Position"]["Drop height"] += 0.1
             if self.gui_menu == 2:
-                self.slow_speed += 1
+                self.settings["Speed"]["Slow speed"] += 1
             if self.gui_menu == 3:
-                self.medium_speed += 1
+                self.settings["Speed"]["Medium speed"] += 1
             if self.gui_menu == 4:
-                self.fast_speed += 1        
+                self.settings["Speed"]["Fast speed"]+= 1        
             if self.gui_menu == 5:
-                self.pipette_pumping_volume += 1
+                self.settings["Tissues"]["Pumping Volume"] += 1
             if self.gui_menu == 6:
-                self.pipette_pumping_speed += 1
+                self.settings["Tissues"]["Pumping speed"] += 1
             if self.gui_menu == 7:
-                self.pipette_dropping_volume += 1
+                self.settings["Tissues"]["Dropping volume"] += 1
             if self.gui_menu == 8:
-                self.pipette_dropping_speed += 1 
+                self.settings["Tissues"]["Dropping speed"] += 1 
         
         if direction == 'down':
             
             if self.gui_menu == 0:
-                self.pick_height -= 0.1
+                self.settings["Position"]["Pick height"] -= 0.1
             if self.gui_menu == 1:
-                self.drop_height -= 0.1
+                self.settings["Position"]["Drop height"] -= 0.1
             if self.gui_menu == 2:
-                self.slow_speed -= 1
+                self.settings["Speed"]["Slow speed"] -= 1
             if self.gui_menu == 3:
-                self.medium_speed -= 1
+                self.settings["Speed"]["Medium speed"] -= 1
             if self.gui_menu == 4:
-                self.fast_speed -= 1        
+                self.settings["Speed"]["Fast speed"]-= 1        
             if self.gui_menu == 5:
-                self.pipette_pumping_volume -= 1
+                self.settings["Tissues"]["Pumping Volume"] -= 1
             if self.gui_menu == 6:
-                self.pipette_pumping_speed -= 1
+                self.settings["Tissues"]["Pumping speed"] -= 1
             if self.gui_menu == 7:
-                self.pipette_dropping_volume -= 1
+                self.settings["Tissues"]["Dropping volume"] -= 1
             if self.gui_menu == 8:
-                self.pipette_dropping_speed -= 1 
+                self.settings["Tissues"]["Dropping speed"] -= 1 
                 
         if direction is None:
             
             if self.gui_menu == 0:
-                return self.pick_height
+                return self.settings["Position"]["Pick height"]
             if self.gui_menu == 1:
-                return self.drop_height
+                return self.settings["Position"]["Drop height"]
             if self.gui_menu == 2:
-                return self.slow_speed
+                return self.settings["Speed"]["Slow speed"]
             if self.gui_menu == 3:
-                return self.medium_speed
+                return self.settings["Speed"]["Medium speed"]
             if self.gui_menu == 4:
-                return self.fast_speed       
+                return self.settings["Speed"]["Fast speed"]      
             if self.gui_menu == 5:
-                return self.pipette_pumping_volume
+                return self.settings["Tissues"]["Pumping Volume"]
             if self.gui_menu == 6:
-                return self.pipette_pumping_speed
+                return self.settings["Tissues"]["Pumping speed"]
             if self.gui_menu == 7:
-                return self.pipette_dropping_volume
+                return self.settings["Tissues"]["Dropping volume"]
             if self.gui_menu == 8:
-                return self.pipette_dropping_speed
+                return self.settings["Tissues"]["Dropping speed"]
                 
     def display(self, position):
         

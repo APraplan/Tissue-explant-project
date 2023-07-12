@@ -30,6 +30,7 @@ if not cap.isOpened():
     
 mcv.make_720p(cap)
     
+    
 ret, frame = cap.read() 
 
 
@@ -170,7 +171,7 @@ if verticality_calibration or offset_callibration or camera_calibration or bed_l
     
 if bed_leveling_calibration:
     
-    anycubic.move_axis(x=25, y=195, z=0, f = 8000)
+    anycubic.move_axis(x=35, y=220, z=0, f = 8000)
     
     while(True): 
 
@@ -189,19 +190,19 @@ if bed_leveling_calibration:
         
         if key == ord('0'):
             anycubic.move_axis(z=5, f = 8000)
-            anycubic.move_axis(x=25, y=200, f = 8000)
+            anycubic.move_axis(x=35, y=220, f = 8000)
             anycubic.move_axis(z=1, f = 8000)
         if key == ord('1'):
             anycubic.move_axis(z=5, f = 8000)
-            anycubic.move_axis(x=175, y=200, f = 8000)
+            anycubic.move_axis(x=195, y=220, f = 8000)
             anycubic.move_axis(z=1, f = 8000)        
         if key == ord('2'):
             anycubic.move_axis(z=5, f = 8000)
-            anycubic.move_axis(x=175, y=75, f = 8000)
+            anycubic.move_axis(x=195, y=65, f = 8000)
             anycubic.move_axis(z=1, f = 8000)        
         if key == ord('3'):
             anycubic.move_axis(z=5, f = 8000)
-            anycubic.move_axis(x=25, y=75, f = 8000)
+            anycubic.move_axis(x=35, y=65, f = 8000)
             anycubic.move_axis(z=1, f = 8000)        
         if key == 27: 
             cv2.destroyAllWindows()
@@ -288,7 +289,7 @@ if camera_calibration:
      
     z1 = 175
     z2 = 75
-    h = 388 # Real perimeter
+    h = 386.8 # Real perimeter
     
     anycubic.move_axis(x=100, y=100, z=z1, f = 2000)
     pos = z1

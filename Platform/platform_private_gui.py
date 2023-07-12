@@ -3,6 +3,138 @@ import numpy as np
 import pickle
 import tensorflow as tf
 from keras.models import load_model
+import computer_vision as cv
+import json
+
+def calibration_sequence(self):
+
+    # Macro camera calibration
+    self.anycubic.move_axis_relative(z=self.safe_height, offset=self.settings["Offset"]["Tip one"])
+    self.anycubic.move_axis_relative(x=self.picture_pos, offset=self.settings["Offset"]["Tip one"])
+    
+    while True:
+    
+        self.macro_frame = self.stream2.read()            
+
+        # Inputs
+        key = cv2.waitKey(5) & 0xFF 
+        
+        if key == 13: #enter
+            break
+        
+        cv2.imshow('Macro camera', self.macro_frame) 
+        
+    cv2.destroyAllWindows()  
+        
+        
+    # Offset first tip calibration
+    self.anycubic.move_axis_relative(z=5, offset=self.settings["Offset"]["Tip one"])
+    self.anycubic.move_axis_relative(x=self.settings["Offset"]["Calibration point"][0], y=self.settings["Offset"]["Calibration point"][1], offset=self.settings["Offset"]["Tip one"])
+    self.anycubic.move_axis_relative(z=self.settings["Offset"]["Calibration point"][2], offset=self.settings["Offset"]["Tip one"])
+    
+    while True:
+    
+        frame = self.stream1.read() 
+        self.frame = self.cam.undistort(frame)
+        self.invert = cv.invert(self.frame)
+        imshow = self.frame.copy()
+        
+        # self.macro_frame = self.stream2.read()
+            
+        # Inputs
+        key = cv2.waitKey(5) & 0xFF 
+        
+        self.settings["Offset"]["Tip one"] = calibration_process(self, key, self.settings["Offset"]["Tip one"])
+        
+        if key == 13: #enter
+            print("Offset tip one: ", self.settings["Offset"]["Tip one"])
+            break
+        
+        cv2.imshow('Camera', imshow) 
+        
+        
+    # Change tip
+    self.anycubic.move_axis_relative(z=self.safe_height, offset=self.settings["Offset"]["Tip one"])
+    self.anycubic.finish_request()
+    while not self.anycubic.get_finish_flag():
+        frame = self.stream1.read() 
+        self.frame = self.cam.undistort(frame)
+        imshow = self.frame.copy()
+
+        cv2.imshow('Camera', imshow) 
+        
+    self.tip_number = 2
+    self.dyna.select_tip(tip_number=self.tip_number, ID=3)
+        
+            
+    # Offset second tip calibration
+    self.anycubic.move_axis_relative(x=self.settings["Offset"]["Calibration point"][0], y=self.settings["Offset"]["Calibration point"][1], offset=self.settings["Offset"]["Tip two"])
+    self.anycubic.move_axis_relative(z=self.settings["Offset"]["Calibration point"][2], offset=self.settings["Offset"]["Tip two"])
+    
+    while True:
+    
+        frame = self.stream1.read() 
+        self.frame = self.cam.undistort(frame)
+        self.invert = cv.invert(self.frame)
+        imshow = self.frame.copy()
+        
+        # self.macro_frame = self.stream2.read()
+            
+        # Inputs
+        key = cv2.waitKey(5) & 0xFF 
+        
+        self.settings["Offset"]["Tip two"] = calibration_process(self, key, self.settings["Offset"]["Tip two"])
+        
+        if key == 13: #enter
+            print("Offset tip two: ", self.settings["Offset"]["Tip two"])
+            break
+            
+        cv2.imshow('Camera', imshow) 
+        
+    # Change tip
+    self.anycubic.move_axis_relative(z=self.safe_height, offset=self.settings["Offset"]["Tip one"])
+    self.anycubic.finish_request()
+    while not self.anycubic.get_finish_flag():
+        frame = self.stream1.read() 
+        self.frame = self.cam.undistort(frame)
+        imshow = self.frame.copy()
+
+        cv2.imshow('Camera', imshow) 
+        
+    self.tip_number = 1
+    self.dyna.select_tip(tip_number=self.tip_number, ID=3)
+        
+    # Offset camera calibration
+    self.anycubic.move_axis_relative(x=self.settings["Offset"]["Calibration point"][0], y=self.settings["Offset"]["Calibration point"][1], offset=self.settings["Offset"]["Camera"])
+    self.anycubic.move_axis_relative(z=self.safe_height, offset=self.settings["Offset"]["Camera"])
+    
+    while True:
+    
+        frame = self.stream1.read() 
+        self.frame = self.cam.undistort(frame)
+        self.invert = cv.invert(self.frame)
+        imshow = self.frame.copy()
+        
+        # self.macro_frame = self.stream2.read()
+            
+        # Inputs
+        key = cv2.waitKey(5) & 0xFF 
+        
+        offset = self.settings["Offset"]["Camera"]
+        offset[2] += self.safe_height
+        offset = calibration_process(self, key, offset)
+        self.settings["Offset"]["Camera"][2] = 0
+        
+        if key == 13: #enter
+            print("Offset cam: ", self.settings["Offset"]["Camera"])
+            break
+        
+        markerSize = 15
+        thickness = 1
+        center = (imshow.shape[1]//2, imshow.shape[0]//2)
+        imshow = cv2.drawMarker(imshow, center, (255, 0, 0), cv2.MARKER_CROSS, markerSize, thickness)
+        
+        cv2.imshow('Camera', imshow) 
 
     
 def gui_parameter(self, direction=None):
@@ -10,173 +142,189 @@ def gui_parameter(self, direction=None):
     if direction == 'up':
         
         if self.gui_menu == 0:
-            self.pick_height += 0.1
+            self.settings["Position"]["Pick height"] += 0.1
         if self.gui_menu == 1:
-            self.drop_height += 0.1
+            self.settings["Position"]["Drop height"] += 0.1
         if self.gui_menu == 2:
-            self.slow_speed += 1
+            self.settings["Speed"]["Slow speed"] += 1
         if self.gui_menu == 3:
-            self.medium_speed += 1
+            self.settings["Speed"]["Medium speed"] += 1
         if self.gui_menu == 4:
-            self.fast_speed += 1    
+            self.settings["Speed"]["Fast speed"]+= 1    
         if self.gui_menu == 5:
-            self.pipette_pumping_volume += 1
+            self.settings["Tissues"]["Pumping Volume"] += 1
         if self.gui_menu == 6:
-            self.pipette_pumping_speed += 1
+            self.settings["Tissues"]["Pumping speed"] += 1
         if self.gui_menu == 7:
-            self.pipette_dropping_volume += 1
+            self.settings["Tissues"]["Dropping volume"] += 1
         if self.gui_menu == 8:
-            self.pipette_dropping_speed += 1
+            self.settings["Tissues"]["Dropping speed"] += 1
             
         if self.gui_menu == 9:
-            self.solution_A_pumping_speed += 1
+            self.settings["Solution A"]["Solution A pumping speed"] += 1
         if self.gui_menu == 10:
-            self.solution_A_dropping_speed += 1
+            self.settings["Solution A"]["Solution A dropping speed"] += 1
         if self.gui_menu == 11:
-            self.solution_A_pumping_volume += 1
+            self.settings["Solution A"]["Solution A pumping volume"] += 1
         if self.gui_menu == 12:
-            self.solution_B_pumping_speed += 1
+            self.settings["Solution B"]["Solution B pumping speed"] += 1
         if self.gui_menu == 13:
-            self.solution_B_dropping_speed += 1
+            self.settings["Solution B"]["Solution B dropping speed"] += 1
         if self.gui_menu == 14:
-            self.solution_B_pumping_volume += 1
+            self.settings["Solution B"]["Solution B pumping volume"] += 1
         if self.gui_menu == 15:
-            self.solution_pumping_height += 0.1
+            self.settings["Gel"]["Solution pumping height"] += 0.1
         if self.gui_menu == 16:
-            if self.num_mix < 10:
-                self.num_mix  += 1
+            if self.settings["Gel"]["Number of mix"] < 10:
+                self.settings["Gel"]["Number of mix"]  += 1
         if self.gui_menu == 17:
-            if self.num_wash < 10:
-                self.num_wash += 1
+            if self.settings["Gel"]["Number of wash"] < 10:
+                self.settings["Gel"]["Number of wash"] += 1
         if self.gui_menu == 18:
-            self.max_attempt += 1
+            self.settings["Detection"]["Max attempt"] += 1
         if self.gui_menu == 19:
-            if self.min_size < self.max_size:
-                self.min_size += 1
+            if self.settings["Detection"]["Size min"] < self.settings["Detection"]["Size max"]:
+                self.settings["Detection"]["Size min"] += 1
         if self.gui_menu == 20:
-            if self.max_size < 200:
-                self.max_size += 1
+            if self.settings["Detection"]["Size max"] < 200:
+                self.settings["Detection"]["Size max"] += 1
         if self.gui_menu == 21:
-            self.well_preparation = True
+            self.settings["Well"]["Well preparation"] = True
         if self.gui_menu == 22:
-            if self.nb_sample_well < 8:
-                self.nb_sample_well += 1
+            if self.settings["Well"]["Type"] == "6":
+                self.settings["Well"]["Type"] = "12"
+            elif self.settings["Well"]["Type"] == "12":
+                self.settings["Well"]["Type"] = "24"
+            elif self.settings["Well"]["Type"] == "24":
+                self.settings["Well"]["Type"] = "48"
         if self.gui_menu == 23:
-            if self.number_of_well < 6:
-                self.number_of_well += 1
+            if self.settings["Well"]["Number of sample per well"] < 8:
+                self.settings["Well"]["Number of sample per well"] += 1
+        if self.gui_menu == 24:
+            if self.settings["Well"]["Number of well"] < 6:
+                self.settings["Well"]["Number of well"] += 1
     
     if direction == 'down':
         
         if self.gui_menu == 0:
-            self.pick_height -= 0.1
+            self.settings["Position"]["Pick height"] -= 0.1
         if self.gui_menu == 1:
-            self.drop_height -= 0.1
+            self.settings["Position"]["Drop height"] -= 0.1
         if self.gui_menu == 2:
-            self.slow_speed -= 1
+            self.settings["Speed"]["Slow speed"] -= 1
         if self.gui_menu == 3:
-            self.medium_speed -= 1
+            self.settings["Speed"]["Medium speed"] -= 1
         if self.gui_menu == 4:
-            self.fast_speed -= 1    
+            self.settings["Speed"]["Fast speed"]-= 1    
         if self.gui_menu == 5:
-            self.pipette_pumping_volume -= 1
+            self.settings["Tissues"]["Pumping Volume"] -= 1
         if self.gui_menu == 6:
-            self.pipette_pumping_speed -= 1
+            self.settings["Tissues"]["Pumping speed"] -= 1
         if self.gui_menu == 7:
-            self.pipette_dropping_volume -= 1
+            self.settings["Tissues"]["Dropping volume"] -= 1
         if self.gui_menu == 8:
-            self.pipette_dropping_speed -= 1
+            self.settings["Tissues"]["Dropping speed"] -= 1
             
         if self.gui_menu == 9:
-            self.solution_A_pumping_speed -= 1
+            self.settings["Solution A"]["Solution A pumping speed"] -= 1
         if self.gui_menu == 10:
-            self.solution_A_dropping_speed -= 1
+            self.settings["Solution A"]["Solution A dropping speed"] -= 1
         if self.gui_menu == 11:
-            self.solution_A_pumping_volume -= 1
+            self.settings["Solution A"]["Solution A pumping volume"] -= 1
         if self.gui_menu == 12:
-            self.solution_B_pumping_speed -= 1
+            self.settings["Solution B"]["Solution B pumping speed"] -= 1
         if self.gui_menu == 13:
-            self.solution_B_dropping_speed -= 1
+            self.settings["Solution B"]["Solution B dropping speed"] -= 1
         if self.gui_menu == 14:
-            self.solution_B_pumping_volume -= 1
+            self.settings["Solution B"]["Solution B pumping volume"] -= 1
         if self.gui_menu == 15:
-            self.solution_pumping_height -= 0.1 
+            self.settings["Gel"]["Solution pumping height"] -= 0.1 
         if self.gui_menu == 16:
-            if self.num_mix > 0:
-                self.num_mix  -= 1
+            if self.settings["Gel"]["Number of mix"] > 0:
+                self.settings["Gel"]["Number of mix"]  -= 1
         if self.gui_menu == 17:
-            if self.num_wash > 0:
-                self.num_wash -= 1
+            if self.settings["Gel"]["Number of wash"] > 0:
+                self.settings["Gel"]["Number of wash"] -= 1
         if self.gui_menu == 18:
-            self.max_attempt -= 1
+            self.settings["Detection"]["Max attempt"] -= 1
         if self.gui_menu == 19:
-            if self.min_size > 0:
-                self.min_size -= 1
+            if self.settings["Detection"]["Size min"] > 0:
+                self.settings["Detection"]["Size min"] -= 1
         if self.gui_menu == 20:
-            if self.max_size > self.min_size:
-                self.max_size -= 1
+            if self.settings["Detection"]["Size max"] > self.settings["Detection"]["Size min"]:
+                self.settings["Detection"]["Size max"] -= 1
         if self.gui_menu == 21:
-            self.well_preparation = False
+            self.settings["Well"]["Well preparation"] = False
         if self.gui_menu == 22:
-            if self.nb_sample_well > 1:
-                self.nb_sample_well -= 1
+            if self.settings["Well"]["Type"] == "48":
+                self.settings["Well"]["Type"] = "24"
+            elif self.settings["Well"]["Type"] == "24":
+                self.settings["Well"]["Type"] = "12"
+            elif self.settings["Well"]["Type"] == "12":
+                self.settings["Well"]["Type"] = "6"
         if self.gui_menu == 23:
-            if self.number_of_well > 1:
-                self.number_of_well -= 1
+            if self.settings["Well"]["Number of sample per well"] > 1:
+                self.settings["Well"]["Number of sample per well"] -= 1
+        if self.gui_menu == 24:
+            if self.settings["Well"]["Number of well"] > 1:
+                self.settings["Well"]["Number of well"] -= 1
             
     if direction is None:
         
         if self.gui_menu == 0:
-            return self.pick_height
+            return self.settings["Position"]["Pick height"]
         if self.gui_menu == 1:
-            return self.drop_height
+            return self.settings["Position"]["Drop height"]
         if self.gui_menu == 2:
-            return self.slow_speed
+            return self.settings["Speed"]["Slow speed"]
         if self.gui_menu == 3:
-            return self.medium_speed
+            return self.settings["Speed"]["Medium speed"]
         if self.gui_menu == 4:
-            return self.fast_speed       
+            return self.settings["Speed"]["Fast speed"]      
         if self.gui_menu == 5:
-            return self.pipette_pumping_volume
+            return self.settings["Tissues"]["Pumping Volume"]
         if self.gui_menu == 6:
-            return self.pipette_pumping_speed
+            return self.settings["Tissues"]["Pumping speed"]
         if self.gui_menu == 7:
-            return self.pipette_dropping_volume
+            return self.settings["Tissues"]["Dropping volume"]
         if self.gui_menu == 8:
-            return self.pipette_dropping_speed
+            return self.settings["Tissues"]["Dropping speed"]
         
         if self.gui_menu == 9:
-            return self.solution_A_pumping_speed
+            return self.settings["Solution A"]["Solution A pumping speed"]
         if self.gui_menu == 10:
-            return self.solution_A_dropping_speed
+            return self.settings["Solution A"]["Solution A dropping speed"]
         if self.gui_menu == 11:
-            return self.solution_A_pumping_volume
+            return self.settings["Solution A"]["Solution A pumping volume"]
         if self.gui_menu == 12:
-            return self.solution_B_pumping_speed
+            return self.settings["Solution B"]["Solution B pumping speed"]
         if self.gui_menu == 13:
-            return self.solution_B_dropping_speed
+            return self.settings["Solution B"]["Solution B dropping speed"]
         if self.gui_menu == 14:
-            return self.solution_B_pumping_volume
+            return self.settings["Solution B"]["Solution B pumping volume"]
         if self.gui_menu == 15:
-            return self.solution_pumping_height
+            return self.settings["Gel"]["Solution pumping height"]
         if self.gui_menu == 16:
-            return self.num_mix
+            return self.settings["Gel"]["Number of mix"]
         if self.gui_menu == 17:
-            return self.num_wash
+            return self.settings["Gel"]["Number of wash"]
         if self.gui_menu == 18:
-            return self.max_attempt  
+            return self.settings["Detection"]["Max attempt"]  
         if self.gui_menu == 19:
-            return self.min_size
+            return self.settings["Detection"]["Size min"]
         if self.gui_menu == 20:
-            return self.max_size     
+            return self.settings["Detection"]["Size max"]     
         if self.gui_menu == 21:
-            if self.well_preparation:
+            if self.settings["Well"]["Well preparation"]:
                 return 'yes'
             else:
                 return 'no'
         if self.gui_menu == 22:
-            return self.nb_sample_well
+            return self.settings["Well"]["Type"]
         if self.gui_menu == 23:
-            return self.number_of_well
+            return self.settings["Well"]["Number of sample per well"]
+        if self.gui_menu == 24:
+            return self.settings["Well"]["Number of well"]
 
 
 def display_state(self, imshow, position):
@@ -234,7 +382,7 @@ def display_gui_txt(self, imshow, position):
     size, _ = cv2.getTextSize(name, font, fontScale, thickness)
     pos[0] += size[0] + 7
     
-    if self.gui_menu == 21:
+    if self.gui_menu == 21 or self.gui_menu == 22:
         val = gui_parameter(self)
     else:
         val = str(round(gui_parameter(self), 2))
@@ -286,6 +434,9 @@ def display(self, key):
     imshow = self.background.copy()
     
     cam = self.frame.copy()
+            
+    
+    cv2.circle(cam, (int(self.tip_pos_px[0]), int(self.tip_pos_px[1])), 5, (0, 0, 255), 2) 
     
     if self.success:
         x, y, w, h = [int(i) for i in self.bbox]
@@ -310,65 +461,47 @@ def calibration_process(self, key, offset):
             
     if key == ord('a'):
         offset[0] -= incr
-        self.anycubic.move_axis(x=offset[0],y=offset[1], z=offset[2], printMsg=False)
+        self.anycubic.move_axis_relative(x=self.settings["Offset"]["Calibration point"][0], 
+                                        y=self.settings["Offset"]["Calibration point"][1], 
+                                        z=self.settings["Offset"]["Calibration point"][2], offset=offset)
         
-    if key == ord('d'):
+    elif key == ord('d'):
         offset[0] += incr
-        self.anycubic.move_axis(x=offset[0],y=offset[1], z=offset[2], printMsg=False)
-        
-    if key == ord('w'):
-        offset[1] += incr
-        self.anycubic.move_axis(x=offset[0],y=offset[1], z=offset[2], printMsg=False)
-        
-    if key == ord('s'):
-        offset[1] -= incr
-        self.anycubic.move_axis(x=offset[0],y=offset[1], z=offset[2], printMsg=False)
-        
-    if key == ord('e'):
-        offset[2] += incr
-        self.anycubic.move_axis(x=offset[0],y=offset[1], z=offset[2], printMsg=False)
+        self.anycubic.move_axis_relative(x=self.settings["Offset"]["Calibration point"][0], 
+                                        y=self.settings["Offset"]["Calibration point"][1], 
+                                        z=self.settings["Offset"]["Calibration point"][2], offset=offset)
 
-    if key == ord('c'):
+    elif key == ord('w'):
+        offset[1] += incr
+        self.anycubic.move_axis_relative(x=self.settings["Offset"]["Calibration point"][0], 
+                                        y=self.settings["Offset"]["Calibration point"][1], 
+                                        z=self.settings["Offset"]["Calibration point"][2], offset=offset)
+
+    elif key == ord('s'):
+        offset[1] -= incr
+        self.anycubic.move_axis_relative(x=self.settings["Offset"]["Calibration point"][0], 
+                                        y=self.settings["Offset"]["Calibration point"][1], 
+                                        z=self.settings["Offset"]["Calibration point"][2], offset=offset)
+
+    elif key == ord('e'):
+        offset[2] += incr
+        self.anycubic.move_axis_relative(x=self.settings["Offset"]["Calibration point"][0], 
+                                        y=self.settings["Offset"]["Calibration point"][1], 
+                                        z=self.settings["Offset"]["Calibration point"][2], offset=offset)
+
+    elif key == ord('c'):
         offset[2] -= incr
-        if offset[2] < 0:
-            offset[2] = 0
-        self.anycubic.move_axis(x=offset[0],y=offset[1], z=offset[2], printMsg=False)
-        
+        self.anycubic.move_axis_relative(x=self.settings["Offset"]["Calibration point"][0], 
+                                        y=self.settings["Offset"]["Calibration point"][1], 
+                                        z=self.settings["Offset"]["Calibration point"][2], offset=offset)
+
     return offset
     
     
 def save_parameters(self):
     
-    params = []
-    params.append(self.fast_speed)
-    params.append(self.medium_speed)
-    params.append(self.slow_speed)
-    params.append(self.drop_height)
-    params.append(self.pipette_dropping_speed)
-    params.append(self.pipette_dropping_volume)
-    params.append(self.pick_height)
-    params.append(self.pipette_pumping_speed)
-    params.append(self.pipette_pumping_volume)
-    params.append(self.solution_A_pumping_speed)
-    params.append(self.solution_A_dropping_speed)
-    params.append(self.solution_A_pumping_volume)
-    params.append(self.solution_B_pumping_speed)
-    params.append(self.solution_B_dropping_speed)
-    params.append(self.solution_B_pumping_volume)
-    params.append(self.solution_pumping_height)
-    params.append(self.num_mix)
-    params.append(self.num_wash)
-    params.append(self.max_attempt)
-    params.append(self.min_size)
-    params.append(self.max_size)
-    params.append(self.well_preparation)
-    params.append(self.nb_sample_well)
-    params.append(self.number_of_well)
-    params.append(self.offset_tip_one)
-    params.append(self.offset_tip_two)
-    params.append(self.offset_cam)
-                
-    pickle.dump(params, open('Platform/Calibration/parameters.pkl', 'wb'))
+    with open("settings.json", "w") as jsonFile:
+        json.dump(self.settings, jsonFile, indent=4)
     
     
 def load_parameters(self):
@@ -386,40 +519,13 @@ def load_parameters(self):
                                     ['Solution B', 'Pumping speed', ''], ['Solution B', 'Dropping speed', ''], ['Solution B', 'Pumping volume', 'ul'], 
                                     ['Gel', 'Solution pumping height', 'mm'], ['Gel', 'Number of mix', ''], ['Gel', 'Number of wash', ''],
                                     ['Detection', 'Max attempt', ''],['Detection', 'Size min', ''], ['Detection', 'Size max', ''],
-                                    ['Well', 'Well prepatation', ''],
-                                    ['Well', 'Number of sample per well', ''],
-                                    ['Well', 'Number of well', '']])
+                                    ['Well', 'Well prepatation', ''], ["Well", "Type", ""], ['Well', 'Number of sample per well', ''], ['Well', 'Number of well', '']])
 
     params = pickle.load(open('Platform/Calibration/parameters.pkl', 'rb'))
     
-    self.fast_speed = params[0]
-    self.medium_speed = params[1]
-    self.slow_speed = params[2]
-    self.drop_height = params[3]
-    self.pipette_dropping_speed = params[4]
-    self.pipette_dropping_volume = params[5]
-    self.pick_height = params[6]
-    self.pipette_pumping_speed = params[7]
-    self.pipette_pumping_volume = params[8]
-    self.solution_A_pumping_speed = params[9]
-    self.solution_A_dropping_speed = params[10]
-    self.solution_A_pumping_volume = params[11]
-    self.solution_B_pumping_speed = params[12]
-    self.solution_B_dropping_speed = params[13]
-    self.solution_B_pumping_volume = params[14]
-    self.solution_pumping_height = params[15]
-    self.num_mix = params[16]
-    self.num_wash = params[17]
-    self.max_attempt = params[18]
-    self.min_size = params[19]
-    self.max_size = params[20]
-    self.well_preparation = params[21]
-    self.nb_sample_well = params[22]
-    self.number_of_well = params[23]
-    self.offset_tip_one = params[24]
-    self.offset_tip_two = params[25]
-    self.offset_cam = params[26]
-     
+    with open("settings.json", "r") as jsonFile:
+        self.settings = json.load(jsonFile)
+        
     
 goodbye ="""
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡤⠴⠒⠤⣄⡀⠀⠀⠀⠀⢠⣾⠉⠉⠉⠉⠑⠒⠦⢄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀

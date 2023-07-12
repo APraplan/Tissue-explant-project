@@ -1,20 +1,27 @@
 import serial.tools.list_ports
 from pygrabber.dshow_graph import FilterGraph
+import logging
+
+log = logging.getLogger(__name__)
 
 def list_com_ports()-> None:
     """
     List all the available COM ports and their description.
     """
-    port_data = []
+    port_data:list = list()
     
     for port in serial.tools.list_ports.comports():
         info = dict({"Name": port.name, "Description": port.description, "Manufacturer": port.manufacturer,
                  "Hwid": port.hwid})
         port_data.append(info)
             
-    print (port_data)
+    if len(port_data) == 0:
+        logging.info("No COM port found")
+    else:
+        logging.info(port_data)
+        
     
-def list_cam_ports()-> None:
+def list_cam_index()-> None:
     """
     List all the available cameras and their index.
     """
@@ -23,47 +30,76 @@ def list_cam_ports()-> None:
     for device_index, device_name in enumerate(FilterGraph().get_input_devices()):
         available_cameras[device_index] = device_name
     
-    print (available_cameras)
-        
-def get_com_ports(name_list)-> dict:
-    """
-    Return a dictionary with the COM ports of the devices in name_list.
+    if len(available_cameras) == 0:
+        logging.info("No camera found")
+    else:
+        logging.info(available_cameras)
+    
+    
+def get_com_port(VID, PID)-> str:
+    """Return the COM port of the device corresponding the VID and PID givven.
 
     Args:
-        name_list (String): Name of the devices to find.
+        VID (string): USB Vendor ID.
+        PID (string): USB Product ID.
 
     Returns:
-        dict: Dictionary with the COM ports of the devices in name_list.
+        str: COM port of the device corresponding the VID and PID.
     """
-    port_data = {}
+    coresponding_port:list = list()
     
     for port in serial.tools.list_ports.comports():
-        for name in name_list:
-            if port.description[:len(name)] == name:
-                port_data[name] = port.name
-                
-    return port_data
-
-def get_cam_ports(name_list)-> dict:
-    """
-    Return a dictionary with the index of the cameras in name_list.
+        port_VID = port.hwid.replace("USB VID:PID=", "")[:4]
+        port_PID = port.hwid.replace("USB VID:PID=", "")[5:9]
+        
+        if port_VID == VID and port_PID == PID:
+            coresponding_port.append(port.name)
+            
+    if len(coresponding_port) == 0:
+        logging.error("No COM port found for VID: {} and PID: {}".format(VID, PID))
+    elif len(coresponding_port) > 1:
+        logging.error("More than one COM port found for VID: {} and PID: {}".format(VID, PID))
+    else:
+        return coresponding_port[0]
+    
+    
+def get_cam_index(name)-> int:
+    """Return the index of the camera corresponding the name givven.
 
     Args:
-        name_list (String): Name of the cameras to find.
+        name (string): Name of the camera.
 
     Returns:
-        dict: Dictionary with the index of the cameras in name_list.
+        int: Index of the camera corresponding the name givven.
     """
     
-    port_data = {}
+    corresponding_port:list = list() 
     
-    for device_index, device_name in enumerate(FilterGraph().get_input_devices()):
-        for name in name_list:
-            if device_name == name:
-                port_data[name] = device_index
+    for device_index, device_name in enumerate(FilterGraph().get_input_devices()):        
+        if device_name == name:
+            corresponding_port.append(device_index)
                 
-    return port_data
+    if len(corresponding_port) == 0:
+        logging.error("No camera found for name: {}".format(name))
+    elif len(corresponding_port) > 1:
+        logging.error("More than one camera found for name: {}".format(name))
+    else:
+        return corresponding_port[0]
+
 
 if __name__ == '__main__':
+    
+    logging.basicConfig(
+    format='%(asctime)s %(levelname)-8s %(message)s',
+    level=logging.INFO,
+    datefmt='%Y-%m-%d %H:%M:%S')
+    
     list_com_ports()
     list_cam_ports()
+    
+    # print(get_com_port("0403", "6014"))
+    # print(get_com_port("0403", "6001"))
+    
+# "0403", "6014" Dynamixel controller
+# "0403", "6001" GRBL controller
+# "1A86", "7523" Anycubic mega zero
