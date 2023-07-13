@@ -40,16 +40,16 @@ def commande(key, incr):
     if key == ord('r'):
         anycubic.read_position(printMsg=True)
         
-    if key == ord('a'):
+    if key == 2555904: #Left
         anycubic.move_axis_incremental(x=-incr, f = 10000, printMsg=False)
         
-    if key == ord('d'):
+    if key == 2424832: #Right
         anycubic.move_axis_incremental(x=incr, f = 10000, printMsg=False)
         
-    if key == ord('w'):
+    if key == 2490368: #Up
         anycubic.move_axis_incremental(y=incr, f = 10000, printMsg=False)
         
-    if key == ord('s'):
+    if key == 2621440:#Down
         anycubic.move_axis_incremental(y=-incr, f = 10000, printMsg=False)
         
     if key == ord('e'):

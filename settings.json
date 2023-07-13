@@ -1,6 +1,6 @@
 {
     "Position": {
-        "Pick height": 6.99999999999999,
+        "Pick height": 5.099999999999997,
         "Drop height": 5.700000000000005
     },
     "Speed": {
@@ -11,22 +11,24 @@
     "Tissues": {
         "Pumping Volume": 75.0,
         "Pumping speed": 100,
-        "Dropping volume": 3.0,
-        "Dropping speed": 150
+        "Dropping volume": 4.0,
+        "Dropping speed": 151
     },
     "Solution A": {
-        "Solution A pumping speed": 10,
-        "Solution A dropping speed": 12,
+        "Solution A pumping speed": 15,
+        "Solution A dropping speed": 15,
         "Solution A pumping volume": 100
     },
     "Solution B": {
-        "Solution B pumping speed": 12,
-        "Solution B dropping speed": 12,
+        "Solution B pumping speed": 15,
+        "Solution B dropping speed": 15,
         "Solution B pumping volume": 350
     },
     "Gel": {
-        "Solution pumping height": 3.9999999999999996,
-        "Number of mix": 1,
+        "Tube pumping height": 6,
+        "Vial pumping height": 6,
+        "Well plate pumping height": 5,
+        "Number of mix": 2,
         "Number of wash": 3
     },
     "Detection": {
@@ -35,9 +37,9 @@
         "Size max": 60
     },
     "Well": {
-        "Well preparation": true,
-        "Type": "12",
-        "Number of sample per well": 6,
+        "Well preparation": false,
+        "Type": "TPP12",
+        "Number of sample per well": 3,
         "Number of well": 6
     },
     "Offset": {
@@ -49,12 +51,12 @@
         "Tip one": [
             36.60000000000025,
             75.00000000000001,
-            2.7000000000000006
+            2.6000000000000005
         ],
         "Tip two": [
-            38.20000000000027,
-            73.5000000000001,
-            3.000000000000001
+            38.10000000000027,
+            73.6000000000001,
+            2.900000000000001
         ],
         "Camera": [
             49.10000000000043,

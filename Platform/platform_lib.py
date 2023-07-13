@@ -7,7 +7,7 @@ from platform_private_gel import *
 from platform_private_gui import *
 from Communication.ports_gestion import *
 
-debug = False
+debug = True
 
 if debug:
     from Communication.fake_communication import *
@@ -172,7 +172,7 @@ class platform_pick_and_place:
             self.update() 
              
             # Inputs
-            key = cv2.waitKey(5) & 0xFF 
+            key = cv2.waitKeyEx(5)
             
             if key == 27: #esc
                 break

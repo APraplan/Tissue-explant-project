@@ -60,11 +60,17 @@ def check_pickup_two(self):
     
     self.macro_frame = self.stream2.read()
     
-    _, _, files = next(os.walk(r"Pictures\macro"))
+    macro_dir = r"Pictures\macro"
+    
+    if not os.path.exists(macro_dir):
+        os.makedirs(macro_dir)
+    
+    _, _, files = next(os.walk(macro_dir))
     file_count = len(files)
     cv2.imwrite("Pictures\macro\macro_image_" + str(file_count) + ".png", self.macro_frame)
     
-    res = self.NN.predict(cv2.cvtColor(self.macro_frame, cv2.COLOR_BGR2RGB).reshape(1, 480, 640, 3), verbose=0)
+    # res = self.NN.predict(cv2.cvtColor(self.macro_frame, cv2.COLOR_BGR2RGB).reshape(1, 480, 640, 3), verbose=0)
+    res = self.NN.predict(cv2.cvtColor(self.macro_frame, cv2.COLOR_BGR2GRAY).reshape(1, 480, 640, 1), verbose=0)
     logger.info(f"🔮 Prediciton results {res[0, 0]}")
     
     if res > 0.5:
@@ -157,11 +163,8 @@ def pick(self):
         if self.com_state == 'not send':
             x, y, w, h = self.bbox
             target_px = [int(x+w/2), int(y+h/2)]
-            print("target pos", self.target_pos)
             cam_pos = (self.target_pos[0]+self.offset_check[0]-self.settings["Offset"]["Camera"][0]+self.settings["Offset"]["Tip one"][0], self.target_pos[1]+self.offset_check[1]-self.settings["Offset"]["Camera"][1]+self.settings["Offset"]["Tip one"][1], self.settings["Position"]["Pick height"] + self.pick_offset-self.settings["Offset"]["Camera"][2]+self.settings["Offset"]["Tip one"][2])
-            print("cam pos", cam_pos)
             self.target_pos = self.cam.cam_to_platform_space(target_px, cam_pos)
-            print("new target pos", self.target_pos)
             if (self.target_pos[0]-self.petridish_pos[0])**2+(self.target_pos[1]-self.petridish_pos[1])**2 > self.petridish_radius**2:
                 self.state = 'reset'
                 self.sub_state = 'go to position'
@@ -356,11 +359,11 @@ def reset(self):
             self.com_state = 'send'
             
         elif self.dyna.pipette_is_in_position_ul(self.pipette_1_pos, ID = 1):
-            if self.nb_sample == self.settings["Well"]["Number of sample per well"]:
+            if self.nb_sample >= self.settings["Well"]["Number of sample per well"]:
                 self.well_num += 1
                 self.nb_sample = 0
                 
-                if self.well_num == len(self.culture_well) or self.well_num == self.settings["Well"]["Number of well"]:
+                if self.well_num >= len(self.culture_well) or self.well_num >= self.settings["Well"]["Number of well"]:
                     self.state = 'done'
                     self.com_state = 'not send'
                 else:
@@ -380,6 +383,6 @@ def done(self):
     
     if self.com_state == 'not send':
         self.anycubic.move_axis_relative(z=self.safe_height, printMsg=False, offset=self.settings["Offset"]["Tip one"])
-        self.anycubic.move_axis_relative(x=0, y=220, printMsg=False, offset=self.settings["Offset"]["Tip one"])
+        self.anycubic.move_axis_relative(x=2200, y=220, printMsg=False, offset=self.settings["Offset"]["Tip one"])
         logger.info('🦾 Done')
         self.com_state = 'send'  

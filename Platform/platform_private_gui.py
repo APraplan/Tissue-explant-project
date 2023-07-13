@@ -173,34 +173,38 @@ def gui_parameter(self, direction=None):
         if self.gui_menu == 14:
             self.settings["Solution B"]["Solution B pumping volume"] += 1
         if self.gui_menu == 15:
-            self.settings["Gel"]["Solution pumping height"] += 0.1
+            self.settings["Gel"]["Tube pumping height"] += 0.1
         if self.gui_menu == 16:
+            self.settings["Gel"]["Vial pumping height"] += 0.1
+        if self.gui_menu == 17:
+            self.settings["Gel"]["Well plate pumping height"] += 0.1
+        if self.gui_menu == 18:
             if self.settings["Gel"]["Number of mix"] < 10:
                 self.settings["Gel"]["Number of mix"]  += 1
-        if self.gui_menu == 17:
+        if self.gui_menu == 19:
             if self.settings["Gel"]["Number of wash"] < 10:
                 self.settings["Gel"]["Number of wash"] += 1
-        if self.gui_menu == 18:
+        if self.gui_menu == 20:
             self.settings["Detection"]["Max attempt"] += 1
-        if self.gui_menu == 19:
+        if self.gui_menu == 21:
             if self.settings["Detection"]["Size min"] < self.settings["Detection"]["Size max"]:
                 self.settings["Detection"]["Size min"] += 1
-        if self.gui_menu == 20:
+        if self.gui_menu == 22:
             if self.settings["Detection"]["Size max"] < 200:
                 self.settings["Detection"]["Size max"] += 1
-        if self.gui_menu == 21:
-            self.settings["Well"]["Well preparation"] = True
-        if self.gui_menu == 22:
-            if self.settings["Well"]["Type"] == "6":
-                self.settings["Well"]["Type"] = "12"
-            elif self.settings["Well"]["Type"] == "12":
-                self.settings["Well"]["Type"] = "24"
-            elif self.settings["Well"]["Type"] == "24":
-                self.settings["Well"]["Type"] = "48"
         if self.gui_menu == 23:
+            self.settings["Well"]["Well preparation"] = True
+        if self.gui_menu == 24:
+            if self.settings["Well"]["Type"] == "TPP6":
+                self.settings["Well"]["Type"] = "TPP12"
+            elif self.settings["Well"]["Type"] == "TPP12":
+                self.settings["Well"]["Type"] = "TPP24"
+            elif self.settings["Well"]["Type"] == "TPP24":
+                self.settings["Well"]["Type"] = "TPP48"
+        if self.gui_menu == 25:
             if self.settings["Well"]["Number of sample per well"] < 8:
                 self.settings["Well"]["Number of sample per well"] += 1
-        if self.gui_menu == 24:
+        if self.gui_menu == 26:
             if self.settings["Well"]["Number of well"] < 6:
                 self.settings["Well"]["Number of well"] += 1
     
@@ -238,34 +242,38 @@ def gui_parameter(self, direction=None):
         if self.gui_menu == 14:
             self.settings["Solution B"]["Solution B pumping volume"] -= 1
         if self.gui_menu == 15:
-            self.settings["Gel"]["Solution pumping height"] -= 0.1 
+            self.settings["Gel"]["Tube pumping height"] -= 0.1
         if self.gui_menu == 16:
+            self.settings["Gel"]["Vial pumping height"] -= 0.1
+        if self.gui_menu == 17:
+            self.settings["Gel"]["Well plate pumping height"] -= 0.1
+        if self.gui_menu == 18:
             if self.settings["Gel"]["Number of mix"] > 0:
                 self.settings["Gel"]["Number of mix"]  -= 1
-        if self.gui_menu == 17:
+        if self.gui_menu == 19:
             if self.settings["Gel"]["Number of wash"] > 0:
                 self.settings["Gel"]["Number of wash"] -= 1
-        if self.gui_menu == 18:
+        if self.gui_menu == 20:
             self.settings["Detection"]["Max attempt"] -= 1
-        if self.gui_menu == 19:
+        if self.gui_menu == 21:
             if self.settings["Detection"]["Size min"] > 0:
                 self.settings["Detection"]["Size min"] -= 1
-        if self.gui_menu == 20:
+        if self.gui_menu == 22:
             if self.settings["Detection"]["Size max"] > self.settings["Detection"]["Size min"]:
                 self.settings["Detection"]["Size max"] -= 1
-        if self.gui_menu == 21:
-            self.settings["Well"]["Well preparation"] = False
-        if self.gui_menu == 22:
-            if self.settings["Well"]["Type"] == "48":
-                self.settings["Well"]["Type"] = "24"
-            elif self.settings["Well"]["Type"] == "24":
-                self.settings["Well"]["Type"] = "12"
-            elif self.settings["Well"]["Type"] == "12":
-                self.settings["Well"]["Type"] = "6"
         if self.gui_menu == 23:
+            self.settings["Well"]["Well preparation"] = False
+        if self.gui_menu == 24:
+            if self.settings["Well"]["Type"] == "TPP48":
+                self.settings["Well"]["Type"] = "TPP24"
+            elif self.settings["Well"]["Type"] == "TPP24":
+                self.settings["Well"]["Type"] = "TPP12"
+            elif self.settings["Well"]["Type"] == "TPP12":
+                self.settings["Well"]["Type"] = "TPP6"
+        if self.gui_menu == 25:
             if self.settings["Well"]["Number of sample per well"] > 1:
                 self.settings["Well"]["Number of sample per well"] -= 1
-        if self.gui_menu == 24:
+        if self.gui_menu == 26:
             if self.settings["Well"]["Number of well"] > 1:
                 self.settings["Well"]["Number of well"] -= 1
             
@@ -303,27 +311,31 @@ def gui_parameter(self, direction=None):
         if self.gui_menu == 14:
             return self.settings["Solution B"]["Solution B pumping volume"]
         if self.gui_menu == 15:
-            return self.settings["Gel"]["Solution pumping height"]
+            return self.settings["Gel"]["Tube pumping height"]
         if self.gui_menu == 16:
-            return self.settings["Gel"]["Number of mix"]
+            return self.settings["Gel"]["Vial pumping height"]
         if self.gui_menu == 17:
-            return self.settings["Gel"]["Number of wash"]
+            return self.settings["Gel"]["Well plate pumping height"]
         if self.gui_menu == 18:
-            return self.settings["Detection"]["Max attempt"]  
+            return self.settings["Gel"]["Number of mix"]
         if self.gui_menu == 19:
-            return self.settings["Detection"]["Size min"]
+            return self.settings["Gel"]["Number of wash"]
         if self.gui_menu == 20:
-            return self.settings["Detection"]["Size max"]     
+            return self.settings["Detection"]["Max attempt"]  
         if self.gui_menu == 21:
+            return self.settings["Detection"]["Size min"]
+        if self.gui_menu == 22:
+            return self.settings["Detection"]["Size max"]     
+        if self.gui_menu == 23:
             if self.settings["Well"]["Well preparation"]:
                 return 'yes'
             else:
                 return 'no'
-        if self.gui_menu == 22:
-            return self.settings["Well"]["Type"]
-        if self.gui_menu == 23:
-            return self.settings["Well"]["Number of sample per well"]
         if self.gui_menu == 24:
+            return self.settings["Well"]["Type"]
+        if self.gui_menu == 25:
+            return self.settings["Well"]["Number of sample per well"]
+        if self.gui_menu == 26:
             return self.settings["Well"]["Number of well"]
 
 
@@ -382,7 +394,7 @@ def display_gui_txt(self, imshow, position):
     size, _ = cv2.getTextSize(name, font, fontScale, thickness)
     pos[0] += size[0] + 7
     
-    if self.gui_menu == 21 or self.gui_menu == 22:
+    if type(gui_parameter(self)) == str:
         val = gui_parameter(self)
     else:
         val = str(round(gui_parameter(self), 2))
@@ -410,20 +422,20 @@ def display_gui(self, imshow, key, position):
     if key == ord('r'):
         self.reset()
         
-    if key == ord('a'):
+    if key == 2424832: #Right
         self.gui_menu -= 1
         if self.gui_menu < 0:
             self.gui_menu = len(self.gui_menu_label)-1
     
-    if key == ord('d'):
+    if key == 2555904: #Left
         self.gui_menu += 1
         if self.gui_menu == len(self.gui_menu_label):
             self.gui_menu = 0
             
-    if key == ord('w'):
+    if key == 2490368: #Up
         gui_parameter(self, 'up')
         
-    if key == ord('s'):
+    if key == 2621440:#Down
         gui_parameter(self, 'down')
                     
     return display_gui_txt(self, imshow, position)
@@ -459,25 +471,25 @@ def calibration_process(self, key, offset):
     
     incr = 0.1
             
-    if key == ord('a'):
+    if key == 2555904: #Left
         offset[0] -= incr
         self.anycubic.move_axis_relative(x=self.settings["Offset"]["Calibration point"][0], 
                                         y=self.settings["Offset"]["Calibration point"][1], 
                                         z=self.settings["Offset"]["Calibration point"][2], offset=offset)
         
-    elif key == ord('d'):
+    elif key == 2424832: #Right
         offset[0] += incr
         self.anycubic.move_axis_relative(x=self.settings["Offset"]["Calibration point"][0], 
                                         y=self.settings["Offset"]["Calibration point"][1], 
                                         z=self.settings["Offset"]["Calibration point"][2], offset=offset)
 
-    elif key == ord('w'):
+    if key == 2490368: #Up
         offset[1] += incr
         self.anycubic.move_axis_relative(x=self.settings["Offset"]["Calibration point"][0], 
                                         y=self.settings["Offset"]["Calibration point"][1], 
                                         z=self.settings["Offset"]["Calibration point"][2], offset=offset)
 
-    elif key == ord('s'):
+    if key == 2621440:#Down
         offset[1] -= incr
         self.anycubic.move_axis_relative(x=self.settings["Offset"]["Calibration point"][0], 
                                         y=self.settings["Offset"]["Calibration point"][1], 
@@ -517,11 +529,9 @@ def load_parameters(self):
                                     ['Tissues', 'Pumping Volume', 'ul'], ['Tissues', 'Pumping speed', ''], ['Tissues', 'Dropping volume', 'ul'], ['Tissues', 'Dropping speed', ''],
                                     ['Solution A', 'Pumping speed', ''], ['Solution A', 'Dropping speed', ''], ['Solution A', 'Pumping volume', 'ul'],
                                     ['Solution B', 'Pumping speed', ''], ['Solution B', 'Dropping speed', ''], ['Solution B', 'Pumping volume', 'ul'], 
-                                    ['Gel', 'Solution pumping height', 'mm'], ['Gel', 'Number of mix', ''], ['Gel', 'Number of wash', ''],
+                                    ['Gel', "Tube pumping height", "mm"], ["Gel", "Vial pumping height", "mm"], ["Gel", "Well plate pumping height", "mm"], ['Gel', 'Number of mix', ''], ['Gel', 'Number of wash', ''],
                                     ['Detection', 'Max attempt', ''],['Detection', 'Size min', ''], ['Detection', 'Size max', ''],
                                     ['Well', 'Well prepatation', ''], ["Well", "Type", ""], ['Well', 'Number of sample per well', ''], ['Well', 'Number of well', '']])
-
-    params = pickle.load(open('Platform/Calibration/parameters.pkl', 'rb'))
     
     with open("settings.json", "r") as jsonFile:
         self.settings = json.load(jsonFile)

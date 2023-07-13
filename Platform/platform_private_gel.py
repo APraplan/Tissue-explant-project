@@ -28,21 +28,21 @@ def tube(name):
     return pos
     
 
-def well_plate(id, type='48'):
+def well_plate(id, type='TPP48'):
     # https://www.tpp.ch/page/downloads/IFU_TechDoc/TechDoc-testplates-measurements-d-e.pdf?m=1643984087&
     
     border = [170, 134]
     
-    if type == '6':
+    if type == 'TPP6':
         position = [border[0]-24, border[1]-24.4, 25]
         well_offset = 37.5
-    elif type == '12':
+    elif type == 'TPP12':
         position = [border[0]-17.9, border[1]-26.55, 25]
         well_offset = 24.9
-    elif type == '24':
+    elif type == 'TPP24':
         position = [border[0]-14.85, border[1]-15.4, 25]
         well_offset = 18.6
-    elif type == '48':
+    elif type == 'TPP48':
         position = [border[0]-10.25, border[1]-18.4, 25]
         well_offset = 13
     else:
@@ -93,7 +93,7 @@ def spreading_solution_A(self):
         if self.com_state == 'not send':
             self.anycubic.move_axis_relative(z=self.solution_well['Sol A'][2], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
             self.anycubic.move_axis_relative(x=self.solution_well['Sol A'][0], y=self.solution_well['Sol A'][1], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
-            self.anycubic.move_axis_relative(z=self.settings["Gel"]["Solution pumping height"], f=self.settings["Offset"]["Camera"], offset=self.settings["Offset"]["Tip two"]) 
+            self.anycubic.move_axis_relative(z=self.settings["Gel"]["Vial pumping height"], f=self.settings["Offset"]["Camera"], offset=self.settings["Offset"]["Tip two"]) 
             self.anycubic.finish_request() 
             self.com_state = 'send'  
             
@@ -120,7 +120,7 @@ def spreading_solution_A(self):
         if self.com_state == 'not send':
             self.anycubic.move_axis_relative(z=self.mixing_well[self.solution_prep_num][2], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
             self.anycubic.move_axis_relative(x=self.mixing_well[self.solution_prep_num][0], y=self.mixing_well[self.solution_prep_num][1], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
-            self.anycubic.move_axis_relative(z=self.settings["Gel"]["Solution pumping height"], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"]) 
+            self.anycubic.move_axis_relative(z=self.settings["Gel"]["Well plate pumping height"], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"]) 
             self.anycubic.finish_request() 
             self.com_state = 'send'  
             
@@ -172,7 +172,7 @@ def preparing_gel(self):
         if self.com_state == 'not send':
             self.anycubic.move_axis_relative(z=self.solution_well['Sol B'][2], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
             self.anycubic.move_axis_relative(x=self.solution_well['Sol B'][0], y=self.solution_well['Sol B'][1], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
-            self.anycubic.move_axis_relative(z=self.settings["Gel"]["Solution pumping height"], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"]) 
+            self.anycubic.move_axis_relative(z=self.settings["Gel"]["Vial pumping height"], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"]) 
             self.anycubic.finish_request() 
             self.com_state = 'send'  
             
@@ -199,7 +199,7 @@ def preparing_gel(self):
         if self.com_state == 'not send':
             self.anycubic.move_axis_relative(z=self.mixing_well[self.well_num][2], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
             self.anycubic.move_axis_relative(x=self.mixing_well[self.well_num][0], y=self.mixing_well[self.well_num][1], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
-            self.anycubic.move_axis_relative(z=self.settings["Gel"]["Solution pumping height"], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"]) 
+            self.anycubic.move_axis_relative(z=self.settings["Gel"]["Well plate pumping height"], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"]) 
             self.anycubic.finish_request() 
             self.com_state = 'send'  
             
@@ -246,7 +246,7 @@ def preparing_gel(self):
         if self.com_state == 'not send':
             self.anycubic.move_axis_relative(z=self.mixing_well[self.well_num][2], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
             self.anycubic.move_axis_relative(x=self.culture_well[self.well_num][0], y=self.culture_well[self.well_num][1], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
-            self.anycubic.move_axis_relative(z=self.settings["Gel"]["Solution pumping height"], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"]) 
+            self.anycubic.move_axis_relative(z=self.settings["Gel"]["Well plate pumping height"], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"]) 
             self.anycubic.finish_request() 
             self.com_state = 'send'  
             
@@ -275,7 +275,7 @@ def preparing_gel(self):
         if self.com_state == 'not send':
             self.anycubic.move_axis_relative(z=self.solution_well['Washing'][2], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
             self.anycubic.move_axis_relative(x=self.solution_well['Washing'][0], y=self.solution_well['Washing'][1], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
-            self.anycubic.move_axis_relative(z=self.settings["Gel"]["Solution pumping height"], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"]) 
+            self.anycubic.move_axis_relative(z=self.settings["Gel"]["Vial pumping height"], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"]) 
             self.anycubic.finish_request() 
             self.com_state = 'send'  
             
@@ -331,7 +331,7 @@ def homming(self):
         elif self.anycubic.get_finish_flag():
             self.mixing_well = [tube('A'), tube('B'), tube('C'), tube('D'), tube('E'), tube('F')]
             self.culture_well = [well_plate('A1', self.settings["Well"]["Type"]), well_plate('A2', self.settings["Well"]["Type"]), well_plate('A3', self.settings["Well"]["Type"]), well_plate('B1', self.settings["Well"]["Type"]), well_plate('B2', self.settings["Well"]["Type"]), well_plate('B3', self.settings["Well"]["Type"])]
-            self.solution_well = {'Sol A' : vial('A'), 'Sol B' : vial('B'), 'Washing' : well_plate('A3', self.settings["Well"]["Type"]), 'Dump' : well_plate('B3', self.settings["Well"]["Type"])}
+            self.solution_well = {'Sol A' : vial('A'), 'Sol B' : vial('B'), 'Washing' : vial('A'), 'Dump' : vial('A')}
 
             
             self.tip_number = 1
@@ -385,7 +385,7 @@ def homming(self):
         if self.com_state == 'not send':
             self.anycubic.move_axis_relative(z=self.solution_well['Dump'][2], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
             self.anycubic.move_axis_relative(x=self.solution_well['Dump'][0], y=self.solution_well['Dump'][1], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
-            self.anycubic.move_axis_relative(z=self.settings["Gel"]["Solution pumping height"], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"]) 
+            self.anycubic.move_axis_relative(z=self.settings["Gel"]["Vial pumping height"], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"]) 
             self.anycubic.finish_request() 
             self.com_state = 'send'  
             
@@ -406,7 +406,19 @@ def homming(self):
             if self.settings["Well"]["Well preparation"]:
                 # self.state = 'spreading solution A'
                 self.state = 'preparing gel'
+    
             else:
-                self.state = 'detect'
+                self.sub_state = 'exit vial'
+                self.com_state = 'not send'
+                
+    elif self.sub_state == 'exit vial':
+        if self.com_state == 'not send':
+            self.anycubic.move_axis_relative(z=self.solution_well['Dump'][2], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
+            self.anycubic.move_axis_relative(x=self.detection_place[0], y=self.detection_place[1], z=self.detection_place[2], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Camera"])
+            self.anycubic.finish_request()
+            self.com_state = 'send'
+        
+        if self.anycubic.get_finish_flag():
+            self.state = 'detect'
             self.sub_state = 'go to position'
-            self.com_state = 'not send'   
+            self.com_state = 'send'   

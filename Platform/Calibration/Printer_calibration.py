@@ -258,19 +258,19 @@ if offset_callibration:
         
         key = cv2.waitKey(5) & 0xFF
         
-        if key == ord('a'):
+        if key == 2555904: #Left
             offset[0] -= 0.1
             anycubic.move_axis(x=calibration_position[0]+offset[0], y=calibration_position[1]+offset[1], z=2, f = 8000)
             
-        if key == ord('d'):
+        if key == 2424832: #Right
             offset[0] += 0.1
             anycubic.move_axis(x=calibration_position[0]+offset[0], y=calibration_position[1]+offset[1], z=2, f = 8000)
             
-        if key == ord('w'):
+        if key == 2490368: #Up
             offset[1] -= 0.1
             anycubic.move_axis(x=calibration_position[0]+offset[0], y=calibration_position[1]+offset[1], z=2, f = 8000)
             
-        if key == ord('s'):
+        if key == 2621440:#Down
             offset[1] += 0.1
             anycubic.move_axis(x=calibration_position[0]+offset[0], y=calibration_position[1]+offset[1], z=2, f = 8000)
         
@@ -387,19 +387,19 @@ if camera_calibration:
         
         key = cv2.waitKey(5) & 0xFF 
 
-        if key == ord('a'):
+        if key == 2555904: #Left
             f[1] += 0.005
             print('f ', f)
             
-        if key == ord('d'):
+        if key == 2424832: #Right
             f[1] -= 0.005
             print('f ', f)
             
-        if key == ord('w'):
+        if key == 2490368: #Up
             f[0] += 0.005
             print('f ', f)
             
-        if key == ord('s'):
+        if key == 2621440:#Down
             f[0] -= 0.005
             print('f ', f)
             

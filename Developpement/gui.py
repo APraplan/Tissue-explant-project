@@ -117,21 +117,23 @@ class platform_pick_and_place_gui:
         
 
     def gui(self, key):
+        # Left: 2424832 Up: 2490368 Right: 2555904 Down: 2621440
         
-        if key == ord('a'):
+        if key == 2424832:#ord('a'):
+            print("test")
             self.gui_menu += 1
             if self.gui_menu == len(self.gui_menu_label):
                 self.gui_menu = 0
                 
-        if key == ord('d'):
+        if key == 2555904:#ord('d'):
             self.gui_menu -= 1
             if self.gui_menu < 0:
                 self.gui_menu = len(self.gui_menu_label)-1
                 
-        if key == ord('w'):
+        if key == 2490368: #ord('w'):
             self.parameter('up')
             
-        if key == ord('s'):
+        if key == 2621440:#ord('s'):
             self.parameter('down')
                         
         self.display([50, 150])
