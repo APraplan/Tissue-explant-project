@@ -1,16 +1,16 @@
 {
     "Position": {
-        "Pick height": 5.099999999999997,
-        "Drop height": 5.700000000000005
+        "Pick height": 5.899999999999994,
+        "Drop height": 4.400000000000009
     },
     "Speed": {
         "Slow speed": 3,
-        "Medium speed": 7,
-        "Fast speed": 90
+        "Medium speed": 8,
+        "Fast speed": 100
     },
     "Tissues": {
         "Pumping Volume": 75.0,
-        "Pumping speed": 100,
+        "Pumping speed": 65,
         "Dropping volume": 4.0,
         "Dropping speed": 151
     },
@@ -28,18 +28,22 @@
         "Tube pumping height": 6,
         "Vial pumping height": 6,
         "Well plate pumping height": 5,
-        "Number of mix": 2,
+        "Number of mix": 3,
+        "Proportion of mixing volume": 0.75,
         "Number of wash": 3
     },
     "Detection": {
-        "Max attempt": 2,
+        "Max attempt": 3,
         "Size min": 50,
-        "Size max": 60
+        "Size max": 70,
+        "Circularity min": 0.0,
+        "Convexity min": 0.8,
+        "Inertia min": 0.3
     },
     "Well": {
-        "Well preparation": false,
-        "Type": "TPP12",
-        "Number of sample per well": 3,
+        "Well preparation": true,
+        "Type": "TPP6",
+        "Number of sample per well": 8,
         "Number of well": 6
     },
     "Offset": {
@@ -49,18 +53,18 @@
             0
         ],
         "Tip one": [
-            36.60000000000025,
-            75.00000000000001,
-            2.6000000000000005
+            36.900000000000254,
+            75.2,
+            2.4000000000000004
         ],
         "Tip two": [
             38.10000000000027,
-            73.6000000000001,
-            2.900000000000001
+            73.30000000000011,
+            2.5000000000000004
         ],
         "Camera": [
             49.10000000000043,
-            54.600000000000506,
+            54.80000000000051,
             0
         ]
     }

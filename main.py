@@ -1,7 +1,7 @@
 import sys
 sys.path.append('Platform')
 sys.path.append('Pictures')
-sys.path.append('TEP_convNN_BW')
+sys.path.append('TEP_convNN_96')
 from Platform.platform_lib import platform_pick_and_place
 
 

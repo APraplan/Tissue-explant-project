@@ -75,7 +75,7 @@ while(True):
         printed = True
 
     # Wait for Esc key to stop 
-    k = cv2.waitKey(5) & 0xFF
+    k = cv2.waitKeyEx(5)
     if k == ord('p'):
         # path = "C:\Users\APrap\Documents\CREATE\Pick-and-Place\Pictures\image" + str(num)
         cv2.imwrite("Pictures\Realsample\image" + str(num) + ".png", frame)

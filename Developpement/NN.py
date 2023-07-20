@@ -47,7 +47,7 @@ while True:
     
     cv2.imshow("Output Frame2", frameB)
 
-    key = cv2.waitKey(1) & 0xFF
+    key = cv2.waitKeyEx(1)
     if key == ord("q"):
         break
 

@@ -49,7 +49,7 @@ for image in images:
         # Draw and display the corners
         cv2.drawChessboardCorners(img, chessboardSize, corners2, ret)
         cv2.imshow('img', img)
-        cv2.waitKey(5)
+        cv2.waitKeyEx(5)
 
 
 cv2.destroyAllWindows()

@@ -17,7 +17,7 @@ def calibration_sequence(self):
         self.macro_frame = self.stream2.read()            
 
         # Inputs
-        key = cv2.waitKey(5) & 0xFF 
+        key = cv2.waitKeyEx(5)  
         
         if key == 13: #enter
             break
@@ -42,7 +42,7 @@ def calibration_sequence(self):
         # self.macro_frame = self.stream2.read()
             
         # Inputs
-        key = cv2.waitKey(5) & 0xFF 
+        key = cv2.waitKeyEx(5)
         
         self.settings["Offset"]["Tip one"] = calibration_process(self, key, self.settings["Offset"]["Tip one"])
         
@@ -81,7 +81,7 @@ def calibration_sequence(self):
         # self.macro_frame = self.stream2.read()
             
         # Inputs
-        key = cv2.waitKey(5) & 0xFF 
+        key = cv2.waitKeyEx(5)
         
         self.settings["Offset"]["Tip two"] = calibration_process(self, key, self.settings["Offset"]["Tip two"])
         
@@ -118,7 +118,7 @@ def calibration_sequence(self):
         # self.macro_frame = self.stream2.read()
             
         # Inputs
-        key = cv2.waitKey(5) & 0xFF 
+        key = cv2.waitKeyEx(5)
         
         offset = self.settings["Offset"]["Camera"]
         offset[2] += self.safe_height
@@ -143,199 +143,254 @@ def gui_parameter(self, direction=None):
         
         if self.gui_menu == 0:
             self.settings["Position"]["Pick height"] += 0.1
-        if self.gui_menu == 1:
+        elif self.gui_menu == 1:
             self.settings["Position"]["Drop height"] += 0.1
-        if self.gui_menu == 2:
+            
+        elif self.gui_menu == 2:
             self.settings["Speed"]["Slow speed"] += 1
-        if self.gui_menu == 3:
+        elif self.gui_menu == 3:
             self.settings["Speed"]["Medium speed"] += 1
-        if self.gui_menu == 4:
-            self.settings["Speed"]["Fast speed"]+= 1    
-        if self.gui_menu == 5:
+        elif self.gui_menu == 4:
+            self.settings["Speed"]["Fast speed"]+= 1   
+             
+        elif self.gui_menu == 5:
             self.settings["Tissues"]["Pumping Volume"] += 1
-        if self.gui_menu == 6:
+        elif self.gui_menu == 6:
             self.settings["Tissues"]["Pumping speed"] += 1
-        if self.gui_menu == 7:
+        elif self.gui_menu == 7:
             self.settings["Tissues"]["Dropping volume"] += 1
-        if self.gui_menu == 8:
+        elif self.gui_menu == 8:
             self.settings["Tissues"]["Dropping speed"] += 1
             
-        if self.gui_menu == 9:
+        elif self.gui_menu == 9:
             self.settings["Solution A"]["Solution A pumping speed"] += 1
-        if self.gui_menu == 10:
+        elif self.gui_menu == 10:
             self.settings["Solution A"]["Solution A dropping speed"] += 1
-        if self.gui_menu == 11:
+        elif self.gui_menu == 11:
             self.settings["Solution A"]["Solution A pumping volume"] += 1
-        if self.gui_menu == 12:
+            
+        elif self.gui_menu == 12:
             self.settings["Solution B"]["Solution B pumping speed"] += 1
-        if self.gui_menu == 13:
+        elif self.gui_menu == 13:
             self.settings["Solution B"]["Solution B dropping speed"] += 1
-        if self.gui_menu == 14:
+        elif self.gui_menu == 14:
             self.settings["Solution B"]["Solution B pumping volume"] += 1
-        if self.gui_menu == 15:
+            
+        elif self.gui_menu == 15:
             self.settings["Gel"]["Tube pumping height"] += 0.1
-        if self.gui_menu == 16:
+        elif self.gui_menu == 16:
             self.settings["Gel"]["Vial pumping height"] += 0.1
-        if self.gui_menu == 17:
+        elif self.gui_menu == 17:
             self.settings["Gel"]["Well plate pumping height"] += 0.1
-        if self.gui_menu == 18:
+        elif self.gui_menu == 18:
             if self.settings["Gel"]["Number of mix"] < 10:
                 self.settings["Gel"]["Number of mix"]  += 1
-        if self.gui_menu == 19:
+        elif self.gui_menu == 19:
+            if self.settings["Gel"]["Proportion of mixing volume"] < 1:
+                self.settings["Gel"]["Proportion of mixing volume"] += 0.01
+        elif self.gui_menu == 20:
             if self.settings["Gel"]["Number of wash"] < 10:
                 self.settings["Gel"]["Number of wash"] += 1
-        if self.gui_menu == 20:
+                
+        elif self.gui_menu == 21:
             self.settings["Detection"]["Max attempt"] += 1
-        if self.gui_menu == 21:
+        elif self.gui_menu == 22:
             if self.settings["Detection"]["Size min"] < self.settings["Detection"]["Size max"]:
                 self.settings["Detection"]["Size min"] += 1
-        if self.gui_menu == 22:
+        elif self.gui_menu == 23:
             if self.settings["Detection"]["Size max"] < 200:
                 self.settings["Detection"]["Size max"] += 1
-        if self.gui_menu == 23:
+        elif self.gui_menu == 24:
+            if self.settings["Detection"]["Circularity min"] < 1:
+                self.settings["Detection"]["Circularity min"] += 0.01
+        elif self.gui_menu == 25:
+            if self.settings["Detection"]["Convexity min"] < 1:
+                self.settings["Detection"]["Convexity min"] += 0.01
+        elif self.gui_menu == 26:
+            if self.settings["Detection"]["Inertia min"] < 1:
+                self.settings["Detection"]["Inertia min"] += 0.01
+                
+        elif self.gui_menu == 27:
             self.settings["Well"]["Well preparation"] = True
-        if self.gui_menu == 24:
+        elif self.gui_menu == 28:
             if self.settings["Well"]["Type"] == "TPP6":
                 self.settings["Well"]["Type"] = "TPP12"
             elif self.settings["Well"]["Type"] == "TPP12":
                 self.settings["Well"]["Type"] = "TPP24"
             elif self.settings["Well"]["Type"] == "TPP24":
                 self.settings["Well"]["Type"] = "TPP48"
-        if self.gui_menu == 25:
+        elif self.gui_menu == 29:
             if self.settings["Well"]["Number of sample per well"] < 8:
                 self.settings["Well"]["Number of sample per well"] += 1
-        if self.gui_menu == 26:
+        elif self.gui_menu == 30:
             if self.settings["Well"]["Number of well"] < 6:
                 self.settings["Well"]["Number of well"] += 1
     
-    if direction == 'down':
+    elif direction == 'down':
         
         if self.gui_menu == 0:
             self.settings["Position"]["Pick height"] -= 0.1
-        if self.gui_menu == 1:
+        elif self.gui_menu == 1:
             self.settings["Position"]["Drop height"] -= 0.1
-        if self.gui_menu == 2:
+        elif self.gui_menu == 2:
             self.settings["Speed"]["Slow speed"] -= 1
-        if self.gui_menu == 3:
+        elif self.gui_menu == 3:
             self.settings["Speed"]["Medium speed"] -= 1
-        if self.gui_menu == 4:
+        elif self.gui_menu == 4:
             self.settings["Speed"]["Fast speed"]-= 1    
-        if self.gui_menu == 5:
+            
+        elif self.gui_menu == 5:
             self.settings["Tissues"]["Pumping Volume"] -= 1
-        if self.gui_menu == 6:
+        elif self.gui_menu == 6:
             self.settings["Tissues"]["Pumping speed"] -= 1
-        if self.gui_menu == 7:
+        elif self.gui_menu == 7:
             self.settings["Tissues"]["Dropping volume"] -= 1
-        if self.gui_menu == 8:
+        elif self.gui_menu == 8:
             self.settings["Tissues"]["Dropping speed"] -= 1
             
-        if self.gui_menu == 9:
+        elif self.gui_menu == 9:
             self.settings["Solution A"]["Solution A pumping speed"] -= 1
-        if self.gui_menu == 10:
+        elif self.gui_menu == 10:
             self.settings["Solution A"]["Solution A dropping speed"] -= 1
-        if self.gui_menu == 11:
+        elif self.gui_menu == 11:
             self.settings["Solution A"]["Solution A pumping volume"] -= 1
-        if self.gui_menu == 12:
+            
+        elif self.gui_menu == 12:
             self.settings["Solution B"]["Solution B pumping speed"] -= 1
-        if self.gui_menu == 13:
+        elif self.gui_menu == 13:
             self.settings["Solution B"]["Solution B dropping speed"] -= 1
-        if self.gui_menu == 14:
+        elif self.gui_menu == 14:
             self.settings["Solution B"]["Solution B pumping volume"] -= 1
-        if self.gui_menu == 15:
+            
+        elif self.gui_menu == 15:
             self.settings["Gel"]["Tube pumping height"] -= 0.1
-        if self.gui_menu == 16:
+        elif self.gui_menu == 16:
             self.settings["Gel"]["Vial pumping height"] -= 0.1
-        if self.gui_menu == 17:
+        elif self.gui_menu == 17:
             self.settings["Gel"]["Well plate pumping height"] -= 0.1
-        if self.gui_menu == 18:
+        elif self.gui_menu == 18:
             if self.settings["Gel"]["Number of mix"] > 0:
                 self.settings["Gel"]["Number of mix"]  -= 1
-        if self.gui_menu == 19:
+        elif self.gui_menu == 19:
+            if self.settings["Gel"]["Proportion of mixing volume"] > 0.0:
+                self.settings["Gel"]["Proportion of mixing volume"] -= 0.01
+            else:
+                self.settings["Gel"]["Proportion of mixing volume"] = 0.0
+        elif self.gui_menu == 20:
             if self.settings["Gel"]["Number of wash"] > 0:
                 self.settings["Gel"]["Number of wash"] -= 1
-        if self.gui_menu == 20:
+                
+        elif self.gui_menu == 21:
             self.settings["Detection"]["Max attempt"] -= 1
-        if self.gui_menu == 21:
+        elif self.gui_menu == 22:
             if self.settings["Detection"]["Size min"] > 0:
                 self.settings["Detection"]["Size min"] -= 1
-        if self.gui_menu == 22:
+        elif self.gui_menu == 23:
             if self.settings["Detection"]["Size max"] > self.settings["Detection"]["Size min"]:
                 self.settings["Detection"]["Size max"] -= 1
-        if self.gui_menu == 23:
+        elif self.gui_menu == 24:
+            if self.settings["Detection"]["Circularity min"] > 0:
+                self.settings["Detection"]["Circularity min"] -= 0.01
+            else:
+                self.settings["Detection"]["Circularity min"] = 0.0
+        elif self.gui_menu == 25:
+            if self.settings["Detection"]["Convexity min"] > 0:
+                self.settings["Detection"]["Convexity min"] -= 0.01
+            else:
+                self.settings["Detection"]["Convexity min"] = 0.0
+        elif self.gui_menu == 26:
+            if self.settings["Detection"]["Inertia min"] > 0:
+                self.settings["Detection"]["Inertia min"] -= 0.01  
+            else:
+                self.settings["Detection"]["Inertia min"] = 0.0
+                
+        elif self.gui_menu == 27:
             self.settings["Well"]["Well preparation"] = False
-        if self.gui_menu == 24:
+        elif self.gui_menu == 28:
             if self.settings["Well"]["Type"] == "TPP48":
                 self.settings["Well"]["Type"] = "TPP24"
             elif self.settings["Well"]["Type"] == "TPP24":
                 self.settings["Well"]["Type"] = "TPP12"
             elif self.settings["Well"]["Type"] == "TPP12":
                 self.settings["Well"]["Type"] = "TPP6"
-        if self.gui_menu == 25:
+        elif self.gui_menu == 29:
             if self.settings["Well"]["Number of sample per well"] > 1:
                 self.settings["Well"]["Number of sample per well"] -= 1
-        if self.gui_menu == 26:
+        elif self.gui_menu == 30:
             if self.settings["Well"]["Number of well"] > 1:
                 self.settings["Well"]["Number of well"] -= 1
             
-    if direction is None:
+    elif direction is None:
         
         if self.gui_menu == 0:
             return self.settings["Position"]["Pick height"]
-        if self.gui_menu == 1:
+        elif self.gui_menu == 1:
             return self.settings["Position"]["Drop height"]
-        if self.gui_menu == 2:
+        elif self.gui_menu == 2:
             return self.settings["Speed"]["Slow speed"]
-        if self.gui_menu == 3:
+        elif self.gui_menu == 3:
             return self.settings["Speed"]["Medium speed"]
-        if self.gui_menu == 4:
+        elif self.gui_menu == 4:
             return self.settings["Speed"]["Fast speed"]      
-        if self.gui_menu == 5:
+        
+        elif self.gui_menu == 5:
             return self.settings["Tissues"]["Pumping Volume"]
-        if self.gui_menu == 6:
+        elif self.gui_menu == 6:
             return self.settings["Tissues"]["Pumping speed"]
-        if self.gui_menu == 7:
+        elif self.gui_menu == 7:
             return self.settings["Tissues"]["Dropping volume"]
-        if self.gui_menu == 8:
+        elif self.gui_menu == 8:
             return self.settings["Tissues"]["Dropping speed"]
         
-        if self.gui_menu == 9:
+        elif self.gui_menu == 9:
             return self.settings["Solution A"]["Solution A pumping speed"]
-        if self.gui_menu == 10:
+        elif self.gui_menu == 10:
             return self.settings["Solution A"]["Solution A dropping speed"]
-        if self.gui_menu == 11:
+        elif self.gui_menu == 11:
             return self.settings["Solution A"]["Solution A pumping volume"]
-        if self.gui_menu == 12:
+        
+        elif self.gui_menu == 12:
             return self.settings["Solution B"]["Solution B pumping speed"]
-        if self.gui_menu == 13:
+        elif self.gui_menu == 13:
             return self.settings["Solution B"]["Solution B dropping speed"]
-        if self.gui_menu == 14:
+        elif self.gui_menu == 14:
             return self.settings["Solution B"]["Solution B pumping volume"]
-        if self.gui_menu == 15:
+        
+        elif self.gui_menu == 15:
             return self.settings["Gel"]["Tube pumping height"]
-        if self.gui_menu == 16:
+        elif self.gui_menu == 16:
             return self.settings["Gel"]["Vial pumping height"]
-        if self.gui_menu == 17:
+        elif self.gui_menu == 17:
             return self.settings["Gel"]["Well plate pumping height"]
-        if self.gui_menu == 18:
+        elif self.gui_menu == 18:
             return self.settings["Gel"]["Number of mix"]
-        if self.gui_menu == 19:
+        elif self.gui_menu == 19:
+            return self.settings["Gel"]["Proportion of mixing volume"]
+        elif self.gui_menu == 20:
             return self.settings["Gel"]["Number of wash"]
-        if self.gui_menu == 20:
+        
+        elif self.gui_menu == 21:
             return self.settings["Detection"]["Max attempt"]  
-        if self.gui_menu == 21:
+        elif self.gui_menu == 22:
             return self.settings["Detection"]["Size min"]
-        if self.gui_menu == 22:
+        elif self.gui_menu == 23:
             return self.settings["Detection"]["Size max"]     
-        if self.gui_menu == 23:
+        elif self.gui_menu == 24:
+            return self.settings["Detection"]["Circularity min"]
+        elif self.gui_menu == 25:
+            return self.settings["Detection"]["Convexity min"]
+        elif self.gui_menu == 26:
+            return self.settings["Detection"]["Inertia min"]
+        elif self.gui_menu == 27:
             if self.settings["Well"]["Well preparation"]:
                 return 'yes'
             else:
                 return 'no'
-        if self.gui_menu == 24:
+        elif self.gui_menu == 28:
             return self.settings["Well"]["Type"]
-        if self.gui_menu == 25:
+        elif self.gui_menu == 29:
             return self.settings["Well"]["Number of sample per well"]
-        if self.gui_menu == 26:
+        elif self.gui_menu == 30:
             return self.settings["Well"]["Number of well"]
 
 
@@ -412,7 +467,7 @@ def display_gui_txt(self, imshow, position):
 
 def display_gui(self, imshow, key, position):
     
-    # if key == ord('c'):
+    # if key == ord('d'):
     #     cv2.imwrite("Pictures\Realsample\image_on_the_go.png", self.frame)
     
     if key == ord('p'):
@@ -471,13 +526,13 @@ def calibration_process(self, key, offset):
     
     incr = 0.1
             
-    if key == 2555904: #Left
+    if key == 2424832: #Right
         offset[0] -= incr
         self.anycubic.move_axis_relative(x=self.settings["Offset"]["Calibration point"][0], 
                                         y=self.settings["Offset"]["Calibration point"][1], 
                                         z=self.settings["Offset"]["Calibration point"][2], offset=offset)
         
-    elif key == 2424832: #Right
+    elif key == 2555904: #Left
         offset[0] += incr
         self.anycubic.move_axis_relative(x=self.settings["Offset"]["Calibration point"][0], 
                                         y=self.settings["Offset"]["Calibration point"][1], 
@@ -495,13 +550,13 @@ def calibration_process(self, key, offset):
                                         y=self.settings["Offset"]["Calibration point"][1], 
                                         z=self.settings["Offset"]["Calibration point"][2], offset=offset)
 
-    elif key == ord('e'):
+    elif key == ord('u'):
         offset[2] += incr
         self.anycubic.move_axis_relative(x=self.settings["Offset"]["Calibration point"][0], 
                                         y=self.settings["Offset"]["Calibration point"][1], 
                                         z=self.settings["Offset"]["Calibration point"][2], offset=offset)
 
-    elif key == ord('c'):
+    elif key == ord('d'):
         offset[2] -= incr
         self.anycubic.move_axis_relative(x=self.settings["Offset"]["Calibration point"][0], 
                                         y=self.settings["Offset"]["Calibration point"][1], 
@@ -518,7 +573,7 @@ def save_parameters(self):
     
 def load_parameters(self):
     
-    self.NN = load_model(r'TEP_convNN_BW')
+    self.NN = load_model(r'TEP_convNN_96')
 
     self.background = cv2.imread(r'Pictures\Utils\Backgroud.png')
     self.round_edges_mask = cv2.imread(r'Pictures\Utils\mask_rounded_edges.png')
@@ -529,8 +584,8 @@ def load_parameters(self):
                                     ['Tissues', 'Pumping Volume', 'ul'], ['Tissues', 'Pumping speed', ''], ['Tissues', 'Dropping volume', 'ul'], ['Tissues', 'Dropping speed', ''],
                                     ['Solution A', 'Pumping speed', ''], ['Solution A', 'Dropping speed', ''], ['Solution A', 'Pumping volume', 'ul'],
                                     ['Solution B', 'Pumping speed', ''], ['Solution B', 'Dropping speed', ''], ['Solution B', 'Pumping volume', 'ul'], 
-                                    ['Gel', "Tube pumping height", "mm"], ["Gel", "Vial pumping height", "mm"], ["Gel", "Well plate pumping height", "mm"], ['Gel', 'Number of mix', ''], ['Gel', 'Number of wash', ''],
-                                    ['Detection', 'Max attempt', ''],['Detection', 'Size min', ''], ['Detection', 'Size max', ''],
+                                    ['Gel', "Tube pumping height", "mm"], ["Gel", "Vial pumping height", "mm"], ["Gel", "Well plate pumping height", "mm"], ['Gel', 'Number of mix', ''], ['Gel', "Proportion of mixing volume", ''], ['Gel', 'Number of wash', ''],
+                                    ['Detection', 'Max attempt', ''],['Detection', 'Size min', ''], ['Detection', 'Size max', ''], ['Detection', 'Circularity min', ''], ['Detection', 'Convexity min', ''], ['Detection', 'Inertia min', ''],  
                                     ['Well', 'Well prepatation', ''], ["Well", "Type", ""], ['Well', 'Number of sample per well', ''], ['Well', 'Number of well', '']])
     
     with open("settings.json", "r") as jsonFile:

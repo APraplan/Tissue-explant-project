@@ -202,6 +202,6 @@ while True:
     
     cv2.imshow('Xplant', imshow)
     
-    if cv2.waitKey(1) & 0xFF == ord('q'):
+    if cv2.waitKeyEx(1) & 0xFF == ord('q'):
         break
     

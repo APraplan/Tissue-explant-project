@@ -45,7 +45,7 @@ if chessboard_calibration:
                     
         cv2.imshow('Push "p" to take calibration pictures', frame) 
                 
-        key = cv2.waitKey(5) & 0xFF
+        key = cv2.waitKeyEx(5)
         if key == ord('p'):
             cv2.imwrite("Pictures\calibration\image" + str(num) + ".png", frame)
             num += 1
@@ -92,7 +92,7 @@ if chessboard_calibration:
             # Draw and display the corners
             cv2.drawChessboardCorners(img, chessboardSize, corners2, ret)
             cv2.imshow('img', img)
-            cv2.waitKey(5)
+            cv2.waitKeyEx(5)
 
 
     cv2.destroyAllWindows()
@@ -155,7 +155,7 @@ if test_chessboard_calibration:
         cv2.imshow('Camera', frame) 
         cv2.imshow('Udistort', imshow) 
         
-        key = cv2.waitKey(5) & 0xFF
+        key = cv2.waitKeyEx(5)
         
         if key == 27: 
             cv2.destroyAllWindows()
@@ -186,7 +186,7 @@ if bed_leveling_calibration:
             
         cv2.imshow('Press "0,1,2,3" to circle', imshow) 
         
-        key = cv2.waitKey(5) & 0xFF
+        key = cv2.waitKeyEx(5)
         
         if key == ord('0'):
             anycubic.move_axis(z=5, f = 8000)
@@ -225,7 +225,7 @@ if verticality_calibration:
             
         cv2.imshow('Press "0" to go down and "1" to go up', imshow) 
         
-        key = cv2.waitKey(5) & 0xFF
+        key = cv2.waitKeyEx(5)
         
         if key == ord('0'):
             anycubic.move_axis(x=calibration_position[0], y=calibration_position[1], z=5, f = 8000)
@@ -407,7 +407,7 @@ if camera_calibration:
             angle -= 0.5*np.pi/180
             print('angle ', angle)
             
-        if key == ord('e'):
+        if key == ord('u'):
             angle += 0.5*np.pi/180
             print('angle ', angle)
                         

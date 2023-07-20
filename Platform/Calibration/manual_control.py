@@ -52,10 +52,10 @@ def commande(key, incr):
     if key == 2621440:#Down
         anycubic.move_axis_incremental(y=-incr, f = 10000, printMsg=False)
         
-    if key == ord('e'):
+    if key == ord('u'):
         anycubic.move_axis_incremental(z=incr, f = 10000, printMsg=False)
 
-    if key == ord('c'):
+    if key == ord('d'):
         anycubic.move_axis_incremental(z=-incr, f = 10000, printMsg=False)
         
     
@@ -89,7 +89,7 @@ while(True):
     cv2.imshow('Camera', frame) 
 
     # Wait for Esc key to stop 
-    k = cv2.waitKey(5) & 0xFF
+    k = cv2.waitKeyEx(5)
     if k == ord('p'):
         # path = "C:\Users\APrap\Documents\CREATE\Pick-and-Place\Pictures\image" + str(num)
         cv2.imwrite("Pictures/image" + str(num) + ".png", frame)

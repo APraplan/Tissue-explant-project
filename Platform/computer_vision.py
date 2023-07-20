@@ -140,7 +140,7 @@ class Camera:
 
 def get_position2(image):
     # cv2.imshow('Image', image)
-    # cv2.waitKey(0) 
+    # cv2.waitKeyEx(0) 
     
     image_blur = cv2.GaussianBlur(image, (5,5), 0)
     # cv2.imshow('Image', image_blur)
@@ -308,7 +308,7 @@ def create_detector():
     
     return detector 
 
-def create_sample_detector(min_size, max_size):
+def create_sample_detector(settings):
     
     # Setup SimpleBlobDetector parameters.
     params = cv2.SimpleBlobDetector_Params()
@@ -320,20 +320,29 @@ def create_sample_detector(min_size, max_size):
 
     # Filter by Area.
     params.filterByArea = True
-    params.minArea = min_size
-    params.maxArea = max_size
+    params.minArea = settings["Size min"]
+    params.maxArea = settings["Size max"]
 
     # Filter by Circularity
-    params.filterByCircularity = False
-    params.minCircularity = 0.1
+    if np.abs(settings["Circularity min"]) < 1e-5:
+        params.filterByCircularity = False
+    else:
+        params.filterByCircularity = True
+        params.minCircularity = settings["Circularity min"]
 
     # Filter by Convexity
-    params.filterByConvexity = True
-    params.minConvexity = 0.8
+    if np.abs(settings["Convexity min"]) < 1e-5:
+        params.filterByConvexity = False
+    else:
+        params.filterByConvexity = True
+        params.minConvexity = settings["Convexity min"]
 
     # Filter by Inertia
-    params.filterByInertia = True
-    params.minInertiaRatio = 0.3
+    if np.abs(settings["Inertia min"]) < 1e-5:
+        params.filterByInertia = False
+    else:
+        params.filterByInertia = True
+        params.minInertiaRatio = settings["Inertia min"]
 
     # Create a detector with the parameters
     # OLD: detector = cv2.SimpleBlobDetector(params)

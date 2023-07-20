@@ -146,7 +146,7 @@ while True:
     plat.frame = np.ones((450,800))
 
     # Inputs
-    key = cv2.waitKey(10) & 0xFF
+    key = cv2.waitKeyEx(10)
     
     plat.gui(key)
     cv2.imshow('Camera', plat.frame)     

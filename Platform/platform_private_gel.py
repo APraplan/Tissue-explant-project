@@ -226,7 +226,7 @@ def preparing_gel(self):
         
         if self.com_state == 'not send':
             self.dyna.write_profile_velocity(self.settings["Solution B"]["Solution B pumping speed"], ID = 2)
-            self.pipette_2_pos = self.pipette_empty - (self.settings["Solution A"]["Solution A pumping volume"] + self.settings["Solution B"]["Solution B pumping volume"])*0.75
+            self.pipette_2_pos = self.pipette_empty - (self.settings["Solution A"]["Solution A pumping volume"] + self.settings["Solution B"]["Solution B pumping volume"])*self.settings["Gel"]["Proportion of mixing volume"]
             self.dyna.write_pipette_ul(self.pipette_2_pos, ID = 2)
             self.com_state = 'send'  
             
@@ -406,6 +406,8 @@ def homming(self):
             if self.settings["Well"]["Well preparation"]:
                 # self.state = 'spreading solution A'
                 self.state = 'preparing gel'
+                self.sub_state = 'go to position'
+                self.com_state = 'not send'
     
             else:
                 self.sub_state = 'exit vial'

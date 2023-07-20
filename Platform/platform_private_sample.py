@@ -69,8 +69,8 @@ def check_pickup_two(self):
     file_count = len(files)
     cv2.imwrite("Pictures\macro\macro_image_" + str(file_count) + ".png", self.macro_frame)
     
-    # res = self.NN.predict(cv2.cvtColor(self.macro_frame, cv2.COLOR_BGR2RGB).reshape(1, 480, 640, 3), verbose=0)
-    res = self.NN.predict(cv2.cvtColor(self.macro_frame, cv2.COLOR_BGR2GRAY).reshape(1, 480, 640, 1), verbose=0)
+    res = self.NN.predict(cv2.cvtColor(self.macro_frame, cv2.COLOR_BGR2RGB).reshape(1, 480, 640, 3), verbose=0)
+    # res = self.NN.predict(cv2.cvtColor(self.macro_frame, cv2.COLOR_BGR2GRAY).reshape(1, 480, 640, 1), verbose=0)
     logger.info(f"🔮 Prediciton results {res[0, 0]}")
     
     if res > 0.5:
@@ -102,7 +102,7 @@ def detect(self):
         elif self.anycubic.get_finish_flag():
             self.tip_number = 1
             self.dyna.select_tip(tip_number=self.tip_number, ID=3)
-            self.sample_detector = cv.create_sample_detector(self.settings["Detection"]["Size min"], self.settings["Detection"]["Size max"]) 
+            self.sample_detector = cv.create_sample_detector(self.settings["Detection"]) 
             self.sub_state = 'analyse picture'
             self.com_state = 'not send'
             
@@ -161,22 +161,24 @@ def pick(self):
     elif self.sub_state == 'correction':
         
         if self.com_state == 'not send':
-            x, y, w, h = self.bbox
-            target_px = [int(x+w/2), int(y+h/2)]
-            cam_pos = (self.target_pos[0]+self.offset_check[0]-self.settings["Offset"]["Camera"][0]+self.settings["Offset"]["Tip one"][0], self.target_pos[1]+self.offset_check[1]-self.settings["Offset"]["Camera"][1]+self.settings["Offset"]["Tip one"][1], self.settings["Position"]["Pick height"] + self.pick_offset-self.settings["Offset"]["Camera"][2]+self.settings["Offset"]["Tip one"][2])
-            self.target_pos = self.cam.cam_to_platform_space(target_px, cam_pos)
-            if (self.target_pos[0]-self.petridish_pos[0])**2+(self.target_pos[1]-self.petridish_pos[1])**2 > self.petridish_radius**2:
-                self.state = 'reset'
-                self.sub_state = 'go to position'
-                self.com_state = 'not send'         
-                self.pick_attempt = 0    
-            else:              
-                self.anycubic.move_axis_relative(x=self.target_pos[0], y=self.target_pos[1], z=self.settings["Position"]["Pick height"], f=self.settings["Speed"]["Slow speed"], offset=self.settings["Offset"]["Tip one"])
-                # indirect move to go on top
-                # self.anycubic.move_axis_relative(x=self.target_pos[0], y=self.target_pos[1], z=self.settings["Position"]["Pick height"]+2, f=self.settings["Speed"]["Slow speed"])
-                # self.anycubic.move_axis_relative(z=self.settings["Position"]["Pick height"], f=self.settings["Speed"]["Slow speed"])
-                self.anycubic.finish_request()
-                self.com_state = 'send'
+            if delay(self, 0.3):
+                x, y, w, h = self.bbox
+                target_px = [int(x+w/2), int(y+h/2)]
+                cam_pos = (self.target_pos[0]+self.offset_check[0]-self.settings["Offset"]["Camera"][0]+self.settings["Offset"]["Tip one"][0], self.target_pos[1]+self.offset_check[1]-self.settings["Offset"]["Camera"][1]+self.settings["Offset"]["Tip one"][1], self.settings["Position"]["Pick height"] + self.pick_offset-self.settings["Offset"]["Camera"][2]+self.settings["Offset"]["Tip one"][2])
+                self.target_pos = self.cam.cam_to_platform_space(target_px, cam_pos)
+                if (self.target_pos[0]-self.petridish_pos[0])**2+(self.target_pos[1]-self.petridish_pos[1])**2 > self.petridish_radius**2:
+                    self.state = 'reset'
+                    self.sub_state = 'go to position'
+                    self.com_state = 'not send'         
+                    self.pick_attempt = 0    
+                else:              
+                    man_corr = 0.02 # Small manual offset to correct dynamic offset
+                    self.anycubic.move_axis_relative(x=self.target_pos[0]-man_corr*self.offset_check[0], y=self.target_pos[1]-man_corr*self.offset_check[1], z=self.settings["Position"]["Pick height"], f=self.settings["Speed"]["Slow speed"], offset=self.settings["Offset"]["Tip one"])
+                    # indirect move to go on top
+                    # self.anycubic.move_axis_relative(x=self.target_pos[0], y=self.target_pos[1], z=self.settings["Position"]["Pick height"]+2, f=self.settings["Speed"]["Slow speed"])
+                    # self.anycubic.move_axis_relative(z=self.settings["Position"]["Pick height"], f=self.settings["Speed"]["Slow speed"])
+                    self.anycubic.finish_request()
+                    self.com_state = 'send'
         
         elif self.anycubic.get_finish_flag():
             self.sub_state = 'suck'
@@ -235,7 +237,10 @@ def picture(self):
         if self.com_state == 'not send':
             dest = destination(self)
             self.anycubic.move_axis_relative(z=self.safe_height, f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip one"])
-            self.anycubic.move_axis_relative(x=self.picture_pos, y=dest[1], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip one"])
+            if dest[1] > 100:
+                self.anycubic.move_axis_relative(x=self.picture_pos, y=100, f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip one"])
+            else:
+                self.anycubic.move_axis_relative(x=self.picture_pos, y=dest[1], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip one"])
             self.anycubic.finish_request()
             self.com_state = 'send'
             
@@ -260,6 +265,8 @@ def place(self):
         if self.com_state == 'not send':
             self.anycubic.move_axis_relative(z=self.safe_height, f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip one"])
             dest = destination(self)
+            if dest[1] > 100:
+                self.anycubic.move_axis_relative(x=80, y=100, f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip one"])
             self.anycubic.move_axis_relative(x=dest[0], y=dest[1], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip one"])
             self.anycubic.finish_request()
             self.com_state = 'send'
@@ -314,7 +321,9 @@ def second_picture(self):
         if self.com_state == 'not send':
             dest = destination(self)
             self.anycubic.move_axis_relative(z=self.safe_height, f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip one"])
-            self.anycubic.move_axis_relative(x=self.picture_pos, y=dest[1], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip one"])
+            if dest[1] > 100:
+                self.anycubic.move_axis_relative(x=80, y=100, f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip one"])
+            self.anycubic.move_axis_relative(x=self.picture_pos, f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip one"])
             self.anycubic.finish_request()
             self.com_state = 'send'
             
