@@ -1,10 +1,24 @@
 import cv2
 import numpy as np
-import pickle
 import tensorflow as tf
 from keras.models import load_model
 import computer_vision as cv
 import json
+import platform
+
+def linux_to_windows_arrow_conversion(key):
+
+    if key == 65362: #UP
+        key = 2490368
+    elif key == 65364: #Dow
+        key = 2621440
+    elif key == 65361: #Right
+        key = 2424832
+    elif key == 65363: #Left
+        key = 2555904
+
+    return key
+    
 
 def calibration_sequence(self):
 
@@ -44,6 +58,9 @@ def calibration_sequence(self):
         # Inputs
         key = cv2.waitKeyEx(5)
         
+        if platform.system() == 'Linux':
+            key = linux_to_windows_arrow_conversion(key)
+        
         self.settings["Offset"]["Tip one"] = calibration_process(self, key, self.settings["Offset"]["Tip one"])
         
         if key == 13: #enter
@@ -82,6 +99,9 @@ def calibration_sequence(self):
             
         # Inputs
         key = cv2.waitKeyEx(5)
+
+        if platform.system() == 'Linux':
+            key = linux_to_windows_arrow_conversion(key)
         
         self.settings["Offset"]["Tip two"] = calibration_process(self, key, self.settings["Offset"]["Tip two"])
         
@@ -119,6 +139,9 @@ def calibration_sequence(self):
             
         # Inputs
         key = cv2.waitKeyEx(5)
+
+        if platform.system() == 'Linux':
+            key = linux_to_windows_arrow_conversion(key)
         
         offset = self.settings["Offset"]["Camera"]
         offset[2] += self.safe_height
@@ -572,11 +595,11 @@ def save_parameters(self):
     
     
 def load_parameters(self):
-    
-    self.NN = load_model(r'TEP_convNN_96')
 
-    self.background = cv2.imread(r'Pictures\Utils\Backgroud.png')
-    self.round_edges_mask = cv2.imread(r'Pictures\Utils\mask_rounded_edges.png')
+    self.NN = load_model(r'TEP_convNN_96')
+    self.background = cv2.imread(r'Pictures/Utils/Backgroud.png')
+    self.round_edges_mask = cv2.imread(r'Pictures/Utils/mask_rounded_edges.png')  
+    
     self.gui_menu = 0
     
     self.gui_menu_label = np.array([['Position', 'Pick height', 'mm'], ['Position', 'Drop height', 'mm'],

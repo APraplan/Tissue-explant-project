@@ -60,14 +60,14 @@ def check_pickup_two(self):
     
     self.macro_frame = self.stream2.read()
     
-    macro_dir = r"Pictures\macro"
+    macro_dir = r"Pictures/macro"
     
     if not os.path.exists(macro_dir):
         os.makedirs(macro_dir)
     
     _, _, files = next(os.walk(macro_dir))
     file_count = len(files)
-    cv2.imwrite("Pictures\macro\macro_image_" + str(file_count) + ".png", self.macro_frame)
+    cv2.imwrite("Pictures/macro/macro_image_" + str(file_count) + ".png", self.macro_frame)
     
     res = self.NN.predict(cv2.cvtColor(self.macro_frame, cv2.COLOR_BGR2RGB).reshape(1, 480, 640, 3), verbose=0)
     # res = self.NN.predict(cv2.cvtColor(self.macro_frame, cv2.COLOR_BGR2GRAY).reshape(1, 480, 640, 1), verbose=0)

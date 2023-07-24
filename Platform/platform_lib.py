@@ -7,6 +7,7 @@ from platform_private_gel import *
 from platform_private_gui import *
 from Communication.ports_gestion import *
 
+
 debug = False
 
 if debug:
@@ -147,17 +148,17 @@ class platform_pick_and_place:
         
     
     def run(self):
-        
+
         if self.record:
             try :
-                _, _, files = next(os.walk(r"Pictures\Videos"))
+                _, _, files = next(os.walk(r"Pictures/Videos"))
                 id = len(files)
             except:
-                os.mkdir(r"Pictures\Videos")
+                os.makedirs(r"Pictures/Videos")
                 id = 0
                 
-            out = cv2.VideoWriter(r'Pictures\Videos\video_' + str(id) + '.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 10, (self.frame.shape[1], self.frame.shape[0]))
-           
+            out = cv2.VideoWriter(r'Pictures/Videos/video_' + str(id) + '.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 10, (self.frame.shape[1], self.frame.shape[0]))
+
         while True:
         
             frame = self.stream1.read() 
@@ -173,6 +174,9 @@ class platform_pick_and_place:
              
             # Inputs
             key = cv2.waitKeyEx(5)
+
+            if platform.system() == 'Linux':
+                key = linux_to_windows_arrow_conversion(key)
             
             if key == 27: #esc
                 break

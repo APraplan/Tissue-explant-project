@@ -78,7 +78,7 @@ while(True):
     k = cv2.waitKeyEx(5)
     if k == ord('p'):
         # path = "C:\Users\APrap\Documents\CREATE\Pick-and-Place\Pictures\image" + str(num)
-        cv2.imwrite("Pictures\Realsample\image" + str(num) + ".png", frame)
+        cv2.imwrite(r"Pictures/Realsample/image" + str(num) + ".png", frame)
         num += 1
     
     if k == 27: 

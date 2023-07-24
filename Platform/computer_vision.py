@@ -423,7 +423,7 @@ def distance(keypoint1, keypoint2):
 def detection(self):
     
     out = self.frame.copy()
-    cv2.imwrite("Pictures\detection\image.png", out)
+    cv2.imwrite(r"Pictures/detection/image.png", out)
     
     zoi = cv2.bitwise_and(self.invert, self.invert, mask=self.mask)
 
@@ -498,13 +498,13 @@ def detection(self):
     out = d_angles(out, keypoints[id_target], [optimal_angle], GREEN)   
     out = d_circle(out, [keypoints[id_target]], 5, GREEN)
         
-    cv2.imwrite("Pictures\detection\image_detection.png", out)
+    cv2.imwrite(r"Pictures/detection/image_detection.png", out)
     return [keypoints[id_target].pt[0], keypoints[id_target].pt[1]], optimal_angle
         
     
 def detect(image, detector, mask = None):
     
-    cv2.imwrite("Pictures\detection\image.png", image)
+    cv2.imwrite(r"Pictures/detection/image.png", image)
     
     # Choose image
     if mask is not None:
@@ -525,7 +525,7 @@ def detect(image, detector, mask = None):
         image = cv2.putText(image, str(i+1), (int(keypoints[i].pt[0]-size[0]/2),int(keypoints[i].pt[1]-5)), font, 
                    fontScale, color, thickness, cv2.LINE_AA)
     
-    cv2.imwrite("Pictures\detection\image_detection.png", image)
+    cv2.imwrite(r"Pictures/detection/image_detection.png", image)
     
     # Choose keypoint
     w = 40
@@ -554,7 +554,7 @@ def detect(image, detector, mask = None):
 
 def real_detect(image, inverted_gray_image, detector, mask):
 
-    cv2.imwrite("Pictures\detection\image.png", image)
+    cv2.imwrite(r"Pictures/detection/image.png", image)
     
     # Choose image
     if mask is not None:
@@ -575,7 +575,7 @@ def real_detect(image, inverted_gray_image, detector, mask):
         image = cv2.putText(image, str(i+1), (int(keypoints[i].pt[0]-size[0]/2),int(keypoints[i].pt[1]-5)), font, 
                    fontScale, color, thickness, cv2.LINE_AA)
     
-    cv2.imwrite("Pictures\detection\image_detection.png", image)
+    cv2.imwrite(r"Pictures/detection/image_detection.png", image)
     
     # Choose keypoint
     w = 40
