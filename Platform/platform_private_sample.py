@@ -4,6 +4,7 @@ import math
 import time
 import os
 from loguru import logger
+from Communication.csv_access import save_datas
 
 class sample:
     
@@ -194,6 +195,7 @@ def pick(self):
             self.com_state = 'send'
             
         elif self.dyna.pipette_is_in_position_ul(self.pipette_1_pos, ID = 1):
+            self.results_attempts += 1
             self.sub_state = 'check'
             self.com_state = 'not send'
             
@@ -249,11 +251,17 @@ def picture(self):
             # print(check_pickup_two(self))
             if delay(self, 0.5):
                 if check_pickup_two(self):
+                    self.results_acc_first = (self.resutls_attempts - self.results_false_pos)/self.results_attempts
+                    save_datas([self.results_attempts, self.results_acc_first])
+                    self.results_false_pos = 0
+                    self.results_attempts = 0
+                    self.results_acc_first = 0
                     self.state = 'place'
                     self.sub_state = 'go to position'
                     self.com_state = 'not send' 
                     
                 else:
+                    self.results_false_pos += 1
                     self.state = 'reset'
                     self.sub_state = 'go to position'
                     self.com_state = 'not send'            

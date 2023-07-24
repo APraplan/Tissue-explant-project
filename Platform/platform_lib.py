@@ -8,7 +8,7 @@ from platform_private_gui import *
 from Communication.ports_gestion import *
 
 
-debug = False
+debug = True
 
 if debug:
     from Communication.fake_communication import *
@@ -28,6 +28,10 @@ class platform_pick_and_place:
         self.save = 0
         self.counter = 0
         self.record = True
+        
+        self.results_false_pos = 0
+        self.results_attempts = 0
+        self.results_acc_first = 0
 
         # FSM
         self.chrono_set = False

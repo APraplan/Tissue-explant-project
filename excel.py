@@ -1,2 +1,0 @@
-import panda as pd
-
