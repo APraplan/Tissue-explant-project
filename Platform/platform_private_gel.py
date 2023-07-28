@@ -45,6 +45,9 @@ def well_plate(id, type='TPP48'):
     elif type == 'TPP48':
         position = [border[0]-10.25, border[1]-18.4, 25]
         well_offset = 13
+    elif type == 'NUNC48':
+        position = [border[0]-10, border[1]-15.5, 25]
+        well_offset = 13.5
     else:
         print('Wrong well plate type')
     
@@ -215,12 +218,18 @@ def preparing_gel(self):
             self.dyna.write_profile_velocity(self.settings["Solution B"]["Solution B pumping speed"], ID = 2)
             self.pipette_2_pos = self.pipette_empty
             self.dyna.write_pipette_ul(self.pipette_2_pos, ID = 2)
+            self.mix += 1
             self.com_state = 'send'  
             
         elif self.dyna.pipette_is_in_position_ul(self.pipette_2_pos, ID = 2):
-            self.sub_state = 'mix up'
-            self.com_state = 'not send'
             
+            if self.mix > self.settings["Gel"]["Number of mix"]:
+                self.sub_state = 'take gel'
+                self.com_state = 'not send'               
+            else:     
+                self.sub_state = 'mix up'
+                self.com_state = 'not send'
+
             
     elif self.sub_state == 'mix up':
         
@@ -229,17 +238,23 @@ def preparing_gel(self):
             self.pipette_2_pos = self.pipette_empty - (self.settings["Solution A"]["Solution A pumping volume"] + self.settings["Solution B"]["Solution B pumping volume"])*self.settings["Gel"]["Proportion of mixing volume"]
             self.dyna.write_pipette_ul(self.pipette_2_pos, ID = 2)
             self.com_state = 'send'  
-            
+
         elif self.dyna.pipette_is_in_position_ul(self.pipette_2_pos, ID = 2):
-            self.mix += 1
+            self.sub_state = 'mix down'
+            self.com_state = 'not send'
             
-            if self.mix > self.settings["Gel"]["Number of mix"]:
-                self.sub_state = 'place gel'
-                self.com_state = 'not send'               
-            else:     
-                self.sub_state = 'mix down'
-                self.com_state = 'not send'
-                
+    elif self.sub_state == 'take gel':
+    
+        if self.com_state == 'not send':
+            self.dyna.write_profile_velocity(self.settings["Solution B"]["Solution B pumping speed"], ID = 2)
+            self.pipette_2_pos = self.pipette_empty - (self.settings["Solution A"]["Solution A pumping volume"] + self.settings["Solution B"]["Solution B pumping volume"])*0.9
+            self.dyna.write_pipette_ul(self.pipette_2_pos, ID = 2)
+            self.com_state = 'send'  
+
+        elif self.dyna.pipette_is_in_position_ul(self.pipette_2_pos, ID = 2):
+            self.sub_state = 'place gel'
+            self.com_state = 'not send'
+            
                 
     elif self.sub_state == 'place gel':
         
@@ -259,15 +274,29 @@ def preparing_gel(self):
         
         if self.com_state == 'not send':
             self.dyna.write_profile_velocity(self.settings["Solution B"]["Solution B pumping speed"], ID = 2)
-            self.pipette_2_pos = self.pipette_2_pos + (self.settings["Solution A"]["Solution A pumping volume"] + self.settings["Solution B"]["Solution B pumping volume"])*0.75
+            self.pipette_2_pos = self.pipette_2_pos + (self.settings["Solution A"]["Solution A pumping volume"] + self.settings["Solution B"]["Solution B pumping volume"])*0.85
             self.dyna.write_pipette_ul(self.pipette_2_pos, ID = 2)
             self.com_state = 'send'  
             
         elif self.dyna.pipette_is_in_position_ul(self.pipette_2_pos, ID = 2):
+            # Normal experiment
             # self.sub_state = 'washing'
+            # self.com_state = 'not send'
+
+            # Experiment without washing
             self.state = 'detect'
             self.sub_state = 'go to position'
             self.com_state = 'not send'
+
+            # Only gel prep
+            # self.well_num += 1
+            # if self.well_num >= len(self.culture_well) or self.well_num >= self.settings["Well"]["Number of well"]:
+            #     self.state = 'done'
+            #     self.com_state = 'not send'
+            # else:
+            #     self.state = 'preparing gel'
+            #     self.sub_state = 'go to position'
+            #     self.com_state = 'not send'
 
 
     elif self.sub_state == 'washing':
@@ -330,7 +359,7 @@ def homming(self):
             
         elif self.anycubic.get_finish_flag():
             self.mixing_well = [tube('A'), tube('B'), tube('C'), tube('D'), tube('E'), tube('F')]
-            self.culture_well = [well_plate('A1', self.settings["Well"]["Type"]), well_plate('A2', self.settings["Well"]["Type"]), well_plate('A3', self.settings["Well"]["Type"]), well_plate('B1', self.settings["Well"]["Type"]), well_plate('B2', self.settings["Well"]["Type"]), well_plate('B3', self.settings["Well"]["Type"])]
+            self.culture_well = [well_plate('C1', self.settings["Well"]["Type"]), well_plate('B1', self.settings["Well"]["Type"]), well_plate('C1', self.settings["Well"]["Type"]), well_plate('D1', self.settings["Well"]["Type"]), well_plate('E1', self.settings["Well"]["Type"]), well_plate('F1', self.settings["Well"]["Type"])]
             self.solution_well = {'Sol A' : vial('A'), 'Sol B' : vial('B'), 'Washing' : vial('A'), 'Dump' : vial('A')}
 
             

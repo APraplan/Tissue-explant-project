@@ -8,7 +8,7 @@ from platform_private_gui import *
 from Communication.ports_gestion import *
 
 
-debug = True
+debug = False
 
 if debug:
     from Communication.fake_communication import *
@@ -117,6 +117,12 @@ class platform_pick_and_place:
         self.anycubic.max_x_feedrate(300)
         self.anycubic.max_y_feedrate(300)
         self.anycubic.max_z_feedrate(25)
+
+        # Select first tip
+        self.anycubic.move_axis_relative(x=15, y=0, z=self.safe_height, offset=self.settings["Offset"]["Tip one"])
+        self.anycubic.finish_request()
+        while not self.anycubic.get_finish_flag():
+            pass
         
         self.dyna.begin_communication()
         self.dyna.set_operating_mode("position", ID="all")
@@ -124,6 +130,7 @@ class platform_pick_and_place:
         self.dyna.set_position_gains(P_gain = 2700, I_gain = 50, D_gain = 5000, ID=1)
         self.dyna.set_position_gains(P_gain = 2700, I_gain = 90, D_gain = 5000, ID=2)
         self.dyna.set_position_gains(P_gain = 2500, I_gain = 40, D_gain = 5000, ID=3)
+
         self.tip_number = 1
         self.dyna.select_tip(tip_number=self.tip_number, ID=3)
 
@@ -247,6 +254,13 @@ class platform_pick_and_place:
         if self.state == 'pause':
             logger.info('🧫 Resumed')
             self.state = self.last_state
+        if self.state == 'Done':
+            if self.settings["Well"]["Well preparation"]:
+                self.state = 'preparing gel'
+            else:
+                self.state = 'detect'
+            self.sub_state = 'go to position'
+            self.com_state = 'not send'
                 
 
     def reset(self):

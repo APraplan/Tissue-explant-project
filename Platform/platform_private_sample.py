@@ -173,7 +173,7 @@ def pick(self):
                     self.com_state = 'not send'         
                     self.pick_attempt = 0    
                 else:              
-                    man_corr = 0.02 # Small manual offset to correct dynamic offset
+                    man_corr = 0.2 # Small manual offset to correct dynamic offset
                     self.anycubic.move_axis_relative(x=self.target_pos[0]-man_corr*self.offset_check[0], y=self.target_pos[1]-man_corr*self.offset_check[1], z=self.settings["Position"]["Pick height"], f=self.settings["Speed"]["Slow speed"], offset=self.settings["Offset"]["Tip one"])
                     # indirect move to go on top
                     # self.anycubic.move_axis_relative(x=self.target_pos[0], y=self.target_pos[1], z=self.settings["Position"]["Pick height"]+2, f=self.settings["Speed"]["Slow speed"])
@@ -251,7 +251,7 @@ def picture(self):
             # print(check_pickup_two(self))
             if delay(self, 0.5):
                 if check_pickup_two(self):
-                    self.results_acc_first = (self.resutls_attempts - self.results_false_pos)/self.results_attempts
+                    self.results_acc_first = (self.results_attempts - self.results_false_pos)/self.results_attempts
                     save_datas([self.results_attempts, self.results_acc_first])
                     self.results_false_pos = 0
                     self.results_attempts = 0
@@ -401,5 +401,7 @@ def done(self):
     if self.com_state == 'not send':
         self.anycubic.move_axis_relative(z=self.safe_height, printMsg=False, offset=self.settings["Offset"]["Tip one"])
         self.anycubic.move_axis_relative(x=2200, y=220, printMsg=False, offset=self.settings["Offset"]["Tip one"])
+        self.tip_number = 1
+        self.dyna.select_tip(tip_number=self.tip_number, ID=3)
         logger.info('🦾 Done')
         self.com_state = 'send'  

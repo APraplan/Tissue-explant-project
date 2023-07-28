@@ -9,9 +9,9 @@ options = {
     "CAP_PROP_FRAME_HEIGHT": 720,
     "CAP_PROP_FPS": 30,
 }
-stream1 = VideoGear(source=0, logging=True, **options).start() 
+stream1 = VideoGear(source=2, logging=True, **options).start() 
 
-stream2 = VideoGear(source=1, logging=True, **options).start() 
+stream2 = VideoGear(source=4, logging=True, **options).start() 
 
 frameA = stream1.read()
 frameB = stream2.read()

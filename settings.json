@@ -1,7 +1,7 @@
 {
     "Position": {
-        "Pick height": 5.899999999999994,
-        "Drop height": 4.400000000000009
+        "Pick height": 5.599999999999995,
+        "Drop height": 5.0
     },
     "Speed": {
         "Slow speed": 3,
@@ -11,7 +11,7 @@
     "Tissues": {
         "Pumping Volume": 75.0,
         "Pumping speed": 65,
-        "Dropping volume": 4.0,
+        "Dropping volume": 5.0,
         "Dropping speed": 151
     },
     "Solution A": {
@@ -22,27 +22,27 @@
     "Solution B": {
         "Solution B pumping speed": 15,
         "Solution B dropping speed": 15,
-        "Solution B pumping volume": 350
+        "Solution B pumping volume": 400
     },
     "Gel": {
-        "Tube pumping height": 6,
-        "Vial pumping height": 6,
+        "Tube pumping height": 3.5,
+        "Vial pumping height": 3.5,
         "Well plate pumping height": 5,
         "Number of mix": 3,
-        "Proportion of mixing volume": 0.75,
+        "Proportion of mixing volume": 0.8,
         "Number of wash": 3
     },
     "Detection": {
-        "Max attempt": 3,
+        "Max attempt": 2,
         "Size min": 50,
-        "Size max": 70,
+        "Size max": 66,
         "Circularity min": 0.0,
         "Convexity min": 0.8,
         "Inertia min": 0.3
     },
     "Well": {
         "Well preparation": true,
-        "Type": "TPP6",
+        "Type": "NUNC48",
         "Number of sample per well": 8,
         "Number of well": 6
     },
@@ -53,17 +53,17 @@
             0
         ],
         "Tip one": [
-            37.30000000000026,
-            74.00000000000007,
-            2.4000000000000004
+            34.900000000000226,
+            74.50000000000004,
+            2.2
         ],
         "Tip two": [
-            35.40000000000023,
-            72.80000000000014,
-            2.5000000000000004
+            37.40000000000026,
+            73.70000000000009,
+            2.0
         ],
         "Camera": [
-            49.10000000000043,
+            49.20000000000043,
             54.70000000000051,
             0
         ]

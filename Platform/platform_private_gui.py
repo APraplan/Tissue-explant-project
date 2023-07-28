@@ -43,6 +43,7 @@ def calibration_sequence(self):
         
     # Offset first tip calibration
     self.anycubic.move_axis_relative(z=5, offset=self.settings["Offset"]["Tip one"])
+    self.anycubic.move_axis_relative(x=5, y=-15, offset=self.settings["Offset"]["Tip one"])
     self.anycubic.move_axis_relative(x=self.settings["Offset"]["Calibration point"][0], y=self.settings["Offset"]["Calibration point"][1], offset=self.settings["Offset"]["Tip one"])
     self.anycubic.move_axis_relative(z=self.settings["Offset"]["Calibration point"][2], offset=self.settings["Offset"]["Tip one"])
     
