@@ -28,10 +28,12 @@ class platform_pick_and_place:
         self.save = 0
         self.counter = 0
         self.record = True
-        
-        self.results_false_pos = 0
-        self.results_attempts = 0
-        self.results_acc_first = 0
+       
+        self.results = [] 
+        self.results_first_detection = False
+        self.results_second_detection = False
+        self.results_ground_truth = False
+        self.results_error_desctiption = "False detection"
 
         # FSM
         self.chrono_set = False

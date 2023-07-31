@@ -41,7 +41,7 @@
         "Inertia min": 0.3
     },
     "Well": {
-        "Well preparation": true,
+        "Well preparation": false,
         "Type": "NUNC48",
         "Number of sample per well": 8,
         "Number of well": 6

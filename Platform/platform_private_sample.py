@@ -214,23 +214,16 @@ def pick(self):
             self.pick_attempt += 1
             
             if check_pickup(self):
-                           
-                release_tracker(self)
-                self.state = 'picture'
-                self.sub_state = 'go to position'
-                self.com_state = 'not send' 
-                self.pick_attempt = 0
-                
-            elif self.pipette_1_pos - self.settings["Tissues"]["Pumping Volume"] >= 0 and self.pick_attempt < self.settings["Detection"]["Max attempt"]:
-                self.sub_state = 'correction'
-                self.com_state = 'not send'
-                
+                self.results_first_detection = True
             else:
-                release_tracker(self)
-                self.state = 'reset'
-                self.sub_state = 'go to position'
-                self.com_state = 'not send'         
-                self.pick_attempt = 0    
+                self.results_first_detection = False
+                
+                    
+            release_tracker(self)
+            self.state = 'picture'
+            self.sub_state = 'go to position'
+            self.com_state = 'not send' 
+            self.pick_attempt = 0
 
 def picture(self):
     
@@ -251,20 +244,26 @@ def picture(self):
             # print(check_pickup_two(self))
             if delay(self, 0.5):
                 if check_pickup_two(self):
-                    self.results_acc_first = (self.results_attempts - self.results_false_pos)/self.results_attempts
-                    save_datas([self.results_attempts, self.results_acc_first])
-                    self.results_false_pos = 0
-                    self.results_attempts = 0
-                    self.results_acc_first = 0
-                    self.state = 'place'
-                    self.sub_state = 'go to position'
-                    self.com_state = 'not send' 
-                    
+                    self.results_second_detection = True
                 else:
-                    self.results_false_pos += 1
-                    self.state = 'reset'
-                    self.sub_state = 'go to position'
-                    self.com_state = 'not send'            
+                    self.reults_second_detection = False
+                    
+                    
+                uin = input("Error description: ")
+                
+                if uin == "":
+                    self.resulsts_grouns_truth = True
+                else:
+                    self.results_ground_truth = False
+                    
+                self.results_error_description = uin
+                     
+                save_datas([self.results_first_detection, self.results_second_detection, self.results_ground_truth, self.results_error_description])
+
+                self.results_false_pos += 1
+                self.state = 'reset'
+                self.sub_state = 'go to position'
+                self.com_state = 'not send'            
                 
 def place(self):
 
