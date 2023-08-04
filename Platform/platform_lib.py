@@ -24,16 +24,12 @@ class platform_pick_and_place:
         
         load_parameters(self)
         
+        self.selected_id = 1
+        
         # Temp
         self.save = 0
         self.counter = 0
         self.record = True
-       
-        self.results = [] 
-        self.results_first_detection = False
-        self.results_second_detection = False
-        self.results_ground_truth = False
-        self.results_error_desctiption = "False detection"
 
         # FSM
         self.chrono_set = False

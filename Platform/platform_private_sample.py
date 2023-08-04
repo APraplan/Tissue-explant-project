@@ -5,6 +5,7 @@ import time
 import os
 from loguru import logger
 from Communication.csv_access import save_datas
+import numpy as np
 
 class sample:
     
@@ -110,15 +111,21 @@ def detect(self):
             
     elif self.sub_state == 'analyse picture':
           
-        target_px, optimal_angle = cv.detection(self)
-                
-        if target_px is not None:
+        dictionary = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
+        parameters =  cv2.aruco.DetectorParameters()
+        detector = cv2.aruco.ArucoDetector(dictionary, parameters)   
+        markerCorners, markerIds, _ = detector.detectMarkers(self.frame)
+        try:
+            id = np.where(markerIds == self.selected_id)[0][0]
+        except:
+            id = None
+                                         
+        if id is not None:
+            center_point = np.mean(markerCorners[id][0], axis=0)
              
-            set_tracker(self, target_px)
-            self.target_pos = self.cam.cam_to_platform_space(target_px, self.detection_place)
-            self.offset_check = (self.dist_check*math.sin(optimal_angle), self.dist_check*math.cos(optimal_angle))
+            self.target_pos = self.cam.cam_to_platform_space(center_point, self.detection_place)
 
-            self.state = 'pick'
+            self.state = 'go to position'
             self.sub_state = 'empty pipette'
             self.com_state = 'not send'
             self.detect_attempt = 0
@@ -131,26 +138,12 @@ def detect(self):
                 self.detect_attempt = 0
                 logger.info('🔎 No tissue detected')
     
-def pick(self):
+def pick(self):             
             
-    
-    if self.sub_state == 'empty pipette':
-    
-        if self.com_state == 'not send':
-            self.dyna.write_profile_velocity(self.settings["Tissues"]["Dropping speed"], ID = 1)
-            self.pipette_1_pos = 310
-            self.dyna.write_pipette_ul(self.pipette_1_pos, ID = 1)
-            self.com_state = 'send'
-            
-        elif self.dyna.pipette_is_in_position_ul(self.pipette_1_pos, ID = 1):
-            self.sub_state = 'go to position'
-            self.com_state = 'not send'
-                
-            
-    elif self.sub_state == 'go to position':
+    if self.sub_state == 'go to position':
         
         if self.com_state == 'not send':
-            self.anycubic.move_axis_relative(x=self.target_pos[0]+self.offset_check[0], y=self.target_pos[1]+self.offset_check[1], z=self.settings["Position"]["Pick height"] + self.pick_offset, f=self.settings["Speed"]["Medium speed"], offset=self.settings["Offset"]["Tip one"])
+            self.anycubic.move_axis_relative(x=self.target_pos[0], y=self.target_pos[1], z=self.settings["Position"]["Pick height"] + self.pick_offset, f=self.settings["Speed"]["Medium speed"], offset=self.settings["Offset"]["Camera"])
             self.anycubic.finish_request()
             self.com_state = 'send'
             
@@ -163,67 +156,41 @@ def pick(self):
         
         if self.com_state == 'not send':
             if delay(self, 0.3):
-                x, y, w, h = self.bbox
-                target_px = [int(x+w/2), int(y+h/2)]
-                cam_pos = (self.target_pos[0]+self.offset_check[0]-self.settings["Offset"]["Camera"][0]+self.settings["Offset"]["Tip one"][0], self.target_pos[1]+self.offset_check[1]-self.settings["Offset"]["Camera"][1]+self.settings["Offset"]["Tip one"][1], self.settings["Position"]["Pick height"] + self.pick_offset-self.settings["Offset"]["Camera"][2]+self.settings["Offset"]["Tip one"][2])
-                self.target_pos = self.cam.cam_to_platform_space(target_px, cam_pos)
-                if (self.target_pos[0]-self.petridish_pos[0])**2+(self.target_pos[1]-self.petridish_pos[1])**2 > self.petridish_radius**2:
+                            
+                dictionary = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
+                parameters =  cv2.aruco.DetectorParameters()
+                detector = cv2.aruco.ArucoDetector(dictionary, parameters)   
+                markerCorners, markerIds, _ = detector.detectMarkers(self.frame)
+                try:
+                    id = np.where(markerIds == self.selected_id)[0][0]
+                except:
+                    id = None
+                                                
+                if id is not None:
+                    cam_pos = (self.target_pos[0], self.target_pos[1], self.settings["Position"]["Pick height"])
+                    man_corr = 0.2 # Small manual offset to correct dynamic offset
+                    
+                    for i in range(4):
+                        corner = self.cam.cam_to_platform_space(markerCorners[id][0][i], cam_pos)
+                        self.anycubic.move_axis_relative(x=corner[0]+man_corr, y=corner[1]+man_corr, z=5, f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip one"])
+                        self.anycubic.move_axis_relative(z=-1, f=self.settings["Speed"]["Slow speed"], offset=self.settings["Offset"]["Tip one"])
+                        self.anycubic.move_axis_relative(z=5, f=self.settings["Speed"]["Slow speed"], offset=self.settings["Offset"]["Tip one"])
+                    
+                    self.anycubic.finish_request()
+                    self.com_state = 'send'    
+                    
+                else:    
                     self.state = 'reset'
                     self.sub_state = 'go to position'
                     self.com_state = 'not send'         
                     self.pick_attempt = 0    
-                else:              
-                    man_corr = 0.2 # Small manual offset to correct dynamic offset
-                    self.anycubic.move_axis_relative(x=self.target_pos[0]-man_corr*self.offset_check[0], y=self.target_pos[1]-man_corr*self.offset_check[1], z=self.settings["Position"]["Pick height"], f=self.settings["Speed"]["Slow speed"], offset=self.settings["Offset"]["Tip one"])
-                    # indirect move to go on top
-                    # self.anycubic.move_axis_relative(x=self.target_pos[0], y=self.target_pos[1], z=self.settings["Position"]["Pick height"]+2, f=self.settings["Speed"]["Slow speed"])
-                    # self.anycubic.move_axis_relative(z=self.settings["Position"]["Pick height"], f=self.settings["Speed"]["Slow speed"])
-                    self.anycubic.finish_request()
-                    self.com_state = 'send'
         
         elif self.anycubic.get_finish_flag():
-            self.sub_state = 'suck'
-            self.com_state = 'not send'
-    
-
-    elif self.sub_state == 'suck':
-        
-        if self.com_state == 'not send':
-            self.pipette_1_pos = self.pipette_1_pos - self.settings["Tissues"]["Pumping Volume"]
-            self.dyna.write_profile_velocity(self.settings["Tissues"]["Pumping speed"], ID = 1)
-            self.dyna.write_pipette_ul(self.pipette_1_pos, ID = 1)
-            self.com_state = 'send'
-            
-        elif self.dyna.pipette_is_in_position_ul(self.pipette_1_pos, ID = 1):
-            self.results_attempts += 1
-            self.sub_state = 'check'
-            self.com_state = 'not send'
-            
-    
-    elif self.sub_state == 'check':
-        
-        if self.com_state == 'not send':
-            self.anycubic.move_axis_relative(z=self.settings["Position"]["Pick height"] + self.pick_offset, f=self.settings["Speed"]["Slow speed"], offset=self.settings["Offset"]["Tip one"])
-            self.anycubic.move_axis_relative(x=self.target_pos[0]+self.offset_check[0], y=self.target_pos[1]+self.offset_check[1], f=self.settings["Speed"]["Slow speed"], offset=self.settings["Offset"]["Tip one"])
-            self.anycubic.finish_request()
-            self.com_state = 'send'
-            
-        elif self.anycubic.get_finish_flag():
-            
-            # print(check_pickup(self))
-            self.pick_attempt += 1
-            
-            if check_pickup(self):
-                self.results_first_detection = True
-            else:
-                self.results_first_detection = False
-                
-                    
-            release_tracker(self)
-            self.state = 'picture'
+            self.state = 'detect'
             self.sub_state = 'go to position'
-            self.com_state = 'not send' 
-            self.pick_attempt = 0
+            self.com_state = 'not send'       
+            self.pick_attempt = 0    
+    
 
 def picture(self):
     
@@ -244,23 +211,8 @@ def picture(self):
             # print(check_pickup_two(self))
             if delay(self, 0.5):
                 if check_pickup_two(self):
-                    self.results_second_detection = True
-                else:
-                    self.reults_second_detection = False
-                    
-                    
-                uin = input("Error description: ")
+                    pass
                 
-                if uin == "":
-                    self.resulsts_grouns_truth = True
-                else:
-                    self.results_ground_truth = False
-                    
-                self.results_error_description = uin
-                     
-                save_datas([self.results_first_detection, self.results_second_detection, self.results_ground_truth, self.results_error_description])
-
-                self.results_false_pos += 1
                 self.state = 'reset'
                 self.sub_state = 'go to position'
                 self.com_state = 'not send'            
