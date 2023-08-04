@@ -132,7 +132,14 @@ TEP_convNN_92/
 outpy.avi
 TEP_convNN_96/
 TEP_convNN_BW/
+TEP_convNN_all/
 Pictures/macro
+Pictures/macro_col
+Pictures/macro_kid
+Pictures/macro_spleen
+Pictures/macro_col_2
+Pictures/macro_kid_2
+Pictures/macro_spleen_2
 Pictures/Videos/
 
 .gitignore

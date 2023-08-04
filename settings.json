@@ -1,6 +1,6 @@
 {
     "Position": {
-        "Pick height": 5.599999999999995,
+        "Pick height": 5.699999999999995,
         "Drop height": 5.0
     },
     "Speed": {
@@ -9,7 +9,7 @@
         "Fast speed": 100
     },
     "Tissues": {
-        "Pumping Volume": 75.0,
+        "Pumping Volume": 95.0,
         "Pumping speed": 65,
         "Dropping volume": 5.0,
         "Dropping speed": 151
@@ -34,8 +34,8 @@
     },
     "Detection": {
         "Max attempt": 2,
-        "Size min": 50,
-        "Size max": 66,
+        "Size min": 65,
+        "Size max": 70,
         "Circularity min": 0.0,
         "Convexity min": 0.8,
         "Inertia min": 0.3
@@ -53,18 +53,18 @@
             0
         ],
         "Tip one": [
-            34.900000000000226,
-            74.50000000000004,
-            2.2
+            34.70000000000022,
+            74.80000000000003,
+            2.4000000000000004
         ],
         "Tip two": [
             37.40000000000026,
-            73.70000000000009,
+            74.80000000000003,
             2.0
         ],
         "Camera": [
-            49.20000000000043,
-            54.70000000000051,
+            49.40000000000043,
+            54.90000000000051,
             0
         ]
     }

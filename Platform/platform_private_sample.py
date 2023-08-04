@@ -173,8 +173,8 @@ def pick(self):
                     self.com_state = 'not send'         
                     self.pick_attempt = 0    
                 else:              
-                    man_corr = 0.2 # Small manual offset to correct dynamic offset
-                    self.anycubic.move_axis_relative(x=self.target_pos[0]-man_corr*self.offset_check[0], y=self.target_pos[1]-man_corr*self.offset_check[1], z=self.settings["Position"]["Pick height"], f=self.settings["Speed"]["Slow speed"], offset=self.settings["Offset"]["Tip one"])
+                    man_corr = [0., 1.0] # Small manual offset to correct dynamic offset
+                    self.anycubic.move_axis_relative(x=self.target_pos[0]+man_corr[0], y=self.target_pos[1]+man_corr[1], z=self.settings["Position"]["Pick height"], f=self.settings["Speed"]["Slow speed"], offset=self.settings["Offset"]["Tip one"])
                     # indirect move to go on top
                     # self.anycubic.move_axis_relative(x=self.target_pos[0], y=self.target_pos[1], z=self.settings["Position"]["Pick height"]+2, f=self.settings["Speed"]["Slow speed"])
                     # self.anycubic.move_axis_relative(z=self.settings["Position"]["Pick height"], f=self.settings["Speed"]["Slow speed"])
@@ -195,7 +195,6 @@ def pick(self):
             self.com_state = 'send'
             
         elif self.dyna.pipette_is_in_position_ul(self.pipette_1_pos, ID = 1):
-            self.results_attempts += 1
             self.sub_state = 'check'
             self.com_state = 'not send'
             
@@ -246,24 +245,26 @@ def picture(self):
                 if check_pickup_two(self):
                     self.results_second_detection = True
                 else:
-                    self.reults_second_detection = False
+                    self.results_second_detection = False
                     
                     
-                uin = input("Error description: ")
-                
-                if uin == "":
-                    self.resulsts_grouns_truth = True
-                else:
-                    self.results_ground_truth = False
+                self.results_ground_truth = user_input(self)
                     
-                self.results_error_description = uin
                      
-                save_datas([self.results_first_detection, self.results_second_detection, self.results_ground_truth, self.results_error_description])
+                save_datas([self.results_first_detection, self.results_second_detection, self.results_ground_truth])
 
-                self.results_false_pos += 1
                 self.state = 'reset'
                 self.sub_state = 'go to position'
-                self.com_state = 'not send'            
+                self.com_state = 'not send'    
+
+def user_input(self):
+    while True:
+        key = cv2.waitKeyEx(5)  
+
+        if key == ord('y'):
+            return True
+        elif key == ord('n'):
+            return False      
                 
 def place(self):
 
