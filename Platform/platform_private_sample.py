@@ -6,6 +6,7 @@ import os
 from loguru import logger
 from Communication.csv_access import save_datas
 import numpy as np
+from time import sleep
 
 class sample:
     
@@ -125,8 +126,8 @@ def detect(self):
              
             self.target_pos = self.cam.cam_to_platform_space(center_point, self.detection_place)
 
-            self.state = 'go to position'
-            self.sub_state = 'empty pipette'
+            self.state = 'pick'
+            self.sub_state = 'go to position'
             self.com_state = 'not send'
             self.detect_attempt = 0
         else:
@@ -143,7 +144,7 @@ def pick(self):
     if self.sub_state == 'go to position':
         
         if self.com_state == 'not send':
-            self.anycubic.move_axis_relative(x=self.target_pos[0], y=self.target_pos[1], z=self.settings["Position"]["Pick height"] + self.pick_offset, f=self.settings["Speed"]["Medium speed"], offset=self.settings["Offset"]["Camera"])
+            self.anycubic.move_axis_relative(x=self.target_pos[0], y=self.target_pos[1], z=self.settings["Position"]["Pick height"] + 15, f=self.settings["Speed"]["Medium speed"], offset=self.settings["Offset"]["Camera"])
             self.anycubic.finish_request()
             self.com_state = 'send'
             
@@ -156,34 +157,40 @@ def pick(self):
         
         if self.com_state == 'not send':
             if delay(self, 0.3):
-                            
+
                 dictionary = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
                 parameters =  cv2.aruco.DetectorParameters()
-                detector = cv2.aruco.ArucoDetector(dictionary, parameters)   
+                detector = cv2.aruco.ArucoDetector(dictionary, parameters)  
                 markerCorners, markerIds, _ = detector.detectMarkers(self.frame)
+                            
                 try:
                     id = np.where(markerIds == self.selected_id)[0][0]
                 except:
                     id = None
                                                 
                 if id is not None:
-                    cam_pos = (self.target_pos[0], self.target_pos[1], self.settings["Position"]["Pick height"])
-                    man_corr = 0.2 # Small manual offset to correct dynamic offset
+                    cam_pos = (self.target_pos[0], self.target_pos[1], self.settings["Position"]["Pick height"]+12)
+                    man_corr = [0.1, -0.1] # Small manual offset to correct dynamic offset
                     
                     for i in range(4):
                         corner = self.cam.cam_to_platform_space(markerCorners[id][0][i], cam_pos)
-                        self.anycubic.move_axis_relative(x=corner[0]+man_corr, y=corner[1]+man_corr, z=5, f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip one"])
-                        self.anycubic.move_axis_relative(z=-1, f=self.settings["Speed"]["Slow speed"], offset=self.settings["Offset"]["Tip one"])
+                        self.anycubic.move_axis_relative(x=corner[0]+man_corr[0], y=corner[1]+man_corr[1], z=5, f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip one"])
+                        self.anycubic.move_axis_relative(z=-3, f=self.settings["Speed"]["Slow speed"], offset=self.settings["Offset"]["Tip one"])
                         self.anycubic.move_axis_relative(z=5, f=self.settings["Speed"]["Slow speed"], offset=self.settings["Offset"]["Tip one"])
-                    
+
                     self.anycubic.finish_request()
+                    self.selected_id += 1
                     self.com_state = 'send'    
                     
                 else:    
-                    self.state = 'reset'
-                    self.sub_state = 'go to position'
-                    self.com_state = 'not send'         
-                    self.pick_attempt = 0    
+                    if self.detection_2 > 15:
+                        self.detection_2 = 0
+                        self.state = 'reset'
+                        self.sub_state = 'go to position'
+                        self.com_state = 'not send'         
+                        self.pick_attempt = 0    
+                    else:
+                        self.detection_2 += 1
         
         elif self.anycubic.get_finish_flag():
             self.state = 'detect'

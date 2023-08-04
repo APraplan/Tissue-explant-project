@@ -24,7 +24,8 @@ class platform_pick_and_place:
         
         load_parameters(self)
         
-        self.selected_id = 1
+        self.selected_id = 0
+        self.detection_2 = 0
         
         # Temp
         self.save = 0
@@ -266,11 +267,7 @@ class platform_pick_and_place:
         if not (self.state == 'homming' or self.state == 'spreading solution A' or self.state == 'preparing gel'):
         
             logger.info('⚡ Soft reset')
-            self.pick_attempt = 0
-            self.detect_attempt = 0
-            self.state = 'reset'
-            self.sub_state = 'go to position'
-            self.com_state = 'not send'
+            self.selected_id = 0
         
         
             
