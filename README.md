@@ -58,7 +58,8 @@ To assess the images, a convolutional neural netword as been trained. The role o
 The platform as been tested on three diffrents types of samples. The differents results as been collected on mouse samples, spleen, kidney and colon tissues. This samples gives a good ideas of the capabilities of the robot.
 
 <p align="center">
-  
+  <img src=  width=400>
+  <img src=  width=400>
 </p>
 
 ## Paper 
