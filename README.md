@@ -1,13 +1,21 @@
 # Tissue explant project
 
 ## Objectives
-In the field of personal health threatment, one research technic consist of spreading differant tissue sample of the same tumor biopsy accross different substrats with some unique threatment in order to asses their efficiency. The goal of this project was to automatise this selection and storage in indiidual tubes of the samples in order to make it faster and more accurate.
+In the context of tumor research, personalized medical treatments are very expensive and not widely accessible. One aspect of the research involves isolating samples from a biopsy to test several treatments on the same tumor. This project aims to develop a robotic platform capable of selecting, moving, and culturing these different samples to streamline the resulting research and make the technique more affordable.
+
+![top_view](https://github.com/APraplan/Tissue-explant-project/assets/102581647/a2fc5a77-ee43-46f8-9007-71de811df887)
 
 ## Hardware
 
 
-The project use the frame from a 3D printer, an anycubic mega zero eith it's controller. A webcam is used in order to detect and track the samples and a dynamixel xl430 is used to actuate a micro-pipette in order to act like a pneumatic gripper.
-The next illustrations represent the frame of the robot, the end effextor with the camera and the pipette tip and the actuation of the pipette.
+The project use the frame from a 3D printer, an anycubic mega zero with it's controller. A webcam is used in order to detect and track the samples and three dynamixel xl430 are used to actuate two micro-pipette in order to act like a pneumatic gripper and to automate the manipulation of liquids..
+The next illustrations represent the frame of the robot, the end effextor with the camera and the two pipette tips and the actuation of the pipette.
+
+<p float="left">
+![end_effector](https://github.com/APraplan/Tissue-explant-project/assets/102581647/fb1d9f5c-933b-49e5-8dc0-b622b7e1fc83)
+![front_view](https://github.com/APraplan/Tissue-explant-project/assets/102581647/4d21c6de-903d-4fd5-afc9-68173b136bff)
+
+</p>
 
 <p float="left">
   <img src="https://user-images.githubusercontent.com/102581647/232227676-66328f60-7b82-4bbd-ab56-779f35e75ffc.jpeg" width="400">
