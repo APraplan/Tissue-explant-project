@@ -13,13 +13,16 @@ In the context of tumor research, personalized medical treatments are very expen
 The project use the frame from a 3D printer, an anycubic mega zero with it's controller. A webcam is used in order to detect and track the samples and three dynamixel xl430 are used to actuate two micro-pipette in order to act like a pneumatic gripper and to automate the manipulation of liquids..
 The next illustrations represent the frame of the robot, the end effextor with the camera and the two pipette tips and the actuation of the pipette.
 
-<p align="center">
+<p align=center>
   <img src=https://github.com/APraplan/Tissue-explant-project/assets/102581647/9572526d-2aea-4ac9-890c-88496cf5c024 width=400>
   <img src=https://github.com/APraplan/Tissue-explant-project/assets/102581647/9491d089-d363-485e-b1a6-77915be80771 width=400>
-  <br />
-  <img src=https://github.com/APraplan/Tissue-explant-project/assets/102581647/5af37c6f-3fae-4b4e-ba93-a12e1c62b9a3 width=800>
-  <br />
-  <img src=https://github.com/APraplan/Tissue-explant-project/assets/102581647/2d33303c-686a-4d1b-bafa-7784a51ddd15 width=800>
+</p>
+
+One of the tips is used exclusively for moving the samplesm while the second one is used to mix and place the gel matrix with the nutriments in order to keep the samples alive. Both tips are selectable using an actuator and are connected to individual micropipettes, ensuring a precision of ±3uL while allowing simultaneous use of both tips.
+
+<p align=center>
+  <img src=https://github.com/APraplan/Tissue-explant-project/assets/102581647/5af37c6f-3fae-4b4e-ba93-a12e1c62b9a3 width=400>
+  <img src=https://github.com/APraplan/Tissue-explant-project/assets/102581647/2d33303c-686a-4d1b-bafa-7784a51ddd15 width=400>
 <!--   <img src=https://github.com/APraplan/Tissue-explant-project/assets/102581647/0e87f826-67db-4a24-9667-6fe99478dcc2 width=400> -->
 </p>
 
