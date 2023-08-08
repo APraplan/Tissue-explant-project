@@ -48,6 +48,9 @@ def well_plate(id, type='TPP48'):
     elif type == 'NUNC48':
         position = [border[0]-10, border[1]-15.5, 25]
         well_offset = 13.5
+    elif type == 'FALCON48':
+        position = [border[0]-11.0, border[1]-18.5, 25]
+        well_offset = 12.85
     else:
         print('Wrong well plate type')
     
@@ -200,7 +203,7 @@ def preparing_gel(self):
     elif self.sub_state == 'fill well':
         
         if self.com_state == 'not send':
-            self.anycubic.move_axis_relative(z=self.mixing_well[self.well_num][2], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
+            self.anycubic.move_axis_relative(z=self.solution_well['Sol B'][2], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
             self.anycubic.move_axis_relative(x=self.mixing_well[self.well_num][0], y=self.mixing_well[self.well_num][1], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
             self.anycubic.move_axis_relative(z=self.settings["Gel"]["Well plate pumping height"], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"]) 
             self.anycubic.finish_request() 
@@ -260,6 +263,7 @@ def preparing_gel(self):
         
         if self.com_state == 'not send':
             self.anycubic.move_axis_relative(z=self.mixing_well[self.well_num][2], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
+            self.anycubic.move_axis_relative(x=75, y=140, f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
             self.anycubic.move_axis_relative(x=self.culture_well[self.well_num][0], y=self.culture_well[self.well_num][1], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
             self.anycubic.move_axis_relative(z=self.settings["Gel"]["Well plate pumping height"], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"]) 
             self.anycubic.finish_request() 
@@ -280,13 +284,13 @@ def preparing_gel(self):
             
         elif self.dyna.pipette_is_in_position_ul(self.pipette_2_pos, ID = 2):
             # Normal experiment
-            # self.sub_state = 'washing'
-            # self.com_state = 'not send'
+            self.sub_state = 'washing'
+            self.com_state = 'not send'
 
             # Experiment without washing
-            self.state = 'detect'
-            self.sub_state = 'go to position'
-            self.com_state = 'not send'
+            # self.state = 'detect'
+            # self.sub_state = 'go to position'
+            # self.com_state = 'not send'
 
             # Only gel prep
             # self.well_num += 1
@@ -325,8 +329,7 @@ def preparing_gel(self):
         elif self.dyna.pipette_is_in_position_ul(self.pipette_2_pos, ID = 2):
             
             if self.wash > self.settings["Gel"]["Number of wash"]:
-                self.state = 'detect'
-                self.sub_state = 'go to position'
+                self.sub_state = 'exit vial'
                 self.com_state = 'not send'               
             else:     
                 self.sub_state = 'wash up'
@@ -346,6 +349,18 @@ def preparing_gel(self):
                 
             self.sub_state = 'wash down'
             self.com_state = 'not send'
+
+
+    elif self.sub_state == 'exit vial':
+        if self.com_state == 'not send':
+            self.anycubic.move_axis_relative(z=self.solution_well['Washing'][2], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
+            self.anycubic.finish_request()
+            self.com_state = 'send'
+        
+        if self.anycubic.get_finish_flag():
+            self.state = 'detect'
+            self.sub_state = 'go to position'
+            self.com_state = 'not send'  
             
             
 def homming(self):
@@ -354,12 +369,21 @@ def homming(self):
         
         if self.com_state == 'not send':
             self.anycubic.move_axis_relative(z=self.safe_height, f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip one"])
+
+            # Calibration test
+            # self.anycubic.move_axis_relative(x=well_plate('A1', self.settings["Well"]["Type"])[0], y=well_plate('A1', self.settings["Well"]["Type"])[1], offset=self.settings["Offset"]["Tip one"])
+            # self.anycubic.move_axis_relative(x=well_plate('A8', self.settings["Well"]["Type"])[0], y=well_plate('A8', self.settings["Well"]["Type"])[1], offset=self.settings["Offset"]["Tip one"])
+            # self.anycubic.move_axis_relative(x=well_plate('F8', self.settings["Well"]["Type"])[0], y=well_plate('F8', self.settings["Well"]["Type"])[1], offset=self.settings["Offset"]["Tip one"])
+            # self.anycubic.move_axis_relative(x=well_plate('F1', self.settings["Well"]["Type"])[0], y=well_plate('F1', self.settings["Well"]["Type"])[1], offset=self.settings["Offset"]["Tip one"])
+
             self.anycubic.finish_request() 
             self.com_state = 'send'  
             
         elif self.anycubic.get_finish_flag():
             self.mixing_well = [tube('A'), tube('B'), tube('C'), tube('D'), tube('E'), tube('F')]
-            self.culture_well = [well_plate('C1', self.settings["Well"]["Type"]), well_plate('B1', self.settings["Well"]["Type"]), well_plate('C1', self.settings["Well"]["Type"]), well_plate('D1', self.settings["Well"]["Type"]), well_plate('E1', self.settings["Well"]["Type"]), well_plate('F1', self.settings["Well"]["Type"])]
+            self.culture_well = [well_plate(self.settings["Well"]["Culture 1"], self.settings["Well"]["Type"]), well_plate(self.settings["Well"]["Culture 2"], self.settings["Well"]["Type"]),
+                                 well_plate(self.settings["Well"]["Culture 3"], self.settings["Well"]["Type"]), well_plate(self.settings["Well"]["Culture 4"], self.settings["Well"]["Type"]),
+                                 well_plate(self.settings["Well"]["Culture 5"], self.settings["Well"]["Type"]), well_plate(self.settings["Well"]["Culture 6"], self.settings["Well"]["Type"])]
             self.solution_well = {'Sol A' : vial('A'), 'Sol B' : vial('B'), 'Washing' : vial('A'), 'Dump' : vial('A')}
 
             
@@ -432,24 +456,21 @@ def homming(self):
             self.com_state = 'send'
             
         elif self.dyna.pipette_is_in_position_ul(self.pipette_2_pos, ID = 2):
-            if self.settings["Well"]["Well preparation"]:
-                # self.state = 'spreading solution A'
-                self.state = 'preparing gel'
-                self.sub_state = 'go to position'
-                self.com_state = 'not send'
-    
-            else:
+            
                 self.sub_state = 'exit vial'
                 self.com_state = 'not send'
                 
     elif self.sub_state == 'exit vial':
         if self.com_state == 'not send':
             self.anycubic.move_axis_relative(z=self.solution_well['Dump'][2], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
-            self.anycubic.move_axis_relative(x=self.detection_place[0], y=self.detection_place[1], z=self.detection_place[2], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Camera"])
             self.anycubic.finish_request()
             self.com_state = 'send'
         
         if self.anycubic.get_finish_flag():
-            self.state = 'detect'
+            if self.settings["Well"]["Well preparation"]:
+                self.state = 'preparing gel'
+            else:
+                self.state = 'detect'
+
             self.sub_state = 'go to position'
             self.com_state = 'send'   

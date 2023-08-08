@@ -1,7 +1,7 @@
 {
     "Position": {
-        "Pick height": 5.699999999999995,
-        "Drop height": 5.0
+        "Pick height": 5.599999999999995,
+        "Drop height": 5.3
     },
     "Speed": {
         "Slow speed": 3,
@@ -11,17 +11,17 @@
     "Tissues": {
         "Pumping Volume": 95.0,
         "Pumping speed": 65,
-        "Dropping volume": 5.0,
+        "Dropping volume": 8.0,
         "Dropping speed": 151
     },
     "Solution A": {
-        "Solution A pumping speed": 15,
-        "Solution A dropping speed": 15,
+        "Solution A pumping speed": 60,
+        "Solution A dropping speed": 60,
         "Solution A pumping volume": 100
     },
     "Solution B": {
-        "Solution B pumping speed": 15,
-        "Solution B dropping speed": 15,
+        "Solution B pumping speed": 30,
+        "Solution B dropping speed": 35,
         "Solution B pumping volume": 400
     },
     "Gel": {
@@ -29,22 +29,28 @@
         "Vial pumping height": 3.5,
         "Well plate pumping height": 5,
         "Number of mix": 3,
-        "Proportion of mixing volume": 0.8,
-        "Number of wash": 3
+        "Proportion of mixing volume": 0.7,
+        "Number of wash": 2
     },
     "Detection": {
         "Max attempt": 2,
-        "Size min": 65,
-        "Size max": 70,
+        "Size min": 56,
+        "Size max": 67,
         "Circularity min": 0.0,
         "Convexity min": 0.8,
         "Inertia min": 0.3
     },
     "Well": {
-        "Well preparation": false,
-        "Type": "NUNC48",
-        "Number of sample per well": 8,
-        "Number of well": 6
+        "Well preparation": true,
+        "Type": "FALCON48",
+        "Number of sample per well": 6,
+        "Number of well": 6,
+        "Culture 1": "A1",
+        "Culture 2": "B1",
+        "Culture 3": "C1",
+        "Culture 4": "D1",
+        "Culture 5": "E1",
+        "Culture 6": "F1"
     },
     "Offset": {
         "Calibration point": [
@@ -53,14 +59,14 @@
             0
         ],
         "Tip one": [
-            34.70000000000022,
-            74.80000000000003,
-            2.4000000000000004
+            36.50000000000025,
+            74.20000000000006,
+            2.7000000000000006
         ],
         "Tip two": [
-            37.40000000000026,
-            74.80000000000003,
-            2.0
+            36.300000000000246,
+            80.79999999999968,
+            3.4000000000000012
         ],
         "Camera": [
             49.40000000000043,
