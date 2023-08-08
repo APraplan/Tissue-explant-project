@@ -218,12 +218,18 @@ def pick(self):
                 self.sub_state = 'go to position'
                 self.com_state = 'not send' 
                 self.pick_attempt = 0
-            else:
+                
+            elif self.pick_attempt >= self.settings["Detection"]["Max attempt"]:
                 self.state = 'reset'
                 self.sub_state = 'go to position'
-                self.com_state = 'not send'  
+                self.com_state = 'not send'
+                self.pick_attempt = 0 
                 
-
+            else:
+                self.sub_state == 'correction'
+                self.com_state = 'not send'
+                  
+                
 def picture(self):
     
     if self.sub_state == 'go to position':
@@ -246,6 +252,7 @@ def picture(self):
                     self.state = 'place'
                     self.sub_state = 'go to position'
                     self.com_state = 'not send' 
+                    self.place_attempt = 0
                    
                 else:
                     self.state = 'reset'
@@ -289,6 +296,7 @@ def place(self):
             self.dyna.write_profile_velocity(self.settings["Tissues"]["Dropping speed"], ID = 1)
             self.pipette_1_pos = self.pipette_1_pos + self.settings["Tissues"]["Dropping volume"]
             self.dyna.write_pipette_ul(self.pipette_1_pos, ID = 1)
+            self.place_attempt += 1
             self.com_state = 'send'
             
         elif self.dyna.pipette_is_in_position_ul(self.pipette_1_pos, ID = 1):
@@ -326,9 +334,15 @@ def second_picture(self):
             # print(check_pickup_two(self))
             if delay(self, 0.5):
                 if check_pickup_two(self):
-                    self.state = 'place'
-                    self.sub_state = 'go to position'
-                    self.com_state = 'not send' 
+                    if self.place_attempt >= self.settings["Detection"]["Max place attempts"]:
+                        self.state = 'reset'
+                        self.sub_state = 'go to position'
+                        self.com_state = 'not send' 
+                        
+                    else:
+                        self.state = 'place'
+                        self.sub_state = 'go to position'
+                        self.com_state = 'not send' 
                     
                 else:
                     self.nb_sample += 1

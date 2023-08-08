@@ -328,7 +328,7 @@ def preparing_gel(self):
             
         elif self.dyna.pipette_is_in_position_ul(self.pipette_2_pos, ID = 2):
             
-            if self.wash > self.settings["Gel"]["Number of wash"]:
+            if self.wash >= self.settings["Gel"]["Number of wash"]:
                 self.sub_state = 'exit vial'
                 self.com_state = 'not send'               
             else:     

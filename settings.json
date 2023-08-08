@@ -34,6 +34,7 @@
     },
     "Detection": {
         "Max attempt": 2,
+        "Max place attempts": 4,
         "Size min": 56,
         "Size max": 67,
         "Circularity min": 0.0,
