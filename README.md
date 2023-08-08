@@ -39,7 +39,8 @@ The first challenge was to guarantie a high precision, under the milimeter scale
 The second aspect is to detect and select the different samples taking into account their size and shape to ensure more representative results.
 
 <p align=center>
-  <img src=  width=400>
+  <img src=https://github.com/APraplan/Tissue-explant-project/assets/102581647/a41d90e1-1e0c-4dd4-ae78-6e3ded03ff16  width=400>
+
   <img src=  width=400>
 </p>
 
