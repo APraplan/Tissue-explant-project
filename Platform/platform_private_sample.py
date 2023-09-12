@@ -26,7 +26,7 @@ def destination(self):
     
     well_pos = [self.culture_well[self.well_num][0], self.culture_well[self.well_num][1]]
     
-    radius = 3
+    radius = 1.8
     if self.nb_sample == 0:
         offset = [0, 0]
     else: 
@@ -211,6 +211,7 @@ def pick(self):
             
             # print(check_pickup(self))
             self.pick_attempt += 1
+            print(self.pick_attempt, self.settings["Detection"]["Max attempt"])
             
             if check_pickup(self):
                 release_tracker(self)
@@ -226,8 +227,8 @@ def pick(self):
                 self.pick_attempt = 0 
                 
             else:
-                self.sub_state == 'correction'
-                self.com_state = 'not send'
+                self.sub_state = 'correction'
+                self.com_state = 'not send' 
                   
                 
 def picture(self):
