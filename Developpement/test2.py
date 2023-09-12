@@ -4,7 +4,6 @@ sys.path.append(r"C:\Users\APrap\Documents\CREATE\Tissue-explant-project")
 from Platform.Communication.dynamixel_controller import Dynamixel
 from time import sleep
 import keyboard
-import math
 
 dyna = Dynamixel(ID=[1,2,3], descriptive_device_name="XL430 test motor", series_name=["xl", "xl", "xl"], baudrate=57600,
                  port_name="COM5")
@@ -21,29 +20,33 @@ PIPETTE_MIN = 280
 PIPETTE_MAX = 2800
 
 tip_num = 0
-percentage = 0
+volume = 0
 
 while True:
     
+    if keyboard.is_pressed('0'):
+        print('Position ', volume)
+        volume = 0
+    
     if keyboard.is_pressed('1'):
-        print('Position ', percentage)
-        percentage = 0
+        print('Position ', volume)
+        volume = 100
 
     if keyboard.is_pressed('2'):
-        print('Position ', percentage)
-        percentage = 5/625*100
+        print('Position ', volume)
+        volume = 200
         
     if keyboard.is_pressed('3'):
-        print('Position ', percentage)
-        percentage = 50
+        print('Position ', volume)
+        volume = 300
 
     if keyboard.is_pressed('4'):
-        print('Position ', percentage)
-        percentage = 75
+        print('Position ', volume)
+        volume = 400
         
     if keyboard.is_pressed('5'):
-        print('Position ', percentage)
-        percentage = 100
+        print('Position ', volume)
+        volume = 600
         
     if keyboard.is_pressed("z"):
         print('Tip ', tip_num)
@@ -62,9 +65,9 @@ while True:
     
     # dyna.write_position(pos, ID=3)
     if tip_num == 1:
-        dyna.write_pipette(percentage, ID=1)
+        dyna.write_pipette_ul(volume, ID=1)
     if tip_num == 2:
-        dyna.write_pipette(percentage, ID=2)
+        dyna.write_pipette_ul(volume, ID=2)
         
     dyna.select_tip(tip_num, ID=3)
     
