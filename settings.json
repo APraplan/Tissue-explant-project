@@ -1,7 +1,7 @@
 {
     "Position": {
         "Pick height": 5.599999999999995,
-        "Drop height": 5.3
+        "Drop height": 4.800000000000002
     },
     "Speed": {
         "Slow speed": 3,
@@ -11,7 +11,7 @@
     "Tissues": {
         "Pumping Volume": 95.0,
         "Pumping speed": 65,
-        "Dropping volume": 8.0,
+        "Dropping volume": 10.0,
         "Dropping speed": 151
     },
     "Solution A": {
@@ -25,8 +25,8 @@
         "Solution B pumping volume": 400
     },
     "Gel": {
-        "Tube pumping height": 3.5,
-        "Vial pumping height": 3.5,
+        "Tube pumping height": 3.3,
+        "Vial pumping height": 4.299999999999999,
         "Well plate pumping height": 5,
         "Number of mix": 3,
         "Proportion of mixing volume": 0.7,
@@ -35,8 +35,8 @@
     "Detection": {
         "Max attempt": 2,
         "Max place attempts": 4,
-        "Size min": 56,
-        "Size max": 67,
+        "Size min": 63,
+        "Size max": 70,
         "Circularity min": 0.0,
         "Convexity min": 0.8,
         "Inertia min": 0.3
@@ -45,11 +45,11 @@
         "Well preparation": true,
         "Type": "FALCON48",
         "Number of sample per well": 6,
-        "Number of well": 6,
-        "Culture 1": "A1",
-        "Culture 2": "B1",
-        "Culture 3": "C1",
-        "Culture 4": "D1",
+        "Number of well": 3,
+        "Culture 1": "C1",
+        "Culture 2": "D1",
+        "Culture 3": "E1",
+        "Culture 4": "F1",
         "Culture 5": "E1",
         "Culture 6": "F1"
     },
@@ -60,18 +60,18 @@
             0
         ],
         "Tip one": [
-            36.50000000000025,
+            36.200000000000244,
             74.20000000000006,
             2.7000000000000006
         ],
         "Tip two": [
-            36.300000000000246,
-            80.79999999999968,
+            38.300000000000274,
+            78.09999999999984,
             3.4000000000000012
         ],
         "Camera": [
             49.40000000000043,
-            54.90000000000051,
+            55.00000000000051,
             0
         ]
     }

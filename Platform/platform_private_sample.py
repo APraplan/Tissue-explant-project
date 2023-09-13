@@ -219,6 +219,7 @@ def pick(self):
             
             # print(check_pickup(self))
             self.pick_attempt += 1
+            print(self.pick_attempt, self.settings["Detection"]["Max attempt"])
             
             if check_pickup(self):
                 release_tracker(self)
@@ -234,8 +235,8 @@ def pick(self):
                 self.pick_attempt = 0 
                 
             else:
-                self.sub_state == 'correction'
-                self.com_state = 'not send'
+                self.sub_state = 'correction'
+                self.com_state = 'not send' 
                   
                 
 def picture(self):
