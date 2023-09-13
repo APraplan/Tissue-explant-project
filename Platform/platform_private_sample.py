@@ -26,12 +26,20 @@ def destination(self):
     
     well_pos = [self.culture_well[self.well_num][0], self.culture_well[self.well_num][1]]
     
-    radius = 3
-    if self.nb_sample == 0:
-        offset = [0, 0]
-    else: 
-        angle = (self.nb_sample-1)*2*math.pi/(self.settings["Well"]["Number of sample per well"]-1)
-        offset = [radius*math.cos(angle), radius*math.sin(angle)]
+    # radius = 3
+    # if self.nb_sample == 0:
+    #     offset = [0, 0]
+    # else: 
+    #     angle = (self.nb_sample-1)*2*math.pi/(self.settings["Well"]["Number of sample per well"]-1)
+    #     offset = [radius*math.cos(angle), radius*math.sin(angle)]
+    offset = [0, 0]
+    
+    if self.nb_sample % 2 == 0: 
+        offset[1] = 1
+    else:   
+        offset[1] = -1
+
+    offset[0] = (self.nb_sample - 2) * 2
 
     return [well_pos[0]+offset[0], well_pos[1]+offset[1]]
 
