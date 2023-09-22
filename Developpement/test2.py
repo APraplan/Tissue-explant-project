@@ -3,11 +3,11 @@ sys.path.append(r"C:\Users\APrap\Documents\CREATE\Tissue-explant-project")
 
 from Platform.Communication.dynamixel_controller import Dynamixel
 from time import sleep
+from Platform.Communication.ports_gestion import get_com_port
 import keyboard
 
 dyna = Dynamixel(ID=[1,2,3], descriptive_device_name="XL430 test motor", series_name=["xl", "xl", "xl"], baudrate=57600,
-                 port_name="COM5")
-
+                 port_name=get_com_port("0403", "6014"))
 dyna.begin_communication()
 # dyna.set_operating_mode("position", ID=1)
 dyna.set_operating_mode("position", ID="all")
@@ -21,6 +21,7 @@ PIPETTE_MAX = 2800
 
 tip_num = 0
 volume = 0
+percentage = 0
 
 while True:
     
@@ -45,8 +46,7 @@ while True:
         volume = 400
         
     if keyboard.is_pressed('5'):
-        print('Position ', volume)
-        volume = 600
+        volume = 500
         
     if keyboard.is_pressed("z"):
         print('Tip ', tip_num)
@@ -75,4 +75,4 @@ while True:
     
     sleep(0.02)
     
-print('Goodby ;)')   
+print('Goodby ;)')  

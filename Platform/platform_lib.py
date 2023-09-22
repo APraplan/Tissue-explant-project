@@ -8,7 +8,7 @@ from platform_private_gui import *
 from Communication.ports_gestion import *
 
 
-debug = False
+debug = True
 
 if debug:
     from Communication.fake_communication import *

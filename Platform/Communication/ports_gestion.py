@@ -28,19 +28,12 @@ if platform.system() == 'Windows':
         List all the available cameras and their index.
         """
         available_cameras: dict = dict()
-
-        os.environ["OPENCV_LOG_LEVEL"]="SILENT"
-        max_numbers_of_cameras_to_check = 10
-        for index in range(max_numbers_of_cameras_to_check):
-            capture = cv2.VideoCapture(index)
-            if capture.read()[0]:
-                camera_name = subprocess.run(['cat', '/sys/class/video4linux/video{}/name'.format(index)],
-                                            stdout=subprocess.PIPE).stdout.decode('utf-8')
-                camera_name = camera_name.replace('\n', '')
-                available_cameras[index] = camera_name
         
+        for device_index, device_name in enumerate(FilterGraph().get_input_devices()):        
+                available_cameras[device_name] = device_index
+                    
         if len(available_cameras) == 0:
-            logging.info("No camera found")
+            logging.error("No camera found")
         else:
             logging.info(available_cameras)
         
@@ -206,7 +199,7 @@ if __name__ == '__main__':
     level=logging.INFO,
     datefmt='%Y-%m-%d %H:%M:%S')
     
-    list_com_ports()
+    # list_com_ports()
     list_cam_index()
     
 # print(get_com_port("0403", "6014"))

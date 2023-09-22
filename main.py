@@ -3,7 +3,7 @@ import platform
 if platform.system() == 'Windows':
     sys.path.append('Platform')
     sys.path.append('Pictures')
-    sys.path.append('TEP_convNN_all')
+    sys.path.append('TEP_convNN_96')
 elif platform.system() == 'Linux':
     sys.path.append(sys.path[0]+'/Platform')
     # sys.path.append(sys.path[0]+'/Pictures/*')
