@@ -1,5 +1,7 @@
 import sys
-sys.path.append(r"C:\Users\APrap\Documents\CREATE\Tissue-explant-project")
+# sys.path.append(r"C:\Users\APrap\Documents\CREATE\Tissue-explant-project")
+sys.path.append(sys.path[0] + '\\..\\')
+print("path is ", sys.path[-1])
 
 from Platform.Communication.dynamixel_controller import Dynamixel
 from time import sleep
@@ -75,4 +77,4 @@ while True:
     
     sleep(0.02)
     
-print('Goodby ;)')  
+print('Goodbye ;)')  

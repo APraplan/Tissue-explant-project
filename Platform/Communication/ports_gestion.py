@@ -199,7 +199,7 @@ if __name__ == '__main__':
     level=logging.INFO,
     datefmt='%Y-%m-%d %H:%M:%S')
     
-    # list_com_ports()
+    list_com_ports()
     list_cam_index()
     
 # print(get_com_port("0403", "6014"))

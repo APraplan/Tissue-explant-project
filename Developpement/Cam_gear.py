@@ -9,13 +9,13 @@ options = {
     "CAP_PROP_FRAME_HEIGHT": 720,
     "CAP_PROP_FPS": 30,
 }
-stream1 = VideoGear(source=2, logging=True, **options).start() 
 
-stream2 = VideoGear(source=4, logging=True, **options).start() 
+stream1 = VideoGear(source=0, logging=True, **options).start() # prend bcp de temps, voir si c'est normal et si on peut speed up
+
+stream2 = VideoGear(source=1, logging=True, **options).start() 
 
 frameA = stream1.read()
 frameB = stream2.read()
-
 out1 = cv2.VideoWriter(r'Pictures\Videos\video_exp_1.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 10, (frameA.shape[1], frameA.shape[0]))
 out2 = cv2.VideoWriter(r'Pictures\Videos\video_exp_0.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 10, (frameB.shape[1], frameB.shape[0]))
 
@@ -56,3 +56,41 @@ out2.release()
 # safely close both video streams
 stream1.stop()
 stream2.stop()
+
+
+
+# ##################################
+
+# import cv2
+# import threading
+
+# class camThread(threading.Thread):
+#     def __init__(self, previewName, camID):
+#         threading.Thread.__init__(self)
+#         self.previewName = previewName
+#         self.camID = camID
+#     def run(self):
+#         print( "Starting " + self.previewName)
+#         camPreview(self.previewName, self.camID)
+
+# def camPreview(previewName, camID):
+#     cv2.namedWindow(previewName)
+#     cam = cv2.VideoCapture(camID)
+#     if cam.isOpened():  # try to get the first frame
+#         rval, frame = cam.read()
+#     else:
+#         rval = False
+
+#     while rval:
+#         cv2.imshow(previewName, frame)
+#         rval, frame = cam.read()
+#         key = cv2.waitKey(20)
+#         if key == 27:  # exit on ESC
+#             break
+#     cv2.destroyWindow(previewName)
+
+# # Create two threads as follows
+# thread1 = camThread("Camera 1", 0)
+# thread2 = camThread("Camera 2", 1)
+# thread1.start()
+# thread2.start()
