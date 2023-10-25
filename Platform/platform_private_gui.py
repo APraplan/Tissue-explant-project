@@ -5,6 +5,7 @@ from keras.models import load_model
 import computer_vision as cv
 import json
 import platform
+import Developpement.Cam_gear as cam_gear
 
 def linux_to_windows_arrow_conversion(key):
 
@@ -27,8 +28,7 @@ def calibration_sequence(self):
     self.anycubic.move_axis_relative(x=self.picture_pos, offset=self.settings["Offset"]["Tip one"])
     
     while True:
-    
-        self.macro_frame = self.stream2.read()            
+        self.macro_frame = cam_gear.get_cam_frame(self.stream2)         
 
         # Inputs
         key = cv2.waitKeyEx(5)  
@@ -49,12 +49,12 @@ def calibration_sequence(self):
     
     while True:
     
-        frame = self.stream1.read() 
+        frame = cam_gear.get_cam_frame(self.stream1) 
         self.frame = self.cam.undistort(frame)
         self.invert = cv.invert(self.frame)
         imshow = self.frame.copy()
         
-        # self.macro_frame = self.stream2.read()
+        # self.macro_frame = cam_gear.get_cam_frame(self.stream2) 
             
         # Inputs
         key = cv2.waitKeyEx(5)
@@ -67,7 +67,7 @@ def calibration_sequence(self):
         if key == 13: #enter
             print("Offset tip one: ", self.settings["Offset"]["Tip one"])
             break
-        
+        print("we are here")
         cv2.imshow('Camera', imshow) 
         
         
@@ -75,7 +75,7 @@ def calibration_sequence(self):
     self.anycubic.move_axis_relative(z=self.safe_height, offset=self.settings["Offset"]["Tip one"])
     self.anycubic.finish_request()
     while not self.anycubic.get_finish_flag():
-        frame = self.stream1.read() 
+        frame = cam_gear.get_cam_frame(self.stream1)  
         self.frame = self.cam.undistort(frame)
         imshow = self.frame.copy()
 
@@ -91,12 +91,12 @@ def calibration_sequence(self):
     
     while True:
     
-        frame = self.stream1.read() 
+        frame = cam_gear.get_cam_frame(self.stream1)  
         self.frame = self.cam.undistort(frame)
         self.invert = cv.invert(self.frame)
         imshow = self.frame.copy()
         
-        # self.macro_frame = self.stream2.read()
+        # self.macro_frame = cam_gear.get_cam_frame(self.stream2) 
             
         # Inputs
         key = cv2.waitKeyEx(5)
@@ -116,7 +116,7 @@ def calibration_sequence(self):
     self.anycubic.move_axis_relative(z=self.safe_height, offset=self.settings["Offset"]["Tip one"])
     self.anycubic.finish_request()
     while not self.anycubic.get_finish_flag():
-        frame = self.stream1.read() 
+        frame = cam_gear.get_cam_frame(self.stream1)  
         self.frame = self.cam.undistort(frame)
         imshow = self.frame.copy()
 
@@ -131,12 +131,12 @@ def calibration_sequence(self):
     
     while True:
     
-        frame = self.stream1.read() 
+        frame = cam_gear.get_cam_frame(self.stream1)  
         self.frame = self.cam.undistort(frame)
         self.invert = cv.invert(self.frame)
         imshow = self.frame.copy()
         
-        # self.macro_frame = self.stream2.read()
+        # self.macro_frame = cam_gear.get_cam_frame(self.stream2) 
             
         # Inputs
         key = cv2.waitKeyEx(5)

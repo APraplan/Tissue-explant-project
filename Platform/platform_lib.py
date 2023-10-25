@@ -1,11 +1,13 @@
 import numpy as np
 import cv2
+import threading
 from loguru import logger
 import computer_vision as cv
 from platform_private_sample import *
 from platform_private_gel import *
 from platform_private_gui import *
 from Communication.ports_gestion import *
+import Developpement.Cam_gear as cam_gear
 
 
 debug = False
@@ -54,7 +56,7 @@ class platform_pick_and_place:
         
         # Dynamixel
         self.dyna = Dynamixel(ID=[1,2,3], descriptive_device_name="XL430 test motor", series_name=["xl", "xl", "xl"], baudrate=57600,
-                 port_name=get_com_port("0403", "6014"))
+                 port_name=get_com_port("0403", "6014"))  # vérifier les com port, peut etre source d'erreur sur mon ordi
 
         self.tip_number = 1
         self.pipette_1_pos = 0
@@ -66,14 +68,10 @@ class platform_pick_and_place:
         self.target_pos = (0,0)
         self.nb_sample = 0
         
-        # Camera 1 
-        options = {
-            "CAP_PROP_FRAME_WIDTH": 1280,
-            "CAP_PROP_FRAME_HEIGHT": 720,
-            "CAP_PROP_FPS": 30,
-        }
-        self.stream1 = VideoGear(source=get_cam_index("TV Camera"), logging=True, **options).start() 
-        frame = self.stream1.read() 
+        # Camera 1 - Toolhead Camera
+        self.stream1 = cam_gear.camThread("Camera 1", get_cam_index("TV Camera")) 
+        self.stream1.start()
+        frame = cam_gear.get_cam_frame(self.stream1)  
         self.cam = cv.Camera(frame)
         self.frame = self.cam.undistort(frame)
         self.invert = cv.invert(self.frame)
@@ -84,9 +82,10 @@ class platform_pick_and_place:
         self.detect_attempt = 0
         self.max_detect_attempt = 50
         
-        # Camera 2
-        self.stream2 = VideoGear(source=get_cam_index("USB2.0 UVC PC Camera"), logging=True).start() 
-        self.macro_frame = self.stream2.read()
+        # Camera 2 - Macro Camera
+        self.stream2 = cam_gear.camThread("Camera 2", get_cam_index("USB2.0 UVC PC Camera"))
+        self.stream2.start()
+        self.macro_frame = cam_gear.get_cam_frame(self.stream2)
         self.picture_pos = -self.settings["Offset"]["Tip one"][0]
                 
         # Tracker
@@ -108,6 +107,16 @@ class platform_pick_and_place:
     def init(self):        
         
         self.anycubic.connect()
+        
+        self.dyna.begin_communication()
+        self.dyna.set_operating_mode("position", ID="all")
+        self.dyna.write_profile_velocity(100, ID="all")
+        self.dyna.set_position_gains(P_gain = 2700, I_gain = 50, D_gain = 5000, ID=1)
+        self.dyna.set_position_gains(P_gain = 2700, I_gain = 90, D_gain = 5000, ID=2)
+        self.dyna.set_position_gains(P_gain = 2500, I_gain = 40, D_gain = 5000, ID=3)
+        self.tip_number = 0
+        self.dyna.select_tip(tip_number=self.tip_number, ID=3)
+        
         self.anycubic.homing()
         # self.anycubic.set_home_pos(x=0, y=0, z=0)
         self.anycubic.max_x_feedrate(300)
@@ -120,12 +129,7 @@ class platform_pick_and_place:
         while not self.anycubic.get_finish_flag():
             pass
         
-        self.dyna.begin_communication()
-        self.dyna.set_operating_mode("position", ID="all")
-        self.dyna.write_profile_velocity(100, ID="all")
-        self.dyna.set_position_gains(P_gain = 2700, I_gain = 50, D_gain = 5000, ID=1)
-        self.dyna.set_position_gains(P_gain = 2700, I_gain = 90, D_gain = 5000, ID=2)
-        self.dyna.set_position_gains(P_gain = 2500, I_gain = 40, D_gain = 5000, ID=3)
+        
 
         self.tip_number = 1
         self.dyna.select_tip(tip_number=self.tip_number, ID=3)
@@ -168,14 +172,14 @@ class platform_pick_and_place:
 
         while True:
         
-            frame = self.stream1.read() 
+            frame = cam_gear.get_cam_frame(self.stream1)  
             self.frame = self.cam.undistort(frame)
             self.invert = cv.invert(self.frame)
             
             if self.record:
                 out.write(self.frame)
             
-            # self.macro_frame = self.stream2.read()
+            # self.macro_frame = cam_gear.get_cam_frame(self.stream2) 
             
             self.update() 
              

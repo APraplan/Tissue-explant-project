@@ -50,9 +50,7 @@ while True:
     if keyboard.is_pressed('5'):
         volume = 500
         
-    if keyboard.is_pressed("z"):
-        print('Tip ', tip_num)
-        tip_num = 0
+    
         
     if keyboard.is_pressed("o"):
         tip_num = 1
