@@ -67,7 +67,6 @@ def calibration_sequence(self):
         if key == 13: #enter
             print("Offset tip one: ", self.settings["Offset"]["Tip one"])
             break
-        print("we are here")
         cv2.imshow('Camera', imshow) 
         
         

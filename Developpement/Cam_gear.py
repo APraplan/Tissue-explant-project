@@ -25,6 +25,7 @@ class camThread(threading.Thread):
         self.camPreview()
                 
     def read(self): 
+        #resize frame 
         return self.frame
         
     def close(self):
@@ -32,7 +33,9 @@ class camThread(threading.Thread):
         self.closing = True
         
     def camPreview(self):
-        cam = cv2.VideoCapture(self.camID)
+        cam = cv2.VideoCapture(self.camID, cv2.CAP_DSHOW)
+        cam.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+        cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
         if cam.isOpened():  # try to get the first frame
             rval, self.frame = cam.read()
         else:
