@@ -28,7 +28,7 @@
         "Tube pumping height": 3.3,
         "Vial pumping height": 4.299999999999999,
         "Well plate pumping height": 5,
-        "Number of mix": 3,
+        "Number of mix": 5,
         "Proportion of mixing volume": 0.7,
         "Number of wash": 2
     },
@@ -43,9 +43,9 @@
     },
     "Well": {
         "Well preparation": true,
-        "Type": "FALCON48",
-        "Number of sample per well": 6,
-        "Number of well": 3,
+        "Type": "NUNC48",
+        "Number of sample per well": 4,
+        "Number of well": 1,
         "Culture 1": "C1",
         "Culture 2": "D1",
         "Culture 3": "E1",
@@ -60,17 +60,17 @@
             0
         ],
         "Tip one": [
-            35.500000000000234,
-            75.10000000000001,
-            2.8000000000000007
+            38.00000000000027,
+            75.99999999999996,
+            4.100000000000001
         ],
         "Tip two": [
-            38.20000000000027,
-            78.09999999999984,
-            3.4000000000000012
+            38.50000000000028,
+            78.29999999999983,
+            2.8000000000000007
         ],
         "Camera": [
-            49.40000000000043,
+            49.30000000000043,
             55.300000000000516,
             0
         ]

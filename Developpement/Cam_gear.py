@@ -28,7 +28,7 @@ class camThread(threading.Thread):
         #resize frame 
         return self.frame
         
-    def close(self):
+    def stop(self):
         self.preview = False
         self.closing = True
         
@@ -82,6 +82,3 @@ if __name__ == "__main__":
     thread1.start()
     thread2.start()
     time.sleep(30)
-
-# print("closing window 1")
-# thread1.closing = True

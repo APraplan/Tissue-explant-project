@@ -26,6 +26,11 @@ def calibration_sequence(self):
     # Macro camera calibration
     self.anycubic.move_axis_relative(z=self.safe_height, offset=self.settings["Offset"]["Tip one"])
     self.anycubic.move_axis_relative(x=self.picture_pos, offset=self.settings["Offset"]["Tip one"])
+    # This is to overcome the firmware limit. The z endstop is programmed to be at -9, and the firmware limit is 0.
+    # We move the position to the firmware limit (0), then tell the printer thez are at -endstop position(9), so we 
+    # can move another 9 mm, thus overcoming the firmware limit.
+    self.anycubic.set_position(x=-self.x_firmware_limit_overwrite)  
+    self.anycubic.move_axis_relative(x=self.picture_pos, offset=self.settings["Offset"]["Tip one"])
     
     while True:
         self.macro_frame = cam_gear.get_cam_frame(self.stream2)         
@@ -39,6 +44,9 @@ def calibration_sequence(self):
         cv2.imshow('Macro camera', self.macro_frame) 
         
     cv2.destroyAllWindows()  
+    self.anycubic.move_axis_relative(z=self.safe_height, offset=self.settings["Offset"]["Tip one"])
+    self.anycubic.move_axis_relative(x = -self.x_firmware_limit_overwrite)
+    self.anycubic.set_position(x = 0)
         
         
     # Offset first tip calibration

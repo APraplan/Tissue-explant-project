@@ -370,12 +370,28 @@ class Dynamixel:
 
         
     def select_tip(self, tip_number, ID = None):
+        '''
+        Sets the position to the desired tip. If it's the same as the current one, it won't do anything.
+        Inputs :    tip_number  : (value) 1 or 2
+                    ID          : (value) 1 2 or 3 PER MY UNDERSTANDING. TO VERIFY: i think it's always 3 when you want to change the current tip
+        '''
         selected_IDs = self.fetch_and_check_ID(ID)
         for selected_ID in selected_IDs:
             self.write_position(pos=TIP_POSITION[tip_number], ID = selected_ID)      
         
         
-    def write_pipette_ul(self, volume_ul, ID = None):
+    def write_pipette_ul(self, volume_ul, ID = None, purging = False):
+        '''
+        Compute the movement of the servo motor, designated to a pipette, w.r.t to the minimum. 
+        The minimum and maximum position of each servo is designated in PIPTTE_MIN and PIPETTE_MAX.
+        The absolute difference is awlays the same (2520), but will include a different sign, as the servo motor
+        are mounted in mirrored position.
+        If the argument purging is set to true, it will overcome the maximum position, to purge the pipette.
+        !!! PURGING SHOULD NEVER BE DONE WHEN THE PIPETTE CONTAINS SOMETHING OR WHEN WE ARE INSIDE A LIQUID OTHER THAN WATER. !!!
+        Inputs :    volume_ul   : (value) between 0 and 625
+                    ID          : (value) 1 or 2
+                    purging     : False or True
+        '''
             
         if volume_ul > 625:
             volume_ul = 625

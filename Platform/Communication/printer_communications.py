@@ -158,6 +158,18 @@ class Printer:
             command = command + " F" + str(float(100*f))
 
         self.send_gcode(command, wait_until_completion=True, printMsg=printMsg)
+        
+    def set_position(self, x = None, y = None, z = None, e = None, f = None, printMsg = False):
+        self._finish = False
+        command = "G92"
+        if x is not None:
+            command = command + " X" + str(x)
+        if y is not None:
+            command = command + " Y" + str(y)
+        if z is not None:
+            command = command + " Z" + str(z)
+            
+        self.send_gcode(command, wait_until_completion=False, printMsg=printMsg)
 
     def read_position(self, printMsg=False):
         while True: 

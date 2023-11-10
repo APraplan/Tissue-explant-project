@@ -38,6 +38,7 @@ class platform_pick_and_place:
         self.last_state = 'homming'
         self.sub_state = 'go to position'
         self.com_state = 'not send'
+        self.flag = True
         
         # Picking zone
         self.safe_height = 25
@@ -53,7 +54,7 @@ class platform_pick_and_place:
         
         # Anycubic
         self.anycubic = Printer(descriptive_device_name="printer", port_name=get_com_port("1A86", "7523"), baudrate=115200)
-        
+        self.x_firmware_limit_overwrite = -9
         # Dynamixel
         self.dyna = Dynamixel(ID=[1,2,3], descriptive_device_name="XL430 test motor", series_name=["xl", "xl", "xl"], baudrate=57600,
                  port_name=get_com_port("0403", "6014"))  # vérifier les com port, peut etre source d'erreur sur mon ordi
@@ -159,7 +160,10 @@ class platform_pick_and_place:
         
     
     def run(self):
-
+        ''' Main loop of the code.
+        It will continuously run, update the pictures, and run the function update, that switches between the states
+        Pressin the escape key will stop the loop and close the windows. If you close the program this way, the 
+        parameters will be saved to settings.json'''
         if self.record:
             try :
                 _, _, files = next(os.walk(r"Pictures/Videos"))
@@ -214,7 +218,7 @@ class platform_pick_and_place:
         if self.state == 'homming':
             homming(self)
           
-        elif   self.state == 'spreading solution A':
+        elif self.state == 'spreading solution A':
             spreading_solution_A(self)
             
         elif self.state == 'preparing gel':
