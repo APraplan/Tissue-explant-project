@@ -25,7 +25,7 @@ class platform_pick_and_place:
     def __init__(self):
         
         load_parameters(self)
-        
+        ###### Add comment to these parameters to make it clearer
         # Temp
         self.save = 0
         self.counter = 0
@@ -56,14 +56,16 @@ class platform_pick_and_place:
         self.anycubic = Printer(descriptive_device_name="printer", port_name=get_com_port("1A86", "7523"), baudrate=115200)
         self.x_firmware_limit_overwrite = -9
         # Dynamixel
-        self.dyna = Dynamixel(ID=[1,2,3], descriptive_device_name="XL430 test motor", series_name=["xl", "xl", "xl"], baudrate=57600,
-                 port_name=get_com_port("0403", "6014"))  # vérifier les com port, peut etre source d'erreur sur mon ordi
-
+        
         self.tip_number = 1
         self.pipette_1_pos = 0
         self.pipette_2_pos = 0
         self.pipette_full = 0
-        self.pipette_empty = 625
+        self.pipette_empty = 525
+        
+        self.dyna = Dynamixel(ID=[1,2,3], descriptive_device_name="XL430 test motor", series_name=["xl", "xl", "xl"], baudrate=57600,
+                pipette_empty= self.pipette_empty, port_name=get_com_port("0403", "6014")) 
+
         
         # Tissues
         self.target_pos = (0,0)
@@ -103,10 +105,10 @@ class platform_pick_and_place:
         self.mix = 0
         self.wash = 0
 
-    # Public methodes
+    # Public methods
     
     def init(self):        
-        
+        ''' Initialize most of the parameters and variables. It also sends the homing command to the printer, which uses marlin firmware.'''
         self.anycubic.connect()
         
         self.dyna.begin_communication()
@@ -117,6 +119,7 @@ class platform_pick_and_place:
         self.dyna.set_position_gains(P_gain = 2500, I_gain = 40, D_gain = 5000, ID=3)
         self.tip_number = 0
         self.dyna.select_tip(tip_number=self.tip_number, ID=3)
+        self.dyna.write_pipette_ul(self.pipette_empty, ID=[1,2])
         
         self.anycubic.homing()
         # self.anycubic.set_home_pos(x=0, y=0, z=0)
@@ -148,7 +151,7 @@ class platform_pick_and_place:
     
     
     def calibrate(self):
-        
+        ''' Starts the calibration sequence.'''
         calibration_sequence(self)
             
         self.anycubic.move_axis_relative(z=self.safe_height, offset=self.settings["Offset"]["Tip one"])
@@ -160,10 +163,12 @@ class platform_pick_and_place:
         
     
     def run(self):
-        ''' Main loop of the code.
+        ''' 
+        Main loop of the code.
         It will continuously run, update the pictures, and run the function update, that switches between the states
         Pressin the escape key will stop the loop and close the windows. If you close the program this way, the 
-        parameters will be saved to settings.json'''
+        parameters will be saved to settings.json
+        '''
         if self.record:
             try :
                 _, _, files = next(os.walk(r"Pictures/Videos"))
@@ -246,7 +251,7 @@ class platform_pick_and_place:
             done(self)
                    
     def pause(self):
-    
+        '''' Should be called by pressing the button p while on the GUI '''
         if self.state != 'pause':
             logger.info('🚦 Paused')
             self.last_state = self.state
@@ -254,7 +259,7 @@ class platform_pick_and_place:
             
             
     def resume(self):
-        
+        ''' Should be called by pressing the button enter while on the GUI'''
         if self.state == 'pause':
             logger.info('🧫 Resumed')
             self.state = self.last_state
@@ -268,7 +273,7 @@ class platform_pick_and_place:
                 
 
     def reset(self):
-        
+        ''' Should be called by pressing the button r while on the GUI'''
         if not (self.state == 'homming' or self.state == 'spreading solution A' or self.state == 'preparing gel'):
         
             logger.info('⚡ Soft reset')

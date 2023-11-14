@@ -22,7 +22,13 @@ def linux_to_windows_arrow_conversion(key):
     
 
 def calibration_sequence(self):
-
+    '''
+    1) Moves the tip 1 in front of the maccro camera, to make sure it is in focus. If it is, press enter to procceed.
+    2) Moves the tip 1 to the calibration point. Make sure it is perfectly alligned with the center of the hole in the
+    plate, and make sure the z height matches the surface of the plate. Controls: up, down, left, right, u, d.
+    3) Do the same for the tip 2                                        Controls: up, down, left, right, u, d.
+    4) Calibrate the camera by aligned the blue cross to the center of the same hole, inside the camera window. Press enter once this is done
+    Controls: up, down, left, right.'''
     # Macro camera calibration
     self.anycubic.move_axis_relative(z=self.safe_height, offset=self.settings["Offset"]["Tip one"])
     self.anycubic.move_axis_relative(x=self.picture_pos, offset=self.settings["Offset"]["Tip one"])
@@ -137,7 +143,8 @@ def calibration_sequence(self):
     self.anycubic.move_axis_relative(z=self.safe_height, offset=self.settings["Offset"]["Camera"])
     
     while True:
-    
+    #### Maybe try to change the control for calibrating the camera, to make it more intuitive
+    #### We can also try to flip the camera if it is better
         frame = cam_gear.get_cam_frame(self.stream1)  
         self.frame = self.cam.undistort(frame)
         self.invert = cv.invert(self.frame)
@@ -169,7 +176,12 @@ def calibration_sequence(self):
 
     
 def gui_parameter(self, direction=None):
+    '''
+    This function defines every parameter accessible inside the GUI, and how each parameters is affected. These value are saved into the settings.json if the program is exit properly
+    '''
     
+    
+    ### Maybe rewrite this, if we keep this GUI
     if direction == 'up':
         
         if self.gui_menu == 0:
@@ -497,7 +509,9 @@ def display_gui_txt(self, imshow, position):
 
 
 def display_gui(self, imshow, key, position):
-    
+    '''
+    Defines the different inputs in the GUI
+    '''
     # if key == ord('d'):
     #     cv2.imwrite("Pictures\Realsample\image_on_the_go.png", self.frame)
     

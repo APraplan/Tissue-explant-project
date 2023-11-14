@@ -8,7 +8,7 @@ PIPETTE_MAX = [2880, 1250]
 TIP_POSITION = [3072, 2560, 3584]
 
 class Dynamixel:
-    def __init__(self, ID, descriptive_device_name, port_name, baudrate, series_name = "xm"):
+    def __init__(self, ID, descriptive_device_name, port_name, baudrate, pipette_empty, series_name = "xm"):
         # Communication inputs
         if type(ID) == list:
             self.multiple_motors = True
@@ -19,6 +19,7 @@ class Dynamixel:
         self.descriptive_device_name = descriptive_device_name
         self.port_name = port_name
         self.baudrate = baudrate
+        self.pipette_empty = pipette_empty
         
         # Set series name
         if type(self.ID) == list:
@@ -380,28 +381,35 @@ class Dynamixel:
             self.write_position(pos=TIP_POSITION[tip_number], ID = selected_ID)      
         
         
-    def write_pipette_ul(self, volume_ul, ID = None, purging = False):
+    def write_pipette_ul(self, volume_ul = 525, ID = None, purging = False):
         '''
         Compute the movement of the servo motor, designated to a pipette, w.r.t to the minimum. 
         The minimum and maximum position of each servo is designated in PIPTTE_MIN and PIPETTE_MAX.
         The absolute difference is awlays the same (2520), but will include a different sign, as the servo motor
         are mounted in mirrored position.
         If the argument purging is set to true, it will overcome the maximum position, to purge the pipette.
-        !!! PURGING SHOULD NEVER BE DONE WHEN THE PIPETTE CONTAINS SOMETHING OR WHEN WE ARE INSIDE A LIQUID OTHER THAN WATER. !!!
+        !!! PURGING SHOULD NEVER BE DONE WHEN THE PIPETTE CONTAINS SOMETHING OR WHEN IT IS INSIDE A LIQUID OTHER THAN WATER !!!
         Inputs :    volume_ul   : (value) between 0 and 625
                     ID          : (value) 1 or 2
                     purging     : False or True
         '''
-            
-        if volume_ul > 625:
-            volume_ul = 625
+        
+        ## add offset according to the pipette empty
+        selected_IDs = self.fetch_and_check_ID(ID)
+        if purging:
+            offset = 100
+        else:   
+            offset = 0
+        if volume_ul  > self.pipette_empty + offset:
+            volume_ul = self.pipette_empty + offset
         elif volume_ul < 0:
             volume_ul = 0
             
-        selected_IDs = self.fetch_and_check_ID(ID)
         for selected_ID in selected_IDs:
             pos = int(PIPETTE_MIN[selected_ID-1] + volume_ul/620.0*(PIPETTE_MAX[selected_ID-1]-PIPETTE_MIN[selected_ID-1]))
             self.write_position(pos=pos, ID = selected_ID)
+            
+        
             
             
     def pipette_is_in_position_ul(self, volume_ul, ID = None):

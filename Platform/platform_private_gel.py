@@ -197,6 +197,7 @@ def spreading_solution_A(self):
                 
             else:
                 self.state = 'preparing gel'
+                self.prep_gel_done = False
                 self.sub_state = 'go to position'
                 self.com_state = 'not send'
     
@@ -215,13 +216,47 @@ def preparing_gel(self):
             self.tip_number = 2
             self.dyna.select_tip(tip_number=self.tip_number, ID=3)
             self.solution_prep_num = 0
-            self.sub_state = 'go to sol B'
+            self.sub_state = 'go to purge position'
             self.com_state = 'not send'
+            # self.sub_state = 'go to sol B'
+            # self.com_state = 'not send'
             
-            
+    if self.sub_state == 'go to purge position':
+        ''' We go to the purge position, which is above the liquid'''
+        if self.com_state == 'not send':
+            self.anycubic.move_axis_relative(z=self.solution_well['Sol B'][2], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
+            self.anycubic.finish_request()
+            self.com_state = 'send'
+        elif self.anycubic.get_finish_flag():
+            self.sub_state = 'purging'
+            self.com_state = 'not send'
+
+    if self.sub_state == 'purging':
+        ''' We start purging, wait until it's over, and then reset the position'''
+        if self.com_state =='not send':
+            self.dyna.write_profile_velocity(self.settings["Solution A"]["Purging speed"], ID = 2)
+            self.pipette_2_pos = self.settings["Solution A"]["Purging volume"]
+            self.dyna.write_pipette_ul(self.pipette_2_pos, ID = 2, purging = True)
+            self.com_state = 'send'
+        elif self.dyna.pipette_is_in_position_ul(self.pipette_2_pos, ID = 2):
+            ''' Waits until the purging is done, resets the position, and proceeds to the next step
+            If the current position is larger than the empty position, it means we just purged, so we
+            need to reset the position. Otherwise, we just go to the next step'''
+            if self.pipette_2_pos > self.pipette_empty:
+                self.pipette_2_pos = self.pipette_empty  
+                self.dyna.write_pipette_ul(self.pipette_2_pos, ID = 2, purging = False)
+            elif self.prep_gel_done:
+                self.state = 'detect'
+                self.com_state = 'not send'
+            else:
+                self.sub_state = 'go to sol B' 
+                self.com_state = 'not send'
+
+                        
     elif self.sub_state == 'go to sol B':
         ''' Moves to the vial containing the solution B'''
         if self.com_state == 'not send':
+            
             self.anycubic.move_axis_relative(z=self.solution_well['Sol B'][2], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
             self.anycubic.move_axis_relative(x=self.solution_well['Sol B'][0], y=self.solution_well['Sol B'][1], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
             self.anycubic.move_axis_relative(z=self.settings["Gel"]["Vial pumping height"], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"]) 
@@ -358,6 +393,7 @@ def preparing_gel(self):
             #     self.com_state = 'not send'
             # else:
             #     self.state = 'preparing gel'
+            #     self.prep_gel_done = False
             #     self.sub_state = 'go to position'
             #     self.com_state = 'not send'
 
@@ -423,8 +459,11 @@ def preparing_gel(self):
             self.com_state = 'send'
         
         if self.anycubic.get_finish_flag():
-            self.state = 'detect'
-            self.sub_state = 'go to position'
+            ''' Waits until the movement is done, then changes the sub state to go to purge position'''
+            # self.state = 'detect'
+            # self.sub_state = 'go to position'
+            self.prep_gel_done = True
+            self.sub_state = 'go to purge position'
             self.com_state = 'not send'  
             
             
@@ -524,9 +563,7 @@ def homming(self):
             
     elif self.sub_state == 'empty second pipette':
         ''' Sets the speed for the emptying of the pipette, and empties it'''
-        print("first purge here ?")
         if self.com_state == 'not send':
-            ### METTRE ICI LA PREMIERE PURGE ?
             self.dyna.write_profile_velocity(self.settings["Tissues"]["Dropping speed"], ID = 1)
             self.pipette_2_pos = self.pipette_empty
             self.dyna.write_pipette_ul(self.pipette_2_pos, ID = 2)
@@ -548,6 +585,7 @@ def homming(self):
             ''' Changes stat  to preparing well if the parameter has been set to true, else changes state to detect'''
             if self.settings["Well"]["Well preparation"]:
                 self.state = 'preparing gel'
+                self.prep_gel_done = False
             else:
                 self.state = 'detect'
 

@@ -9,7 +9,7 @@ from Platform.Communication.ports_gestion import get_com_port
 import keyboard
 
 dyna = Dynamixel(ID=[1,2,3], descriptive_device_name="XL430 test motor", series_name=["xl", "xl", "xl"], baudrate=57600,
-                 port_name=get_com_port("0403", "6014"))
+                pipette_empty=525, port_name=get_com_port("0403", "6014"))
 dyna.begin_communication()
 # dyna.set_operating_mode("position", ID=1)
 dyna.set_operating_mode("position", ID="all")
@@ -48,7 +48,12 @@ while True:
         volume = 400
         
     if keyboard.is_pressed('5'):
+        print('Position ', volume)
         volume = 500
+        
+    if keyboard.is_pressed('6'):
+        print('Position ', volume)
+        volume = 600
         
     
         
@@ -63,11 +68,13 @@ while True:
     if keyboard.is_pressed('esc'):
         break
     
-    # dyna.write_position(pos, ID=3)
-    if tip_num == 1:
-        dyna.write_pipette_ul(volume, ID=1)
-    if tip_num == 2:
-        dyna.write_pipette_ul(volume, ID=2)
+    # # dyna.write_position(pos, ID=3)
+    # if tip_num == 1:
+    #     dyna.write_pipette_ul(volume, ID=1)
+    # if tip_num == 2:
+    #     dyna.write_pipette_ul(volume, ID=2)
+    
+    dyna.write_pipette_ul(volume, ID=[1,2])
         
     dyna.select_tip(tip_num, ID=3)
     

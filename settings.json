@@ -17,7 +17,9 @@
     "Solution A": {
         "Solution A pumping speed": 60,
         "Solution A dropping speed": 60,
-        "Solution A pumping volume": 100
+        "Solution A pumping volume": 100,
+        "Purging speed": 100,
+        "Purging volume": 600
     },
     "Solution B": {
         "Solution B pumping speed": 30,
@@ -61,12 +63,12 @@
         ],
         "Tip one": [
             38.00000000000027,
-            75.99999999999996,
+            76.09999999999995,
             4.100000000000001
         ],
         "Tip two": [
-            38.50000000000028,
-            78.29999999999983,
+            38.400000000000276,
+            78.39999999999982,
             2.8000000000000007
         ],
         "Camera": [
