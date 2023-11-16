@@ -117,6 +117,15 @@ class MyWindow(tk.Tk):
         self.well_plate_grid    = None
         self.well_buttons       = []
         
+        self.text_well_plate_explanation = ''' Here, you can select the well plate you want to use. It will display a simulation of the grid,
+in which you can select UP TO 6 wells to use. You can then press the save button to save the selected wells into the config file.'''.replace('\n', ' ' )
+        self.text_well_results = None
+        self.tab_well_explanation   = None    
+        self.tab_well_results       = None
+        self.well_button_grid  = None
+        self.well_reset_button      = None
+        self.well_save_button       = None
+        
         
         self.button_bottom  = None
         self.button_top     = None
@@ -177,15 +186,40 @@ class MyWindow(tk.Tk):
         self.drop = ttk.OptionMenu(self.tab[tab_index], ## eventuellement changer pour un combobox.
                                   self.clicked,
                                   *self.options,
-                                  command=self.show_wells) # try to show a plate by default
+                                  command=self.show_wells) # try to show a plate by default        
+        # self.drop = ttk.Combobox(self.tab[tab_index], ## eventuellement changer pour un combobox.
+        #                          state="readonly",
+        #                          values=self.options,
+        #                          command=self.show_wells) #look how to bind command to combobox
         self.drop.place(relx=0.3, rely=0.3, anchor=tk.CENTER)
         self.well_menu_description = tk.Label(self.tab[tab_index], text="Select a well plate")
         self.well_menu_description.place(relx=0.3, rely=0.2, anchor=tk.CENTER)
         
-        self.tab_well_explanation = tk.Text(self.tab[tab_index], wrap='word', text="Here, you can select the well plate you want to use. 
-                                             It will display")
+        self.tab_well_explanation = tk.Label(self.tab[tab_index],
+                                             text=self.text_well_plate_explanation,
+                                             width=100,
+                                             wraplength=500) ### eventually use text variable
         self.tab_well_explanation.place(relx=0.3, rely=0.4, anchor=tk.CENTER)
         
+        self.text_well_results = tk.StringVar()
+        self.tab_well_results = tk.Label(self.tab[tab_index],
+                                             textvariable=self.text_well_results,
+                                             width=100,
+                                             wraplength=500) ### eventually use text variable
+        self.tab_well_results.place(relx=0.3, rely=0.5, anchor=tk.CENTER)
+        self.well_button_grid = tk.Frame(self.tab[tab_index], width=300, height=480)
+        self.well_button_grid.place(relx=0.3, rely=0.6, anchor=tk.CENTER)
+        self.well_save_button = ttk.Button(self.well_button_grid, text="Save")
+        self.well_save_button.grid(column=0, row=0)
+        self.well_reset_button = ttk.Button(self.well_button_grid, 
+                                            text="Reset", 
+                                            command= lambda var=self.clicked.get(): self.debug(var)) # find a way to retrieve the current drop menu value
+        # lambda (well_dim_x, well_dim_y, well_id):self.set_well_plate
+        self.well_reset_button.grid(column=1, row=0)
+        
+        
+    def debut(self, var):
+        print(var)
         
     def set_well_plate(self, well_dim_x, well_dim_y, well_id):
         
@@ -219,12 +253,16 @@ class MyWindow(tk.Tk):
         if button['relief'] == "sunken":
             button.configure(relief = "raised")
             self.selected_wells.remove(temp2+temp)
+            if len(self.selected_wells)==0:
+                self.text_well_results.set("")
             
         else:
             if (len(self.selected_wells) < 6):
                 button.configure(relief = "sunken")
                 self.selected_wells.append(temp2+temp)
-        print(self.selected_wells)
+        if len(self.selected_wells)>0:
+            self.text_well_results.set("You have selected the following wells:"+str(self.selected_wells))
+         
         
     def show_wells(self, click):
         if self.well_plate_label is not None: # check if it exists
@@ -316,7 +354,6 @@ class MyWindow(tk.Tk):
         
         button_height = 6
         
-        index = 0
         for i in range(3):
             self.servo_frame.append(ttk.Frame(self.tab[tab_index]))
             self.servo_frame[i].grid(column=i*spacing + col_offset, row=row_offset-1, columnspan=1, rowspan=6)
