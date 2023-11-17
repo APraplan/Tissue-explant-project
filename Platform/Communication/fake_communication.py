@@ -5,10 +5,11 @@ PIPETTE_MAX = [2880, 1250]
 TIP_POSITION = [3072, 2560, 3584]
 
 class Dynamixel:
-    def __init__(self, ID, descriptive_device_name, port_name, baudrate, series_name = "xm"):
+    def __init__(self, ID, descriptive_device_name, port_name, baudrate, pipette_empty, series_name = "xm"):
         logger.debug(f"Initializing Dynamixel {ID} on port {port_name} with baudrate {baudrate}")
         self.ID = ID
         self.positions = {}
+        self.pipette_empty = pipette_empty
         
         if type(ID) == list:
             for id in ID:
@@ -195,7 +196,7 @@ class Printer:
             self._finish = False
             if offset is None:
                 offset = [0, 0, 0]
-                
+            print(offset)
             offset[0] = offset[0] + self.home_pos.x
             offset[1] = offset[1] + self.home_pos.y
             offset[2] = offset[2] + self.home_pos.z
