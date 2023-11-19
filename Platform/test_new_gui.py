@@ -549,6 +549,10 @@ in which you can select UP TO 6 wells to use. You can then press the save button
             x = round(float(self.coord_value_text[0].get()),1)
             y = round(float(self.coord_value_text[1].get()),1)
             z = round(float(self.coord_value_text[2].get()),1)
+        else:
+            x = round(float(self.coord_value_text[0].get()) + x,1)
+            y = round(float(self.coord_value_text[1].get()) + y,1)
+            z = round(float(self.coord_value_text[2].get()) + z,1)
             
         if x < X_MIN:
             x = X_MIN
@@ -563,19 +567,13 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         elif z > Z_MAX:
             z = Z_MAX
             
-        if move_button_cmd:
             
-            print("Setting position to X={}, Y={}, Z={}".format(x,y,z))
-            # self.anycubic.move_axis(x=x, y=y, z=z, offset=self.offset)
-            self.coord_value_text[0].set(str(x))
-            self.coord_value_text[1].set(str(y))
-            self.coord_value_text[2].set(str(z))
-        else:
-            # Maybe find a way to read the coordinate instead of writing them manually into self.coord_value_text   
-            self.anycubic.move_axis_relative(x=x, y=y, z=z, offset=self.offset)
-            self.coord_value_text[0].set(round(float(self.coord_value_text[0].get()) + x,1)) # set precision maybe
-            self.coord_value_text[1].set(round(float(self.coord_value_text[1].get()) + y,1)) # set precision maybe
-            self.coord_value_text[2].set(round(float(self.coord_value_text[2].get()) + z,1)) # set precision maybe
+        print("Setting position to X={}, Y={}, Z={}".format(x,y,z))
+        self.anycubic.move_axis(x=x, y=y, z=z, offset=self.offset)
+        self.coord_value_text[0].set(str(x))
+        self.coord_value_text[1].set(str(y))
+        self.coord_value_text[2].set(str(z))
+        # Maybe find a way to read the coordinate instead of writing them manually into self.coord_value_text  
         
         
     def set_servo_control(self, tab_index):
