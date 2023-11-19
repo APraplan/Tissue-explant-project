@@ -124,8 +124,15 @@ class Printer:
 
         self.send_gcode(command, wait_until_completion=True, printMsg=printMsg)
 
-    def move_axis(self, x = None, y = None, z = None, e = None, f = None, printMsg = False):
+    def move_axis(self, x = None, y = None, z = None, e = None, f = None, printMsg = False, offset=None):
         self._finish = False
+        if offset is None:
+            offset = [0, 0, 0]
+            
+        offset[0] = offset[0] + self.home_pos[0]
+        offset[1] = offset[1] + self.home_pos[1]
+        offset[2] = offset[2] + self.home_pos[2]
+        
         command = "G0"
         
         if x is not None:

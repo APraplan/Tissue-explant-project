@@ -28,6 +28,13 @@ else:
 
 
 SETTINGS = "TEST.json"
+X_MIN = 0.0
+X_MAX = 220.0
+Y_MIN = 0.0
+Y_MAX = 220.0
+Z_MIN = 0.0
+Z_MAX = 220.0
+
 class ArrowButtonRight(tk.Frame):  ## replace these with pictures
     def __init__(self, master=None, size=40, target_class=None, printer_class=None, **kwargs):
         tk.Frame.__init__(self, master, **kwargs)
@@ -42,7 +49,7 @@ class ArrowButtonRight(tk.Frame):  ## replace these with pictures
     def on_click(self, event):
         if self.target_class.is_homed:
             print("?Moving  "+str(self.target_class.xyz_step), " in X-UP")
-            self.printer_class.move_axis_relative(x=self.target_class.xyz_step, y=0, z=0, offset=self.target_class.offset)
+            self.target_class.move_xyz(x=self.target_class.xyz_step, y=0, z=0)
         else:
             print("?? Printer not homed yet, please home the printer first")
 
@@ -64,10 +71,10 @@ class ArrowButtonTop(tk.Frame):
         if self.target_class.is_homed:
             if self.is_z:
                 print("?Moving  "+str(self.target_class.xyz_step), " in Z-UP")
-                self.printer_class.move_axis_relative(x=0, y=0, z=self.target_class.xyz_step, offset=self.target_class.offset)
+                self.target_class.move_xyz(x=0, y=0, z=self.target_class.xyz_step)
             else:
                 print("?Moving  "+str(self.target_class.xyz_step), " in Y-UP")
-                self.printer_class.move_axis_relative(x=0, y=self.target_class.xyz_step, z=0, offset=self.target_class.offset)
+                self.target_class.move_xyz(x=0, y=self.target_class.xyz_step, z=0)
         else:
             print("?? Printer not homed yet, please home the printer first")
             
@@ -86,7 +93,7 @@ class ArrowButtonLeft(tk.Frame):
     def on_click(self, event):
         if self.target_class.is_homed:
             print("?Moving  "+str(self.target_class.xyz_step), " in X-DOWN")
-            self.printer_class.move_axis_relative(x=-self.target_class.xyz_step, y=0, z=0, offset=self.target_class.offset)
+            self.target_class.move_xyz(x=-self.target_class.xyz_step, y=0, z=0)
         else:
             print("?? Printer not homed yet, please home the printer first")
 
@@ -107,10 +114,10 @@ class ArrowButtonBottom(tk.Frame):
         if self.target_class.is_homed:
             if self.is_z:
                 print("?Moving  "+str(self.target_class.xyz_step), " in Z-DOWN")
-                self.printer_class.move_axis_relative(x=0, y=0, z=-self.target_class.xyz_step, offset=self.target_class.offset)
+                self.target_class.move_xyz(x=0, y=0, z=-self.target_class.xyz_step)
             else:
                 print("?Moving  "+str(self.target_class.xyz_step), " in Y-DOWN")
-                self.printer_class.move_axis_relative(x=0, y=-self.target_class.xyz_step, z=0, ooffset=self.target_class.offset)
+                self.target_class.move_xyz(x=0, y=-self.target_class.xyz_step, z=0)
         else:
             print("?? Printer not homed yet, please home the printer first")
             
@@ -133,6 +140,7 @@ class RoundButton(tk.Canvas):
         self.printer_class.move_home()    
         self.target_class.is_homed = True    
         [self.target_class.coord_value_text[i].set(0) for i in range(3)]
+        [self.target_class.coord_value[i].configure(state='normal') for i in range(3)]
         
         
 class MyWindow(tk.Tk):
@@ -169,6 +177,14 @@ class MyWindow(tk.Tk):
         
         
     def create_variables(self):
+        '''
+        I created this because in some instance, I needed the variable to be created beforehand. At first, it was to make sure 
+        I could delete something, even if it didn't exist, but it turns out I misused the winfo_exists() method.
+        Before I realized this, I decided to pre create everything here, in order to avoid potential issues...
+        Now, this also serves as a dictionnary of variables (somewhat incomplete, as I didn't properly update this function once
+        I realized my mistake). But still, it is extremely useful. It's just that we can potentially remove half of the function
+        and it would still work.
+        '''
         self.is_homed = False
         self.load_parameters()
         self.tab_orders = [4,1,2,3,0]  # each function will call this with self.tab_orders[i]. If you want to change
@@ -216,11 +232,13 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         
         self.z_label = None                  
                 
+        self.offset = [0,0,0]
+        
         self.xyz_grid_steps     = []
         self.xyz_step_buttons   = []
         self.xyz_step           = 0.1
-        self.coord_value_grid   = None
         
+        self.coord_value_grid   = None
         self.coord_label = []
         self.coord_value = []
         self.coord_value_text = []
@@ -271,9 +289,9 @@ in which you can select UP TO 6 wells to use. You can then press the save button
             self.set_tab_xyz_control()
             
                   
-    def debug(self):
-        var = self.clicked.get()
-        print(var)
+    def debug(self, *args):
+        
+        print(args)
         
                  
     def set_tab_mode(self):
@@ -478,13 +496,12 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         
         self.center_button = RoundButton(self.xyz_gui_position, diameter=50, bg_color="black", target_class=self, printer_class=self.anycubic)
         self.center_button.grid(column=1, row=2, padx=10, pady=10)
-
-             
-        self.z_button_up = ArrowButtonTop(self.xyz_gui_position, target_class = self, printer_class=self.anycubic)
+        self.z_button_up = ArrowButtonTop(self.xyz_gui_position, is_z=True, target_class = self, printer_class=self.anycubic)
         self.z_button_up.grid(column=3, row=1, padx=10, pady=10)
         
-        self.z_button_down = ArrowButtonBottom(self.xyz_gui_position, target_class = self, printer_class=self.anycubic)
+        self.z_button_down = ArrowButtonBottom(self.xyz_gui_position, is_z=True, target_class = self, printer_class=self.anycubic)
         self.z_button_down.grid(column=3, row=3, padx=10, pady=10)
+        
         
         self.z_label = tk.Label(self.xyz_gui_position, text=coords_name[2])
         self.z_label.grid(column=3, row=2, padx=10, pady=10)                      
@@ -512,15 +529,55 @@ in which you can select UP TO 6 wells to use. You can then press the save button
             self.coord_label[i].grid(column=i, row=5, padx=17, pady=10)
             
             self.coord_value_text.append(tk.StringVar())
-            self.coord_value.append(tk.Entry(self.coord_value_grid, width=7, textvariable=self.coord_value_text[i]))  ### ajouter les vraies valeurs ici
+            self.coord_value.append(tk.Entry(self.coord_value_grid, 
+                                             width=7, 
+                                             textvariable=self.coord_value_text[i],
+                                             state='readonly'))  ### ajouter les vraies valeurs ici
             self.coord_value[i].grid(column=i, row=6, padx=17, pady=10)
+        
+        self.move_xyz_button = tk.Button(self.coord_value_grid, text="Move", command=lambda: self.move_xyz(move_button_cmd=True))
+        self.move_xyz_button.grid(column=1, row=7, padx=17, pady=10)   
     
     
     def select_offset(self, value):
         self.offset = self.settings["Offset"][value]    
         print(self.offset)        
      
+    
+    def move_xyz(self, x=0, y=0, z=0, move_button_cmd=False):
+        if move_button_cmd:
+            x = round(float(self.coord_value_text[0].get()),1)
+            y = round(float(self.coord_value_text[1].get()),1)
+            z = round(float(self.coord_value_text[2].get()),1)
             
+        if x < X_MIN:
+            x = X_MIN
+        elif x > X_MAX:
+            x = X_MAX
+        if y < Y_MIN:
+            y = Y_MIN
+        elif y > Y_MAX:
+            y = Y_MAX
+        if z < Z_MIN:
+            z = Z_MIN
+        elif z > Z_MAX:
+            z = Z_MAX
+            
+        if move_button_cmd:
+            
+            print("Setting position to X={}, Y={}, Z={}".format(x,y,z))
+            # self.anycubic.move_axis(x=x, y=y, z=z, offset=self.offset)
+            self.coord_value_text[0].set(str(x))
+            self.coord_value_text[1].set(str(y))
+            self.coord_value_text[2].set(str(z))
+        else:
+            # Maybe find a way to read the coordinate instead of writing them manually into self.coord_value_text   
+            self.anycubic.move_axis_relative(x=x, y=y, z=z, offset=self.offset)
+            self.coord_value_text[0].set(round(float(self.coord_value_text[0].get()) + x,1)) # set precision maybe
+            self.coord_value_text[1].set(round(float(self.coord_value_text[1].get()) + y,1)) # set precision maybe
+            self.coord_value_text[2].set(round(float(self.coord_value_text[2].get()) + z,1)) # set precision maybe
+        
+        
     def set_servo_control(self, tab_index):
 
         gui_x_pos = 0.85
@@ -536,8 +593,10 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         self.servo_gui_position = ttk.Frame(self.tab[tab_index])
         self.servo_gui_position.place(relx=gui_x_pos, rely=gui_y_pos, anchor=tk.CENTER)
         
+        self.servo_temp_warning = ttk.Label(self.tab[tab_index], text="?? This button is currently useless, please ignore it ??")
+        self.servo_temp_warning.place(relx=gui_x_pos-0.033, rely=0.1, anchor=tk.CENTER)
         self.servo_unit_button = ttk.Button(self.tab[tab_index], textvariable=self.servo_unit_text, command=self.change_unit_servo)
-        self.servo_unit_button.place(relx=gui_x_pos-0.033, rely=gui_y_pos+0.2, anchor=tk.CENTER)
+        self.servo_unit_button.place(relx=gui_x_pos-0.033, rely=0.15, anchor=tk.CENTER)
         
         for i in range(3):
             self.servo_frame.append(ttk.Frame(self.servo_gui_position))
@@ -549,13 +608,13 @@ in which you can select UP TO 6 wells to use. You can then press the save button
             self.servo_buttons.append(ttk.Button(self.servo_frame[i], 
                                                  text="+", 
                                                  width=4,
-                                                 command = lambda idx = i+1: self.execute_servo_step('+', idx)))
+                                                 command = lambda idx = i+1: self.move_servo('+', idx)))
             self.servo_buttons[2*i].grid(column=0, row=1, ipady=button_height)
             
             self.servo_buttons.append(ttk.Button(self.servo_frame[i], 
                                                  text="-", 
                                                  width=4,
-                                                 command = lambda idx = i+1: self.execute_servo_step('-', idx)))
+                                                 command = lambda idx = i+1: self.move_servo('-', idx)))
             self.servo_buttons[2*i+1].grid(column=0, row=2, ipady=button_height)
             
             self.servo_values_text.append(tk.StringVar())
@@ -583,18 +642,25 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         
         #### Buttons for saving the positions of the servos and the motors
         self.save_position_gui = ttk.Frame(self.tab[tab_index])
-        self.save_position_gui.place(relx=gui_x_pos-0.03, rely=gui_y_pos+0.35, anchor=tk.CENTER)   
+        self.save_position_gui.place(relx=gui_x_pos-0.03, rely=gui_y_pos+0.2, anchor=tk.CENTER)   
         
         self.save_text = tk.Label(self.save_position_gui, text=f'''You can save the current positions of the motor and the servo.  \n They will be saved in the {SETTINGS} as : ''')
         self.save_text.grid(column=0, row=0)
         
+        self.empty_label1 = tk.Label(self.save_position_gui, text=" ")
+        self.empty_label1.grid(column=0, row=1)
+        self.empty_label1.rowconfigure(1, minsize=2, weight=1)
+        
         self.save_name_entry = tk.Entry(self.save_position_gui, width=15)
-        self.save_name_entry.grid(column=0, row=1)
+        self.save_name_entry.grid(column=0, row=2)
+        self.empty_label2 = tk.Label(self.save_position_gui, text=" ")
+        self.empty_label2.grid(column=0, row=3)
+        self.empty_label2.rowconfigure(3, minsize=2, weight=1)
         self.save_pos_button = ttk.Button(self.save_position_gui, text="Save", command=self.save_pos)
-        self.save_pos_button.grid(column=0, row=2)
+        self.save_pos_button.grid(column=0, row=4)
      
      
-    def execute_servo_step(self, sign, idx):
+    def move_servo(self, sign, idx):
         
         ## add buttons for the servo pipette selector
         if idx == 3:
@@ -673,7 +739,6 @@ in which you can select UP TO 6 wells to use. You can then press the save button
 window = MyWindow()
 
 
-## ajouter le fait que les coords s'ecrivent toutes seulent dans la box prevue pour
 ## ajouter le fait que d'ecrire dans la box bouge limprimante
 ## tout pareil avec les servos
 ## peut etre un bouton pour reset les positions des servos
