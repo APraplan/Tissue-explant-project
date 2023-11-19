@@ -39,7 +39,10 @@ class Dynamixel:
         logger.debug(f"Setting position gains of Dynamixel {self.ID} to P_gain = {P_gain}, I_gain = {I_gain}, D_gain = {D_gain}")
         
     def read_position(self, ID = None):
-        return self.positions[ID]
+        if type(ID) == list:
+            return self.positions
+        else:
+            return self.positions[ID]
             
     def read_velocity(self, ID = None):
         return 0
@@ -108,19 +111,14 @@ class Dynamixel:
             self.write_position(pos=TIP_POSITION[tip_number], ID = id)       
         
     def write_pipette_ul(self, volume_ul, ID = None):
-            
-        if volume_ul > 625:
-            volume_ul = 625
+        print("write_pipette_ul ", volume_ul)
+        if volume_ul  > self.pipette_empty:
+            volume_ul = self.pipette_empty
         elif volume_ul < 0:
             volume_ul = 0
-            
-        if type(ID) == list:
-            for id in ID:
-                pos = int(PIPETTE_MIN[id-1] + volume_ul/620.0*(PIPETTE_MAX[id-1]-PIPETTE_MIN[id-1]))
-                self.write_position(pos=pos, ID = id) 
-        else:
-            pos = int(PIPETTE_MIN[ID-1] + volume_ul/620.0*(PIPETTE_MAX[ID-1]-PIPETTE_MIN[ID-1]))
-            self.write_position(pos=pos, ID = ID)
+        pos = int(PIPETTE_MIN[ID-1] + volume_ul/620.0*(PIPETTE_MAX[ID-1]-PIPETTE_MIN[ID-1]))
+        print("write_pipette_ul ", volume_ul)
+        self.write_position(pos=pos, ID = ID)
             
     def pipette_is_in_position_ul(self, volume_ul, ID = None):
         
@@ -145,7 +143,7 @@ class Printer:
         self.descriptive_device_name = descriptive_device_name
         self.position = position(0,0,0)
         
-        self.home_pos = position(0,0,0)
+        self.home_pos = [0,0,0]
         self._finish = False
 
     def _serial_readline(self):
@@ -194,9 +192,9 @@ class Printer:
 
     def move_axis_relative(self, x = None, y = None, z = None, e = None, f = None, printMsg = False, offset = None):
             self._finish = False
+            
             if offset is None:
                 offset = [0, 0, 0]
-            print(offset)
             offset[0] = offset[0] + self.home_pos.x
             offset[1] = offset[1] + self.home_pos.y
             offset[2] = offset[2] + self.home_pos.z

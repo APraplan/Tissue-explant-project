@@ -19,17 +19,15 @@ debug = True
 
 if debug:
     from Communication.fake_communication import * ### ajouter un simulateur de position sil y en a pas
-    # apparement il aime pas ca
 else:
     from vidgear.gears import VideoGear
     from Communication.dynamixel_controller import *
     from Communication.printer_communications import * 
 
-
 ### ATTENTION AU OFFSET  !!!
 
 
-
+SETTINGS = "TEST.json"
 class ArrowButtonRight(tk.Frame):  ## replace these with pictures
     def __init__(self, master=None, size=40, target_class=None, printer_class=None, **kwargs):
         tk.Frame.__init__(self, master, **kwargs)
@@ -42,9 +40,12 @@ class ArrowButtonRight(tk.Frame):  ## replace these with pictures
         self.canvas.grid()
 
     def on_click(self, event):
-        print("Right Arrow Button clicked!")
-        print(" the baby step is set to "+str(self.target_class.xyz_step), " in X-UP")
-        self.printer_class.move_axis_relative(x=self.target_class.xyz_step, y=0, z=0, offset=0)
+        if self.target_class.is_homed:
+            print("?Moving  "+str(self.target_class.xyz_step), " in X-UP")
+            self.printer_class.move_axis_relative(x=self.target_class.xyz_step, y=0, z=0, offset=self.target_class.offset)
+        else:
+            print("?? Printer not homed yet, please home the printer first")
+
 
 class ArrowButtonTop(tk.Frame):
     def __init__(self, master=None, size=40, target_class=None, is_z = False, printer_class=None, **kwargs):
@@ -59,13 +60,16 @@ class ArrowButtonTop(tk.Frame):
         self.canvas.pack()
 
     def on_click(self, event):
-        print("Top Arrow Button clicked!")
-        if self.is_z:
-            print(" the baby step is set to "+str(self.target_class.xyz_step), " in Z-UP")
-            self.printer_class.move_axis_relative(x=0, y=0, z=self.target_class.xyz_step, offset=0)
+        
+        if self.target_class.is_homed:
+            if self.is_z:
+                print("?Moving  "+str(self.target_class.xyz_step), " in Z-UP")
+                self.printer_class.move_axis_relative(x=0, y=0, z=self.target_class.xyz_step, offset=self.target_class.offset)
+            else:
+                print("?Moving  "+str(self.target_class.xyz_step), " in Y-UP")
+                self.printer_class.move_axis_relative(x=0, y=self.target_class.xyz_step, z=0, offset=self.target_class.offset)
         else:
-            print(" the baby step is set to "+str(self.target_class.xyz_step), " in Y-UP")
-            self.printer_class.move_axis_relative(x=0, y=self.target_class.xyz_step, z=0, offset=0)
+            print("?? Printer not homed yet, please home the printer first")
             
 
 class ArrowButtonLeft(tk.Frame):
@@ -80,9 +84,12 @@ class ArrowButtonLeft(tk.Frame):
         self.canvas.pack()
 
     def on_click(self, event):
-        print("Left Arrow Button clicked!")
-        print(" the baby step is set to "+str(self.target_class.xyz_step), " in X-DOWN")
-        self.printer_class.move_axis_relative(x=-self.target_class.xyz_step, y=0, z=0, offset=0)
+        if self.target_class.is_homed:
+            print("?Moving  "+str(self.target_class.xyz_step), " in X-DOWN")
+            self.printer_class.move_axis_relative(x=-self.target_class.xyz_step, y=0, z=0, offset=self.target_class.offset)
+        else:
+            print("?? Printer not homed yet, please home the printer first")
+
 
 class ArrowButtonBottom(tk.Frame):
     def __init__(self, master=None, size=40, target_class=None, is_z = False, printer_class=None, **kwargs):
@@ -97,13 +104,15 @@ class ArrowButtonBottom(tk.Frame):
         self.canvas.pack()
 
     def on_click(self, event):
-        print("Bottom Arrow Button clicked!")
-        if self.is_z:
-            print(" the baby step is set to "+str(self.target_class.xyz_step), " in Z-DOWN")
-            self.printer_class.move_axis_relative(x=0, y=0, z=-self.target_class.xyz_step, offset=0)
+        if self.target_class.is_homed:
+            if self.is_z:
+                print("?Moving  "+str(self.target_class.xyz_step), " in Z-DOWN")
+                self.printer_class.move_axis_relative(x=0, y=0, z=-self.target_class.xyz_step, offset=self.target_class.offset)
+            else:
+                print("?Moving  "+str(self.target_class.xyz_step), " in Y-DOWN")
+                self.printer_class.move_axis_relative(x=0, y=-self.target_class.xyz_step, z=0, ooffset=self.target_class.offset)
         else:
-            print(" the baby step is set to "+str(self.target_class.xyz_step), " in Y-DOWN")
-            self.printer_class.move_axis_relative(x=0, y=-self.target_class.xyz_step, z=0, offset=0)
+            print("?? Printer not homed yet, please home the printer first")
             
 
 class RoundButton(tk.Canvas):
@@ -120,9 +129,11 @@ class RoundButton(tk.Canvas):
         self.bind("<Button-1>", self.on_click)
 
     def on_click(self, event):
-        print("Round Button Clicked!")
         print("home position")
-        self.printer_class.move_home()        
+        self.printer_class.move_home()    
+        self.target_class.is_homed = True    
+        [self.target_class.coord_value_text[i].set(0) for i in range(3)]
+        
         
 class MyWindow(tk.Tk):
     def __init__(self): 
@@ -141,7 +152,8 @@ class MyWindow(tk.Tk):
         # Create a style to configure the notebook
         self.style = ttk.Style()
         self.style.configure("TNotebook.Tab", padding=(15, 10))  # Adjust the padding values as needed
-
+        
+        self.style.configure('cameraStyle.TFrame', background="black")
 
         self.tabControl = ttk.Notebook(self.window)
 
@@ -155,7 +167,12 @@ class MyWindow(tk.Tk):
 
         self.window.mainloop()
         
+        
     def create_variables(self):
+        self.is_homed = False
+        self.load_parameters()
+        self.tab_orders = [4,1,2,3,0]  # each function will call this with self.tab_orders[i]. If you want to change
+        # the orders of the tabs, for example for debugging, change the order here
         self.tab        = []
         self.title      = []
         self.style      = None
@@ -199,17 +216,27 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         
         self.z_label = None                  
                 
-        self.small_grid_steps   = []
-        self.step_buttons       = []
-        self.xyz_step           = 0
+        self.xyz_grid_steps     = []
+        self.xyz_step_buttons   = []
+        self.xyz_step           = 0.1
+        self.coord_value_grid   = None
         
         self.coord_label = []
         self.coord_value = []
+        self.coord_value_text = []
         
-        self.servo_buttons  = []
-        self.servo_frame    = []
-        self.servo_labels   = []
-        self.servo_values   = []
+        self.servo_buttons      = []
+        self.servo_frame        = []
+        self.servo_labels       = []
+        self.servo_values       = []
+        self.servo_values_text  = []
+        self.servo_gui_position = None
+        self.servo_unit_button  = None 
+        self.servo_unit_value   = 'steps'
+        self.servo_step_buttons = []
+        self.servo_grid_steps   = None
+        self.servo_step         = 1
+        self.servo_pos          = []
         
         self.servo_names    = ["Servo pipette 1", "Servo pipette 2", "Servo pipette selector"]
         
@@ -223,7 +250,12 @@ in which you can select UP TO 6 wells to use. You can then press the save button
                                    baudrate=57600,
                                    pipette_empty= 525, 
                                    port_name=get_com_port("0403", "6014")) 
-
+        self.servo_pos = self.dynamixel.read_position(ID=[1,2,3]).copy()
+        
+        
+    def load_parameters(self):
+        with open(SETTINGS, 'r') as f:
+            self.settings = json.load(f)
         
         
     def set_tabs(self, i):
@@ -258,10 +290,10 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         
     def set_tab_well_plate(self):
         
-        tab_index = 3
+        tab_index = self.tab_orders[3]
         
         self.clicked = tk.StringVar()
-        self.clicked.set(" ") # where is options 0 ??? it doesn't show
+        self.clicked.set(" ")
         
         self.drop = ttk.OptionMenu(self.tab[tab_index], ## eventuellement changer pour un combobox.
                                   self.clicked,
@@ -281,17 +313,17 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         self.tab_well_explanation = tk.Label(self.tab[tab_index],  
                                              text=self.text_well_plate_explanation,
                                              width=100,
-                                             wraplength=500) ### eventually use text variable
+                                             wraplength=500) 
         self.tab_well_explanation.place(relx=0.3, rely=0.4, anchor=tk.CENTER)
         
-        self.text_well_results = tk.StringVar()
+        self.text_well_results = tk.StringVar() # shows a list of selected wells
         self.tab_well_results = tk.Label(self.tab[tab_index],
                                              textvariable=self.text_well_results,
                                              width=100,
-                                             wraplength=500) ### eventually use text variable
+                                             wraplength=500) 
         self.tab_well_results.place(relx=0.3, rely=0.5, anchor=tk.CENTER)
         
-        self.text_remaining_wells = tk.StringVar()
+        self.text_remaining_wells = tk.StringVar() # shows how many more wells you can still select
         self.remaining_wells = tk.Label(self.tab[tab_index],
                                              textvariable=self.text_remaining_wells,
                                              width=100,
@@ -311,13 +343,12 @@ in which you can select UP TO 6 wells to use. You can then press the save button
                                             text="Reset", 
                                             command= lambda: self.show_wells(self.clicked.get())) 
         
-        # otherwise, we can already start changing to combobox
-        
         self.well_reset_button.grid(column=1, row=0)
-        # add the number of remianing cell oone can select
+        # add the number of remaining cell one can select
+        
         
     def show_wells(self, click):
-        tab_index = 3
+        tab_index = self.tab_orders[3]
         self.selected_well_plate = click
         if self.well_plate_label is not None: # check if it exists
             self.well_plate_label.place_forget()
@@ -376,150 +407,273 @@ in which you can select UP TO 6 wells to use. You can then press the save button
                 self.selected_wells.append(temp2+temp)
         if len(self.selected_wells)>0:
             self.text_well_results.set("You have selected the following wells:"+str(self.selected_wells))
+            
         if len(self.selected_wells)==6:
-            self.text_remaining_wells.set("You cannot select more wells")
+            self.text_remaining_wells.set("You cannot select more wells") ### write in red pls
+            self.remaining_wells.config(fg="red")
         else:
             self.text_remaining_wells.set("You can still select "+str(6-len(self.selected_wells))+" wells")
+            self.remaining_wells.config(fg="black")
+            
          
     def delete_well_plate(self):
         self.well_plate_label.place_forget()
         self.well_plate.place_forget() 
         
+        
     def save_well_settings(self):
-        with open('settings.json', 'r') as f:
-            settings = json.load(f)
-        settings["Well"]["Type"] = self.clicked.get()
-        settings["Well"]["Number of well"] = len(self.selected_wells)
+        self.settings["Well"]["Type"] = self.clicked.get()
+        self.settings["Well"]["Number of well"] = len(self.selected_wells)
         for i in range(len(self.selected_wells)):
-            settings["Well"][f"Culture {i+1}"] = self.selected_wells[i]    
+            self.settings["Well"][f"Culture {i+1}"] = self.selected_wells[i]    
         with open('TEST.json', 'w') as f:
-            json.dump(settings, f, indent=4)
+            json.dump(self.settings, f, indent=4)
             
         # ici on garde les ancienne cultures en memoires, mais on a number of well qui est bien defini
         # pbm ou pas ?
+      
         
     def set_tab_xyz_control(self):
-        tab_index = 0
+        tab_index = self.tab_orders[4]
         
         self.set_motor_control(tab_index)
         self.set_servo_control(tab_index)
-            
-        
-        col_count, row_count = self.tab[tab_index].grid_size()
-        
-        for col in range(col_count):
-            self.tab[tab_index].grid_columnconfigure(col, minsize=20)
-        for row in range(row_count):
-            self.tab[tab_index].grid_rowconfigure(row, minsize=20)
-         
+        self.set_camera_for_control(tab_index)
+
                              
     def set_motor_control(self, tab_index):
         
-        row_offset = 8
-        col_offset = 5
+        gui_x_pos = 0.15
+        gui_y_pos = .5
+        self.xyz_gui_position = ttk.Frame(self.tab[tab_index])
+        self.xyz_gui_position.place(relx=gui_x_pos, rely=gui_y_pos, anchor=tk.CENTER)
         steps = [0.1, 1, 5, 10, 25, 50]
         coords_name = ["X", "Y", "Z"]
-        # eventuellement refaire avec un place, puis un grid
-        self.button_right = ArrowButtonRight(self.tab[tab_index], target_class=self, printer_class=self.anycubic)
-        self.button_right.grid(column=2+col_offset, row=1+row_offset, padx=10, pady=10)
         
-        self.button_left = ArrowButtonLeft(self.tab[tab_index], target_class=self, printer_class=self.anycubic)
-        self.button_left.grid(column=0+col_offset, row=1+row_offset, padx=10, pady=10)
+        self.pipette_selector_frame = ttk.Frame(self.tab[tab_index])
+        self.pipette_selector_frame.place(relx=gui_x_pos+0.015, rely=0.15, anchor=tk.CENTER)
+        pipette_name = list(self.settings.get("Offset").keys())[1:]
         
-        self.button_top = ArrowButtonTop(self.tab[tab_index], target_class=self, printer_class=self.anycubic)
-        self.button_top.grid(column=1+col_offset, row=0+row_offset, padx=10, pady=10)
+        self.pipette_selector_text = tk.Label(self.pipette_selector_frame, text="Select the toolhead's offset")
+        self.pipette_selector_text.grid(column=0, row=0)
         
-        self.button_bottom = ArrowButtonBottom(self.tab[tab_index], target_class = self, printer_class=self.anycubic)
-        self.button_bottom.grid(column=1+col_offset, row=2+row_offset, padx=10, pady=10)
+        self.clicked_pipette = tk.StringVar()
+        self.pipette_offset_selector = tk.OptionMenu(self.pipette_selector_frame,
+                                                     self.clicked_pipette,
+                                                     *pipette_name,
+                                                     command=self.select_offset)
+        self.pipette_offset_selector.grid(column=0, row=1)
         
-        self.center_button = RoundButton(self.tab[tab_index], diameter=50, bg_color="black", target_class=self, printer_class=self.anycubic)
-        self.center_button.grid(column=1+col_offset, row=1+row_offset, padx=10, pady=10)
+        self.button_right = ArrowButtonRight(self.xyz_gui_position, target_class=self, printer_class=self.anycubic)
+        self.button_right.grid(column=2, row=2, padx=10, pady=10)
+        
+        self.button_left = ArrowButtonLeft(self.xyz_gui_position, target_class=self, printer_class=self.anycubic)
+        self.button_left.grid(column=0, row=2, padx=10, pady=10)
+        
+        self.button_top = ArrowButtonTop(self.xyz_gui_position, target_class=self, printer_class=self.anycubic)
+        self.button_top.grid(column=1, row=1, padx=10, pady=10)
+        
+        self.button_bottom = ArrowButtonBottom(self.xyz_gui_position, target_class = self, printer_class=self.anycubic)
+        self.button_bottom.grid(column=1, row=3, padx=10, pady=10)
+        
+        self.center_button = RoundButton(self.xyz_gui_position, diameter=50, bg_color="black", target_class=self, printer_class=self.anycubic)
+        self.center_button.grid(column=1, row=2, padx=10, pady=10)
 
+             
+        self.z_button_up = ArrowButtonTop(self.xyz_gui_position, target_class = self, printer_class=self.anycubic)
+        self.z_button_up.grid(column=3, row=1, padx=10, pady=10)
+        
+        self.z_button_down = ArrowButtonBottom(self.xyz_gui_position, target_class = self, printer_class=self.anycubic)
+        self.z_button_down.grid(column=3, row=3, padx=10, pady=10)
+        
+        self.z_label = tk.Label(self.xyz_gui_position, text=coords_name[2])
+        self.z_label.grid(column=3, row=2, padx=10, pady=10)                      
+        
+        self.xyz_grid_steps = ttk.Frame(self.tab[tab_index])
+        self.xyz_grid_steps.place(relx=gui_x_pos+0.015, rely=gui_y_pos-.23, anchor=tk.CENTER)
         for i in range(3): 
-            self.small_grid_steps.append(ttk.Frame(self.tab[tab_index]))
-            self.small_grid_steps[i].grid(column=col_offset+i+1, row=row_offset-1, columnspan=1)
-            self.step_buttons.append(tk.Button(self.small_grid_steps[i], 
+            self.xyz_step_buttons.append(tk.Button(self.xyz_grid_steps, 
                                                 text=str(steps[2*i]), 
                                                 width=5, 
-                                                command = lambda step = steps[2*i], idx = 2*i: self.toggle_step(step, idx)))
-            self.step_buttons[2*i].grid(column=0, row=0)
-            self.step_buttons.append(tk.Button(self.small_grid_steps[i], 
+                                                command = lambda step = steps[2*i], idx = 2*i: self.toggle_step(step, idx, 'xyz')))
+            self.xyz_step_buttons[2*i].grid(column=0+2*i, row=0)
+            if i==0:
+                self.xyz_step_buttons[i].configure(relief = "sunken")
+            self.xyz_step_buttons.append(tk.Button(self.xyz_grid_steps, 
                                                 text=str(steps[2*i+1]), 
                                                 width=5, 
-                                                command = lambda step = steps[2*i+1], idx = 2*i+1, : self.toggle_step(step,idx))) ### set command here
-            self.step_buttons[2*i+1].grid(column=1, row=0)
-            
+                                                command = lambda step = steps[2*i+1], idx = 2*i+1, : self.toggle_step(step,idx, 'xyz'))) ### set command here
+            self.xyz_step_buttons[2*i+1].grid(column=1+2*i, row=0)
         
-        self.z_button_up = ArrowButtonTop(self.tab[tab_index], target_class = self, printer_class=self.anycubic)
-        self.z_button_up.grid(column=4+col_offset, row=0+row_offset, padx=10, pady=10)
-        
-        self.z_button_down = ArrowButtonBottom(self.tab[tab_index], target_class = self, printer_class=self.anycubic)
-        self.z_button_down.grid(column=4+col_offset, row=2+row_offset, padx=10, pady=10)
-        
-        self.z_label = tk.Label(self.tab[tab_index], text=coords_name[2])
-        self.z_label.grid(column=4+col_offset, row=1+row_offset, padx=10, pady=10)                      
-        
+        self.coord_value_grid = ttk.Frame(self.tab[tab_index])
+        self.coord_value_grid.place(relx=gui_x_pos+0.015, rely= gui_y_pos+0.25, anchor=tk.CENTER)
         for i in range(len(coords_name)):
-            self.coord_label.append(tk.Label(self.tab[tab_index], text=coords_name[i])) 
-            self.coord_label[i].grid(column=i+col_offset+1, row=3+row_offset+2, padx=10, pady=10)
+            self.coord_label.append(tk.Label(self.coord_value_grid, text=coords_name[i])) 
+            self.coord_label[i].grid(column=i, row=5, padx=17, pady=10)
             
-            self.coord_value.append(tk.Entry(self.tab[tab_index], width=7))  ### ajouter les vraies valeurs ici
-            self.coord_value[i].grid(column=i+col_offset+1, row=3+row_offset+3, padx=10, pady=10)
-          
-    def toggle_step(self, step, idx):
-        print(step) 
-        self.xyz_step = step  
-        for i in range(len(self.step_buttons)):
-            if i == idx:
-                self.step_buttons[i].configure(relief = "sunken")
-            else:
-                self.step_buttons[i].configure(relief = "raised")
-        
+            self.coord_value_text.append(tk.StringVar())
+            self.coord_value.append(tk.Entry(self.coord_value_grid, width=7, textvariable=self.coord_value_text[i]))  ### ajouter les vraies valeurs ici
+            self.coord_value[i].grid(column=i, row=6, padx=17, pady=10)
     
-    def trigger_step(self):
-        if self.xyz_trigger:
-            self.xyz_trigger = False
-            return True
-        else:
-            return False
-        
+    
+    def select_offset(self, value):
+        self.offset = self.settings["Offset"][value]    
+        print(self.offset)        
+     
+            
     def set_servo_control(self, tab_index):
 
-        row_offset = 8
-        col_offset = 18
-        spacing = 5
+        gui_x_pos = 0.85
+        gui_y_pos = 0.5
+        spacing = 20
+        steps = [1, 5, 10, 25, 50, 100]
         
-        button_height = 6
+        button_height = 8
+        self.servo_unit_text = tk.StringVar()
+        self.servo_unit_text.set("Unit currently set to : steps")
+        self.servo_unit_value = 'steps'
+        
+        self.servo_gui_position = ttk.Frame(self.tab[tab_index])
+        self.servo_gui_position.place(relx=gui_x_pos, rely=gui_y_pos, anchor=tk.CENTER)
+        
+        self.servo_unit_button = ttk.Button(self.tab[tab_index], textvariable=self.servo_unit_text, command=self.change_unit_servo)
+        self.servo_unit_button.place(relx=gui_x_pos-0.033, rely=gui_y_pos+0.2, anchor=tk.CENTER)
         
         for i in range(3):
-            self.servo_frame.append(ttk.Frame(self.tab[tab_index]))
-            self.servo_frame[i].grid(column=i*spacing + col_offset, row=row_offset-1, columnspan=1, rowspan=6)
+            self.servo_frame.append(ttk.Frame(self.servo_gui_position))
+            self.servo_frame[i].grid(column=i, row=0, ipadx=spacing)
             
             self.servo_labels.append(tk.Label(self.servo_frame[i], text=self.servo_names[i]))
             self.servo_labels[i].grid(column=0, row=0, pady = 10)
             
-            self.servo_buttons.append(ttk.Button(self.servo_frame[i], text="+", width=4))
+            self.servo_buttons.append(ttk.Button(self.servo_frame[i], 
+                                                 text="+", 
+                                                 width=4,
+                                                 command = lambda idx = i+1: self.execute_servo_step('+', idx)))
             self.servo_buttons[2*i].grid(column=0, row=1, ipady=button_height)
-            self.servo_buttons.append(ttk.Button(self.servo_frame[i], text="-", width=4))
+            
+            self.servo_buttons.append(ttk.Button(self.servo_frame[i], 
+                                                 text="-", 
+                                                 width=4,
+                                                 command = lambda idx = i+1: self.execute_servo_step('-', idx)))
             self.servo_buttons[2*i+1].grid(column=0, row=2, ipady=button_height)
             
-            
-            self.servo_values.append(tk.Label(self.servo_frame[i], text="0"))  ## to change for actual value, and hopes it get updated
+            self.servo_values_text.append(tk.StringVar())
+            self.servo_values.append(tk.Label(self.servo_frame[i], textvariable=self.servo_values_text[i]))
             self.servo_values[i].grid(column=0, row=5, pady = 15)
+            
+        #### Buttons for deciding the values of the steps
+        self.servo_grid_steps = ttk.Frame(self.tab[tab_index])
+        self.servo_grid_steps.place(relx=gui_x_pos-0.03, rely=gui_y_pos-.23, anchor=tk.CENTER)
         
+        for i in range(3): 
+            self.servo_step_buttons.append(tk.Button(self.servo_grid_steps, 
+                                                text=str(steps[2*i]), 
+                                                width=5, 
+                                                command = lambda step = steps[2*i], idx = 2*i: self.toggle_step(step, idx, 'servo')))
+            self.servo_step_buttons[2*i].grid(column=0+2*i, row=0)
+            
+            if i == 0:
+                self.servo_step_buttons[i].configure(relief = "sunken")
+            self.servo_step_buttons.append(tk.Button(self.servo_grid_steps, 
+                                                text=str(steps[2*i+1]), 
+                                                width=5, 
+                                                command = lambda step = steps[2*i+1], idx = 2*i+1, : self.toggle_step(step,idx, 'servo'))) ### set command here
+            self.servo_step_buttons[2*i+1].grid(column=1+2*i, row=0)
+        
+        #### Buttons for saving the positions of the servos and the motors
+        self.save_position_gui = ttk.Frame(self.tab[tab_index])
+        self.save_position_gui.place(relx=gui_x_pos-0.03, rely=gui_y_pos+0.35, anchor=tk.CENTER)   
+        
+        self.save_text = tk.Label(self.save_position_gui, text=f'''You can save the current positions of the motor and the servo.  \n They will be saved in the {SETTINGS} as : ''')
+        self.save_text.grid(column=0, row=0)
+        
+        self.save_name_entry = tk.Entry(self.save_position_gui, width=15)
+        self.save_name_entry.grid(column=0, row=1)
+        self.save_pos_button = ttk.Button(self.save_position_gui, text="Save", command=self.save_pos)
+        self.save_pos_button.grid(column=0, row=2)
+     
+     
+    def execute_servo_step(self, sign, idx):
+        
+        ## add buttons for the servo pipette selector
+        if idx == 3:
+            return
+        delta = self.servo_step*(1 if sign == '+' else -1)
+        self.servo_pos[idx] = self.servo_pos[idx] + delta
+        self.dynamixel.write_pipette_ul(volume_ul=self.servo_pos[idx], ID=idx)
+        self.servo_values_text[idx-1].set(self.servo_pos[idx])
+        
+        
+    def set_camera_for_control(self, tab_index):
+        self.camera_control_frame = tk.Frame(self.tab[tab_index])
+        self.camera_control_frame.place(relx=0.5, rely=0.5, anchor=tk.CENTER)  
+        
+        options = ["Camera 1", "Camera 2"]
+        self.clicked_camera_control= tk.StringVar()
+        self.camera_menu = tk.OptionMenu(self.camera_control_frame, 
+                                          self.clicked_camera_control, 
+                                          *options, 
+                                          command=self.show_camera_control)
+        
+        self.camera_menu.pack()
+        self.camera_frame = tk.Canvas(self.camera_control_frame, width=300, height=300)
+        self.camera_frame.pack()
+        self.camera_frame.create_rectangle(0, 0, 300, 300, fill="lightgray")
+    
+    
+    def show_camera_control(self, click):
+        pass
+    
+        
+    def change_unit_servo(self):
+        if self.servo_unit_text.get() == "Unit currently set to : steps":
+            self.servo_unit_text.set("Unit currently set to : percentage")
+            self.servo_unit_value = 'percentage'
+        else:
+            self.servo_unit_text.set("Unit currently set to : steps")
+            self.servo_unit_value = 'steps'
+     
+          
+    def toggle_step(self, step, idx, type):
+        if type == 'xyz':
+            self.xyz_step = step 
+            button_list = self.xyz_step_buttons
+        elif type == 'servo':
+            self.servo_step = step 
+            button_list = self.servo_step_buttons
+        else:
+            print("error when defining type of buttons for steps")
+        # ajouter un autre truc pour si on est avec les servos
+        for i in range(len(button_list)):
+            if i == idx:
+                button_list[i].configure(relief = "sunken")
+            else:
+                button_list[i].configure(relief = "raised")
+            
+    
+    def save_pos(self):
+        if self.settings.get('Saved Positions') == None:
+            self.settings['Saved Positions'] = {}
+        var = self.save_name_entry.get()
+        self.settings['Saved Positions'][var] = {}
+        self.settings['Saved Positions'][var]["X"] = 'test'
+        self.settings['Saved Positions'][var]["Y"] = 'test'
+        self.settings['Saved Positions'][var]["Z"] = 'test'
+        self.settings['Saved Positions'][var]["Servo 1"] = 'test'
+        self.settings['Saved Positions'][var]["Servo 2"] = 'test'
+        self.settings['Saved Positions'][var]["Servo Selector"] = 'test'        
+        
+            
     def close_window(self):  
-        print("?????Closing window, add saving step here ")
+        with open("TEST.json", "w") as jsonFile:
+            json.dump(self.settings, jsonFile, indent=4)
         self.window.destroy()
         
 window = MyWindow()
 
 
-## ajouter un bouton pour changer l'unite des servos 
-## ajouter les offsets du au pipettes
-## ajouter un bouton pour choisir la pipette offset
 ## ajouter le fait que les coords s'ecrivent toutes seulent dans la box prevue pour
 ## ajouter le fait que d'ecrire dans la box bouge limprimante
 ## tout pareil avec les servos
-## peut etre un bouton pour enregistrer les positions
 ## peut etre un bouton pour reset les positions des servos
-## ajouter une option de camera, pour visualiser ce que lon fait
