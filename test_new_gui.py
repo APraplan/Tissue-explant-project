@@ -185,8 +185,9 @@ class MyWindow(tk.Tk):
         '''
         self.is_homed = False
         self.load_parameters()
-        self.tab_orders = [0,1,2,3,4]  # each function will call this with self.tab_orders[i]. If you want to change
+        self.tab_orders = [2,1,0,3,4]  # each function will call this with self.tab_orders[i]. If you want to change
         # the orders of the tabs, for example for debugging, change the order here
+        # TODO replace by some get id from tabs_name
         self.tab        = []
         self.title      = []
         self.style      = None
@@ -316,14 +317,98 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         
         
     def set_tab_parameters(self):
-        # TODO
         tab_index = self.tab_orders[2]
-        self.parameter_frame = tk.Frame(self.tab[tab_index])
-        self.parameter_frame.pack()
         
-        columns = ["Parameter", "Value"]
-        self.parameter_threeview = ttk.Treeview(self.parameter_frame, columns=columns, show="headings")
-        self.parameter_threeview.pack()
+        self.parameter_frame = tk.Frame(self.tab[tab_index])
+        self.parameter_frame.place(relx = 0.1, rely=0.1, relheight=0.8)
+        
+        self.parameter_treeview = ttk.Treeview(self.parameter_frame, columns = ('Value',))
+        self.parameter_treeview.heading('#0', text='Element')
+        self.parameter_treeview.heading('Value', text='Value')
+        
+        self.populate_tree('', self.settings)
+        self.parameter_treeview.pack(expand=True, fill ='both')
+        
+        
+        self.edit_parameter_frame = tk.Frame(self.tab[tab_index])
+        self.edit_parameter_frame.place(relx = 0.6, rely=0.3)
+        
+        self.parameter_clicked_1 = tk.StringVar()
+        self.parameter_clicked_1.set(" ")
+        
+        self.parameter_menu = ttk.OptionMenu(self.edit_parameter_frame,
+                                             self.parameter_clicked_1,
+                                             list(self.settings.keys())[0],
+                                             *list(self.settings.keys()),
+                                             command=self.show_parameters)
+        self.parameter_menu.grid(column=0, row=0, sticky="w")
+        self.empty_label_param_1 = tk.Label(self.edit_parameter_frame, text=" ").grid(column=0, row=1, sticky="w")
+        
+    
+    def show_parameters(self, click):
+        
+        self.parameter_clicked_2 = tk.StringVar()
+        self.parameter_clicked_2.set(" ")
+        self.parameter_menu_2 = ttk.OptionMenu(self.edit_parameter_frame,
+                                                self.parameter_clicked_2,
+                                                list(self.settings[click].keys())[0],
+                                                *list(self.settings[click].keys()))
+        self.parameter_menu_2.grid(column=0, row=2, sticky="w")
+        
+        self.empty_label_param_2 = tk.Label(self.edit_parameter_frame, text=" ").grid(column=0, row=3, sticky="w")
+        if type(list(self.settings[self.parameter_clicked_1.get()].values())[0]) == list: 
+            self.entry_param_xyz = tk.Frame(self.edit_parameter_frame)
+            self.entry_param_xyz.grid(column=0, row=4, sticky="w")
+            self.entry_param_xyz_list = []
+            self.entry_param_xyz_label = []
+            for i in range(3):
+                self.entry_param_xyz_label.append(tk.Label(self.entry_param_xyz, text="X" if i==0 else "Y" if i==1 else "Z"))
+                self.entry_param_xyz_label[i].grid(column=i, row=0, sticky="w", padx=5)
+                self.entry_param_xyz_list.append(tk.Entry(self.entry_param_xyz, width=7))
+                self.entry_param_xyz_list[i].grid(column=i, row=1, sticky="w", padx=5)
+        else:
+            self.entry_new_parameter = tk.Entry(self.edit_parameter_frame)
+            self.entry_new_parameter.grid(column=0, row=4, sticky="w")
+        
+        self.empty_label_param_3 = tk.Label(self.edit_parameter_frame, text=" ").grid(column=0, row=5, sticky="w")
+        
+        self.save_new_parameter_button = ttk.Button(self.edit_parameter_frame, text="Save", command=self.save_new_parameter)
+        self.save_new_parameter_button.grid(column=0, row=6, sticky="w")
+        
+
+    def save_new_parameter(self):
+        tab_index = self.tab_orders[2]
+        param1 = self.parameter_clicked_1.get()
+        param2 = self.parameter_clicked_2.get()
+        if type(list(self.settings[param1].values())[0]) == list:
+            self.settings[param1][param2] = [float(self.entry_param_xyz_list[i].get()) for i in range(3)]
+        else:
+            self.settings[param1][param2] = self.entry_new_parameter.get()
+        self.parameter_frame.place_forget()
+        self.parameter_frame = tk.Frame(self.tab[tab_index])
+        self.parameter_frame.place(relx = 0.1, rely=0.1, relheight=0.8)
+        
+        self.parameter_treeview = ttk.Treeview(self.parameter_frame, columns = ('Value',))
+        self.parameter_treeview.heading('#0', text='Element')
+        self.parameter_treeview.heading('Value', text='Value')
+        
+        self.populate_tree('', self.settings)
+        self.parameter_treeview.pack(expand=True, fill ='both')      
+        
+           
+    def populate_tree(self, parent, dictionary):
+        sub_name = ['X', 'Y', 'Z']
+        for key, value in dictionary.items():
+            if type(value) == dict:
+                item = self.parameter_treeview.insert(parent, 'end', text=key, open=True)
+                self.populate_tree(item, value)
+         
+            elif type(value) == list:
+                item1 = self.parameter_treeview.insert(parent, 'end', text=key, open=True)
+                for i in range(3):
+                    item = self.parameter_treeview.insert(item1, 'end', text=sub_name[i], values=[str(value[i])])	
+            else:
+                item = self.parameter_treeview.insert(parent, 'end', text=key, values=[str(value)])
         
         
     def set_tab_well_plate(self):
@@ -718,9 +803,9 @@ in which you can select UP TO 6 wells to use. You can then press the save button
                                           command=self.show_camera_control)
         
         self.camera_menu.pack()
-            # self.camera_frame = tk.Canvas(self.camera_control_frame, width=300, height=300)
-            # self.camera_frame.pack()
-            # self.camera_frame.create_rectangle(0, 0, 300, 300, fill="lightgray")
+        self.camera_frame = tk.Canvas(self.camera_control_frame, width=300, height=300)
+        self.camera_frame.pack()
+        self.camera_frame.create_rectangle(0, 0, 300, 300, fill="lightgray")
     
     
     def show_camera_control(self, click):
@@ -772,6 +857,8 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         self.window.destroy()
         
 window = MyWindow()
+
+
 
 
 ## ajouter le fait que d'ecrire dans la box bouge limprimante

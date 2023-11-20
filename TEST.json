@@ -9,7 +9,7 @@
         "Fast speed": 100
     },
     "Tissues": {
-        "Pumping Volume": 95.0,
+        "Pumping Volume": "95.01",
         "Pumping speed": 65,
         "Dropping volume": 10.0,
         "Dropping speed": 151
@@ -57,9 +57,9 @@
     },
     "Offset": {
         "Calibration point": [
-            80,
-            0,
-            0
+            81.0,
+            0.0,
+            0.0
         ],
         "Tip one": [
             38.00000000000027,
