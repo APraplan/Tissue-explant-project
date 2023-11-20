@@ -224,8 +224,7 @@ class Dynamixel:
         for selected_ID in selected_IDs:
             position, dxl_comm_result, dxl_error = self.packet_handler.read4ByteTxRx(self.port_handler, selected_ID, ADDR_PRESENT_POSITION)
             self._print_error_msg("Read position", dxl_comm_result=dxl_comm_result, dxl_error=dxl_error, selected_ID=selected_ID, print_only_if_error=True)
-            reading.append(self.compensate_twos_complement(position, "position"))
-            
+            reading.append(self.compensate_twos_complement(position, "position")) 
         if len(selected_IDs) == 1:
             return reading[0]
         else:

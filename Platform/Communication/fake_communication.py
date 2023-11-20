@@ -111,14 +111,17 @@ class Dynamixel:
             self.write_position(pos=TIP_POSITION[tip_number], ID = id)       
         
     def write_pipette_ul(self, volume_ul, ID = None):
-        print("write_pipette_ul ", volume_ul)
         if volume_ul  > self.pipette_empty:
             volume_ul = self.pipette_empty
         elif volume_ul < 0:
             volume_ul = 0
-        pos = int(PIPETTE_MIN[ID-1] + volume_ul/620.0*(PIPETTE_MAX[ID-1]-PIPETTE_MIN[ID-1]))
-        print("write_pipette_ul ", volume_ul)
-        self.write_position(pos=pos, ID = ID)
+        if type(ID) == list:
+            for id in ID:
+                pos = int(PIPETTE_MIN[id-1] + volume_ul/620.0*(PIPETTE_MAX[id-1]-PIPETTE_MIN[id-1]))
+                self.write_position(pos=pos, ID = id)
+        else:
+            pos = int(PIPETTE_MIN[ID-1] + volume_ul/620.0*(PIPETTE_MAX[ID-1]-PIPETTE_MIN[ID-1]))
+            self.write_position(pos=pos, ID = ID)
             
     def pipette_is_in_position_ul(self, volume_ul, ID = None):
         

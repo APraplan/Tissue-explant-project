@@ -3,29 +3,22 @@ from tkinter import ttk
 import json
 
 import sys
-import platform
 
-if platform.system() == 'Windows':
-    sys.path.append('Platform')
-    sys.path.append('Pictures')
-    sys.path.append('TEP_convNN_96')
-    sys.path.append('Developpement')
-elif platform.system() == 'Linux':
-    sys.path.append(sys.path[0]+'/Platform')
+sys.path.append('Platform')
+sys.path.append('Pictures')
+sys.path.append('Communication')
     
 from Communication.ports_gestion import *
 
 debug = True
 
 if debug:
-    from Communication.fake_communication import * ### ajouter un simulateur de position sil y en a pas
+    from Communication.fake_communication import * 
 else:
-    from vidgear.gears import VideoGear
     from Communication.dynamixel_controller import *
     from Communication.printer_communications import * 
 
 ### ATTENTION AU OFFSET  !!!
-
 
 SETTINGS = "TEST.json"
 X_MIN = 0.0
@@ -137,7 +130,12 @@ class RoundButton(tk.Canvas):
 
     def on_click(self, event):
         print("home position")
-        self.printer_class.move_home()    
+        self.printer_class.homing()
+        # self.anycubic.set_home_pos(x=0, y=0, z=0)
+        self.printer_class.max_x_feedrate(300)
+        self.printer_class.max_y_feedrate(300)
+        self.printer_class.max_z_feedrate(25)   
+        self.printer_class.move_home()
         self.target_class.is_homed = True    
         [self.target_class.coord_value_text[i].set(0) for i in range(3)]
         [self.target_class.coord_value[i].configure(state='normal') for i in range(3)]
@@ -161,7 +159,7 @@ class MyWindow(tk.Tk):
         self.style = ttk.Style()
         self.style.configure("TNotebook.Tab", padding=(15, 10))  # Adjust the padding values as needed
         
-        self.style.configure('cameraStyle.TFrame', background="black")
+        self.style.configure('cameraStyle.TFrame', background="black")  
 
         self.tabControl = ttk.Notebook(self.window)
 
@@ -187,7 +185,7 @@ class MyWindow(tk.Tk):
         '''
         self.is_homed = False
         self.load_parameters()
-        self.tab_orders = [4,1,2,3,0]  # each function will call this with self.tab_orders[i]. If you want to change
+        self.tab_orders = [0,1,2,3,4]  # each function will call this with self.tab_orders[i]. If you want to change
         # the orders of the tabs, for example for debugging, change the order here
         self.tab        = []
         self.title      = []
@@ -268,8 +266,23 @@ in which you can select UP TO 6 wells to use. You can then press the save button
                                    baudrate=57600,
                                    pipette_empty= 525, 
                                    port_name=get_com_port("0403", "6014")) 
-        self.servo_pos = self.dynamixel.read_position(ID=[1,2,3]).copy()
         
+        
+        self.anycubic.connect()
+        
+        self.dynamixel.begin_communication()
+        self.dynamixel.set_operating_mode("position", ID="all")
+        self.dynamixel.write_profile_velocity(100, ID="all")
+        self.dynamixel.set_position_gains(P_gain = 2700, I_gain = 50, D_gain = 5000, ID=1)
+        self.dynamixel.set_position_gains(P_gain = 2700, I_gain = 90, D_gain = 5000, ID=2)
+        self.dynamixel.set_position_gains(P_gain = 2500, I_gain = 40, D_gain = 5000, ID=3)
+        self.tip_number = 0
+        self.pipette_empty=525
+        self.dynamixel.select_tip(tip_number=self.tip_number, ID=3)
+        self.dynamixel.write_pipette_ul(self.pipette_empty, ID=[1,2])
+        self.servo_pos = [self.pipette_empty, self.pipette_empty, 0]
+        # self.dynamixel.select_tip(tip_number=1, ID=3)
+             
         
     def load_parameters(self):
         with open(SETTINGS, 'r') as f:
@@ -303,7 +316,14 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         
         
     def set_tab_parameters(self):
-        None
+        # TODO
+        tab_index = self.tab_orders[2]
+        self.parameter_frame = tk.Frame(self.tab[tab_index])
+        self.parameter_frame.pack()
+        
+        columns = ["Parameter", "Value"]
+        self.parameter_threeview = ttk.Treeview(self.parameter_frame, columns=columns, show="headings")
+        self.parameter_threeview.pack()
         
         
     def set_tab_well_plate(self):
@@ -482,6 +502,8 @@ in which you can select UP TO 6 wells to use. You can then press the save button
                                                      command=self.select_offset)
         self.pipette_offset_selector.grid(column=0, row=1)
         
+        ### TODO     ALREADY APPLY OFFSET IF PRINTER IS HOMED TODO
+        
         self.button_right = ArrowButtonRight(self.xyz_gui_position, target_class=self, printer_class=self.anycubic)
         self.button_right.grid(column=2, row=2, padx=10, pady=10)
         
@@ -540,11 +562,14 @@ in which you can select UP TO 6 wells to use. You can then press the save button
     
     
     def select_offset(self, value):
-        self.offset = self.settings["Offset"][value]    
+        self.offset = self.settings["Offset"][value]   
+        ### TODO apply offset on position if homed   
         print(self.offset)        
      
     
     def move_xyz(self, x=0, y=0, z=0, move_button_cmd=False):
+        ## maybe add a drop down menu with a list of every known position as to make everything faster
+        ## maybe add a drop down menu setting the speeds !  
         if move_button_cmd:
             x = round(float(self.coord_value_text[0].get()),1)
             y = round(float(self.coord_value_text[1].get()),1)
@@ -569,6 +594,7 @@ in which you can select UP TO 6 wells to use. You can then press the save button
             
             
         print("Setting position to X={}, Y={}, Z={}".format(x,y,z))
+        print("Offset is {}".format(self.offset))
         self.anycubic.move_axis(x=x, y=y, z=z, offset=self.offset)
         self.coord_value_text[0].set(str(x))
         self.coord_value_text[1].set(str(y))
@@ -591,7 +617,7 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         self.servo_gui_position = ttk.Frame(self.tab[tab_index])
         self.servo_gui_position.place(relx=gui_x_pos, rely=gui_y_pos, anchor=tk.CENTER)
         
-        self.servo_temp_warning = ttk.Label(self.tab[tab_index], text="?? This button is currently useless, please ignore it ??")
+        self.servo_temp_warning = ttk.Label(self.tab[tab_index], text="!! This button is currently useless, please ignore it !!")
         self.servo_temp_warning.place(relx=gui_x_pos-0.033, rely=0.1, anchor=tk.CENTER)
         self.servo_unit_button = ttk.Button(self.tab[tab_index], textvariable=self.servo_unit_text, command=self.change_unit_servo)
         self.servo_unit_button.place(relx=gui_x_pos-0.033, rely=0.15, anchor=tk.CENTER)
@@ -606,16 +632,17 @@ in which you can select UP TO 6 wells to use. You can then press the save button
             self.servo_buttons.append(ttk.Button(self.servo_frame[i], 
                                                  text="+", 
                                                  width=4,
-                                                 command = lambda idx = i+1: self.move_servo('+', idx)))
+                                                 command = lambda idx = i: self.move_servo('+', idx)))
             self.servo_buttons[2*i].grid(column=0, row=1, ipady=button_height)
             
             self.servo_buttons.append(ttk.Button(self.servo_frame[i], 
                                                  text="-", 
                                                  width=4,
-                                                 command = lambda idx = i+1: self.move_servo('-', idx)))
+                                                 command = lambda idx = i: self.move_servo('-', idx)))
             self.servo_buttons[2*i+1].grid(column=0, row=2, ipady=button_height)
             
             self.servo_values_text.append(tk.StringVar())
+            self.servo_values_text[i].set(self.servo_pos[i])
             self.servo_values.append(tk.Label(self.servo_frame[i], textvariable=self.servo_values_text[i]))
             self.servo_values[i].grid(column=0, row=5, pady = 15)
             
@@ -640,7 +667,7 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         
         #### Buttons for saving the positions of the servos and the motors
         self.save_position_gui = ttk.Frame(self.tab[tab_index])
-        self.save_position_gui.place(relx=gui_x_pos-0.03, rely=gui_y_pos+0.2, anchor=tk.CENTER)   
+        self.save_position_gui.place(relx=gui_x_pos-0.03, rely=gui_y_pos+0.3, anchor=tk.CENTER)   
         
         self.save_text = tk.Label(self.save_position_gui, text=f'''You can save the current positions of the motor and the servo.  \n They will be saved in the {SETTINGS} as : ''')
         self.save_text.grid(column=0, row=0)
@@ -661,12 +688,22 @@ in which you can select UP TO 6 wells to use. You can then press the save button
     def move_servo(self, sign, idx):
         
         ## add buttons for the servo pipette selector
-        if idx == 3:
+        
+        ## add a button lock when at limit ?
+        if idx == 2:
+            ## TODO add maybe a way to still control this servo's position freely
             return
+        
+        # useless bug makes p2 go to 0, then its all fine
         delta = self.servo_step*(1 if sign == '+' else -1)
+        
         self.servo_pos[idx] = self.servo_pos[idx] + delta
-        self.dynamixel.write_pipette_ul(volume_ul=self.servo_pos[idx], ID=idx)
-        self.servo_values_text[idx-1].set(self.servo_pos[idx])
+        if self.servo_pos[idx] > self.pipette_empty:
+            self.servo_pos[idx] = self.pipette_empty
+        elif self.servo_pos[idx] < 0:
+            self.servo_pos[idx] = 0
+        self.dynamixel.write_pipette_ul(volume_ul=self.servo_pos[idx], ID=idx+1)
+        self.servo_values_text[idx].set(self.servo_pos[idx])
         
         
     def set_camera_for_control(self, tab_index):
@@ -681,9 +718,9 @@ in which you can select UP TO 6 wells to use. You can then press the save button
                                           command=self.show_camera_control)
         
         self.camera_menu.pack()
-        self.camera_frame = tk.Canvas(self.camera_control_frame, width=300, height=300)
-        self.camera_frame.pack()
-        self.camera_frame.create_rectangle(0, 0, 300, 300, fill="lightgray")
+            # self.camera_frame = tk.Canvas(self.camera_control_frame, width=300, height=300)
+            # self.camera_frame.pack()
+            # self.camera_frame.create_rectangle(0, 0, 300, 300, fill="lightgray")
     
     
     def show_camera_control(self, click):
