@@ -194,13 +194,15 @@ class MyWindow(tk.Tk):
         self.style      = None
         self.tabControl = None
         
-        self.tabs_name      = ["Mode", "Cameras", "Parameters", "Well plate", 
-                               "Motion Control", "Documentation"]
+        self.tabs_name      = ["Cameras", "Mode", "Parameters", "Well plate", 
+                               "Motion Control", "Documentation"] # Change the orders of the tabs, good for debugging
         
+        self.camera_displayed_text = tk.StringVar()
+        self.camera_displayed_text.set("Camera 2")
         self.frames         = [[],[]]
         self.camera_feed    = [[None, None, None],
-                            [None, None, None]]
-        self.displayed_cameras = [2, 'both', 2]
+                            [None]]
+        self.displayed_cameras = 2
         self.camera_button_text = [None, None]
         self.create_well_variables()
         self.create_motion_variables()
@@ -306,16 +308,16 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         self.dynamixel.write_profile_velocity(self.servo_pos[-1], ID=[1,2])
         
             
-    def set_tabs(self, i):
-        if i == 0:
+    def set_tabs(self, i): # maybe there's a cleaner way of doing this
+        if i == self.tabs_name.index("Mode"):
             self.set_tab_mode()
-        elif i == 1:
+        elif i == self.tabs_name.index("Cameras"):
             self.set_tab_cameras()
-        elif i == 2:
+        elif i == self.tabs_name.index("Parameters"):
             self.set_tab_parameters()
-        elif i == 3:
+        elif i == self.tabs_name.index("Well plate"):
             self.set_tab_well_plate()
-        elif i == 4:
+        elif i == self.tabs_name.index("Motion Control"):
             self.set_tab_motion_control()
             
                   
@@ -329,15 +331,12 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         self.mode_camera_frame = tk.Frame(self.tab[tab_index])
         self.mode_camera_frame.pack()
         
-        self.camera_button_text[0] = tk.StringVar()
-        self.camera_button_text[0].set("Camera 2")
         self.mode_camera_button = ttk.Button(self.mode_camera_frame, 
-                                             textvariable=self.camera_button_text[0], 
-                                             command= lambda idx = 0:self.show_camera_control(idx))
+                                             textvariable=self.camera_displayed_text,
+                                             command= self.show_camera_control)
         self.mode_camera_button.pack()
-        self.camera_feed[0][0] = tk.Label(self.mode_camera_frame, width=480, height=270)
-        self.camera_feed[1][0] = tk.Label(self.mode_camera_frame, width=480, height=270)
-        # self.camera_feed[1][0].pack()  ## this creates a bugged image
+        self.camera_feed_mode = tk.Label(self.mode_camera_frame, width=480, height=270)
+        self.camera_feed_mode.pack()  
         
     
     #### Functions related to the camera tab ####
@@ -346,13 +345,13 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         self.cameras_camera_frame = tk.Frame(self.tab[tab_index])
         self.cameras_camera_frame.pack()
         
+        self.tesstLabel = tk.Label(self.cameras_camera_frame, text="test")
+        self.tesstLabel.place(relx=0.1, rely=0.1)
+        self.camera_feed_camera_0 = tk.Label(self.cameras_camera_frame, width=480, height=270)
+        self.camera_feed_camera_0.place(relx=0.1, rely=0.1)
+        self.camera_feed_camera_1 = tk.Label(self.cameras_camera_frame, width=480, height=270)
+        self.camera_feed_camera_1.place(relx=0.5, rely=0.1)
         
-        self.camera_feed[0][1] = tk.Label(self.mode_camera_frame, width=480, height=270)
-        self.camera_feed[0][1].place(relx=0.1, rely=0.1)
-        self.camera_feed[1][1] = tk.Label(self.mode_camera_frame, width=480, height=270)
-        self.camera_feed[1][1].place(relx=0.5, rely=0.1)
-        
-        self.camera_feed
         if debug == False:
             self.stream1 = cam_gear.camThread("Camera 1", get_cam_index("TV Camera")) 
             self.stream1.start()
@@ -370,6 +369,7 @@ in which you can select UP TO 6 wells to use. You can then press the save button
             # Camera 2 - Macro Camera
             self.stream2 = cam_gear.camThread("Camera 2", get_cam_index("USB2.0 UVC PC Camera"))
         else:
+            self.stream1 = cv2.imread("Developpement/captured_image.jpg")
             self.stream2 = cam_gear.camThread("Camera 2", 0) # laptop camera
         self.stream2.start()
         self.macro_frame = cam_gear.get_cam_frame(self.stream2)
@@ -385,7 +385,9 @@ in which you can select UP TO 6 wells to use. You can then press the save button
             self.invert = cv.invert(self.frame)
             img = self.frame.copy()
             self.format_image(img, idx = 0)
-            
+        else:
+            frame = cv2.imread("Developpement/captured_image.jpg")
+            self.format_image(frame, idx = 0)    
         self.macro_frame = cam_gear.get_cam_frame(self.stream2) 
         self.format_image(self.macro_frame, idx = 1)
             
@@ -395,11 +397,21 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         img = Image.fromarray(img)
         self.frames[idx] = ImageTk.PhotoImage(image=img)
-        for i in range(len(self.camera_feed[idx])):
-            if self.displayed_cameras[i] == 'both' or self.displayed_cameras[i] == idx+1:
-            
-                self.camera_feed[idx][i].configure(image=self.frames[idx])
-                self.camera_feed[idx][i].image = self.frames[idx]
+        
+        self.display_camera_feed()
+        
+        
+    def display_camera_feed(self):
+        ## make this look nicer please
+        self.camera_feed_mode.configure(image=self.frames[self.displayed_cameras-1])
+        self.camera_feed_mode.image = self.frames[self.displayed_cameras-1]
+        self.camera_feed_control.configure(image=self.frames[self.displayed_cameras-1])
+        self.camera_feed_control.image = self.frames[self.displayed_cameras-1]
+        
+        self.camera_feed_camera_0.configure(image=self.frames[0])
+        self.camera_feed_camera_0.image = self.frames[0]
+        # self.camera_feed_camera_1.configure(image=self.frames[1])
+        # self.camera_feed_camera_1.image = self.frames[1]
         
         
     #### Functions related to the parameter tab ####    
@@ -904,41 +916,24 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         
     def set_camera_for_control(self, tab_index):
         self.camera_control_frame = tk.Frame(self.tab[tab_index])
-        self.camera_control_frame.place(relx=0.5, rely=0.1, anchor=tk.CENTER)  
-        
-        self.camera_button_text[1] = tk.StringVar()
-        self.camera_button_text[1].set("Camera 2")    
+        self.camera_control_frame.place(relx=0.5, rely=0.3, anchor=tk.CENTER)  
+           
         self.control_camera_button = ttk.Button(self.camera_control_frame, 
-                                                textvariable=self.camera_button_text[1], 
-                                                command= lambda idx = 2:self.show_camera_control(idx))
+                                                textvariable=self.camera_displayed_text, 
+                                                command=self.show_camera_control)
         self.control_camera_button.pack()
         
-        self.control_camera_frame = tk.Frame(self.camera_control_frame)
-        self.control_camera_frame.pack()
-         ## why two label. We can use the same one for both camera, and just switch the images
-        self.camera_feed[0][2] = tk.Label(self.mode_camera_frame, width=480, height=270)
-        self.camera_feed[1][2] = tk.Label(self.mode_camera_frame, width=480, height=270)
+        self.camera_feed_control = tk.Label(self.camera_control_frame, width=480, height=270)
+        self.camera_feed_control.pack()
     
     
-    def show_camera_control(self,idx): ### make it useful for tab mode
-        ### there's a bug somehow... 
-        ### try to display one camera feed by default.
-        if self.camera_button_text[int(idx/2)].get() == "Camera 1":
-            try:
-                self.camera_feed[1][idx].pack_forget()
-            except:
-                pass
-            self.camera_feed[0][idx].pack()
-            self.camera_button_text[int(idx/2)].set("Camera 2")
-            self.displayed_cameras[idx] = 2
+    def show_camera_control(self): 
+        if self.camera_displayed_text.get() == "Camera 1":
+            self.camera_displayed_text.set("Camera 2")
+            self.displayed_cameras = 2
         else:
-            try:
-                self.camera_feed[0][idx].pack_forget()
-            except:
-                pass
-            # self.camera_feed[1][idx].pack()
-            self.camera_button_text[int(idx/2)].set("Camera 1")
-            self.displayed_cameras[idx] = 1
+            self.camera_displayed_text.set("Camera 1")
+            self.displayed_cameras = 1
     
         
     def change_unit_servo(self):
