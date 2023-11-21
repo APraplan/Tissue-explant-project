@@ -185,16 +185,25 @@ class MyWindow(tk.Tk):
         '''
         self.is_homed = False
         self.load_parameters()
-        self.tab_orders = [2,1,0,3,4]  # each function will call this with self.tab_orders[i]. If you want to change
-        # the orders of the tabs, for example for debugging, change the order here
         # TODO replace by some get id from tabs_name
         self.tab        = []
         self.title      = []
         self.style      = None
         self.tabControl = None
         
-        self.tabs_name      = ["Mode", "Cameras", "Parameters", "Well plate", "XYZ Control"]
+        self.tabs_name      = ["Mode", "Cameras", "Parameters", "Well plate", "Motion Control", "Documentation"]
         
+        self.create_well_variables()
+        self.create_motion_variables()
+        self.connect_printer_dynamixel()
+        
+    
+    def load_parameters(self):
+        with open(SETTINGS, 'r') as f:
+            self.settings = json.load(f)
+            
+            
+    def create_well_variables(self):
         self.options        = ["TPP6", "TPP12", "TPP24", "TPP48", "NUNC48", "FALCON48"]
         self.label_col      = ["A", "B", "C", "D", "E", "F"]
         self.label_row      = ["1", "2", "3", "4", "5", "6", "7", "8"]
@@ -202,7 +211,7 @@ class MyWindow(tk.Tk):
         self.selected_wells = []
         self.well_dim_x     = 300
         self.well_dim_y     = 480
-        self.drop           = None
+        self.well_menu           = None
         
         self.well_plate_label   = None
         self.well_plate         = None
@@ -220,7 +229,8 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         self.well_reset_button      = None
         self.well_save_button       = None
         
-        
+                
+    def create_motion_variables(self):
         self.button_bottom  = None
         self.button_top     = None
         self.button_left    = None
@@ -249,14 +259,20 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         self.servo_values_text  = []
         self.servo_gui_position = None
         self.servo_unit_button  = None 
-        self.servo_unit_value   = 'steps'
+        self.is_unit_percentage   = False
         self.servo_step_buttons = []
         self.servo_grid_steps   = None
         self.servo_step         = 1
         self.servo_pos          = []
         
-        self.servo_names    = ["Servo pipette 1", "Servo pipette 2", "Servo pipette selector"]
+        self.servo_names    = ["Servo pipette 1", "Servo pipette 2", "Servo speed"]
         
+        self.tip_number = 0
+        self.pipette_empty = 525
+        self.servo_pos = [self.pipette_empty, self.pipette_empty, 30]
+                
+                
+    def connect_printer_dynamixel(self):
         self.anycubic = Printer(descriptive_device_name="printer", 
                                 port_name=get_com_port("1A86", "7523"), 
                                 baudrate=115200)
@@ -266,8 +282,7 @@ in which you can select UP TO 6 wells to use. You can then press the save button
                                    series_name=["xl", "xl", "xl"], 
                                    baudrate=57600,
                                    pipette_empty= 525, 
-                                   port_name=get_com_port("0403", "6014")) 
-        
+                                   port_name=get_com_port("0403", "6014"))
         
         self.anycubic.connect()
         
@@ -277,19 +292,11 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         self.dynamixel.set_position_gains(P_gain = 2700, I_gain = 50, D_gain = 5000, ID=1)
         self.dynamixel.set_position_gains(P_gain = 2700, I_gain = 90, D_gain = 5000, ID=2)
         self.dynamixel.set_position_gains(P_gain = 2500, I_gain = 40, D_gain = 5000, ID=3)
-        self.tip_number = 0
-        self.pipette_empty=525
         self.dynamixel.select_tip(tip_number=self.tip_number, ID=3)
         self.dynamixel.write_pipette_ul(self.pipette_empty, ID=[1,2])
-        self.servo_pos = [self.pipette_empty, self.pipette_empty, 0]
-        # self.dynamixel.select_tip(tip_number=1, ID=3)
-             
+        self.dynamixel.write_profile_velocity(self.servo_pos[-1], ID=[1,2])
         
-    def load_parameters(self):
-        with open(SETTINGS, 'r') as f:
-            self.settings = json.load(f)
-        
-        
+            
     def set_tabs(self, i):
         if i == 0:
             self.set_tab_mode()
@@ -300,24 +307,25 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         elif i == 3:
             self.set_tab_well_plate()
         elif i == 4:
-            self.set_tab_xyz_control()
+            self.set_tab_motion_control()
             
                   
-    def debug(self, *args):
+    def debug(self):
+        print(self.parameter_clicked_1.get(), self.parameter_clicked_2.get())
         
-        print(args)
-        
-                 
+    
+    #### Functions related to the mode tab ####            
     def set_tab_mode(self):
         None
         
-        
+    
+    #### Functions related to the camera tab ####
     def set_tab_cameras(self):
         None
         
-        
+    #### Functions related to the parameter tab ####    
     def set_tab_parameters(self):
-        tab_index = self.tab_orders[2]
+        tab_index = self.tabs_name.index("Parameters")
         
         self.parameter_frame = tk.Frame(self.tab[tab_index])
         self.parameter_frame.place(relx = 0.1, rely=0.1, relheight=0.8)
@@ -333,32 +341,40 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         self.edit_parameter_frame = tk.Frame(self.tab[tab_index])
         self.edit_parameter_frame.place(relx = 0.6, rely=0.3)
         
-        self.parameter_clicked_1 = tk.StringVar()
-        self.parameter_clicked_1.set(" ")
+        self.param_list = list(self.settings.keys())
+        self.param_list.remove("Well")
         
+        self.parameter_clicked_1 = tk.StringVar()
+        self.parameter_clicked_1.set(self.param_list[0])
         self.parameter_menu = ttk.OptionMenu(self.edit_parameter_frame,
                                              self.parameter_clicked_1,
-                                             list(self.settings.keys())[0],
-                                             *list(self.settings.keys()),
+                                             self.param_list[0],
+                                             *self.param_list,
                                              command=self.show_parameters)
         self.parameter_menu.grid(column=0, row=0, sticky="w")
+        self.show_parameters(self.parameter_clicked_1.get())
         self.empty_label_param_1 = tk.Label(self.edit_parameter_frame, text=" ").grid(column=0, row=1, sticky="w")
         
     
     def show_parameters(self, click):
-        
+        try:
+            self.sub_parameter_frame.grid_forget()
+        except:
+            pass
+        self.sub_parameter_frame = tk.Frame(self.edit_parameter_frame)
+        self.sub_parameter_frame.grid(column=0, row=2, sticky="w")
         self.parameter_clicked_2 = tk.StringVar()
         self.parameter_clicked_2.set(" ")
-        self.parameter_menu_2 = ttk.OptionMenu(self.edit_parameter_frame,
+        self.parameter_menu_2 = ttk.OptionMenu(self.sub_parameter_frame,
                                                 self.parameter_clicked_2,
                                                 list(self.settings[click].keys())[0],
                                                 *list(self.settings[click].keys()))
-        self.parameter_menu_2.grid(column=0, row=2, sticky="w")
+        self.parameter_menu_2.grid(column=0, row=0, sticky="w")
         
-        self.empty_label_param_2 = tk.Label(self.edit_parameter_frame, text=" ").grid(column=0, row=3, sticky="w")
+        self.empty_label_param_2 = tk.Label(self.sub_parameter_frame, text=" ").grid(column=0, row=1, sticky="w")
         if type(list(self.settings[self.parameter_clicked_1.get()].values())[0]) == list: 
-            self.entry_param_xyz = tk.Frame(self.edit_parameter_frame)
-            self.entry_param_xyz.grid(column=0, row=4, sticky="w")
+            self.entry_param_xyz = tk.Frame(self.sub_parameter_frame)
+            self.entry_param_xyz.grid(column=0, row=2, sticky="w")
             self.entry_param_xyz_list = []
             self.entry_param_xyz_label = []
             for i in range(3):
@@ -367,23 +383,36 @@ in which you can select UP TO 6 wells to use. You can then press the save button
                 self.entry_param_xyz_list.append(tk.Entry(self.entry_param_xyz, width=7))
                 self.entry_param_xyz_list[i].grid(column=i, row=1, sticky="w", padx=5)
         else:
-            self.entry_new_parameter = tk.Entry(self.edit_parameter_frame)
-            self.entry_new_parameter.grid(column=0, row=4, sticky="w")
+            self.entry_new_parameter = tk.Entry(self.sub_parameter_frame)
+            self.entry_new_parameter.grid(column=0, row=3, sticky="w")
         
-        self.empty_label_param_3 = tk.Label(self.edit_parameter_frame, text=" ").grid(column=0, row=5, sticky="w")
+        self.empty_label_param_3 = tk.Label(self.sub_parameter_frame, text=" ").grid(column=0, row=4, sticky="w")
         
-        self.save_new_parameter_button = ttk.Button(self.edit_parameter_frame, text="Save", command=self.save_new_parameter)
-        self.save_new_parameter_button.grid(column=0, row=6, sticky="w")
-        
+        self.save_new_parameter_button = ttk.Button(self.sub_parameter_frame, text="Save", command=self.save_new_parameter)
+        self.save_new_parameter_button.grid(column=0, row=5, sticky="w")
+
 
     def save_new_parameter(self):
-        tab_index = self.tab_orders[2]
+        tab_index = self.tabs_name.index("Parameters")
         param1 = self.parameter_clicked_1.get()
         param2 = self.parameter_clicked_2.get()
         if type(list(self.settings[param1].values())[0]) == list:
-            self.settings[param1][param2] = [float(self.entry_param_xyz_list[i].get()) for i in range(3)]
+            for i in range(3):
+                if self.entry_param_xyz_list[i].get().isdigit():
+                    self.settings[param1][param2][i] = round(float(self.entry_param_xyz_list[i].get()),2)
+                elif self.entry_param_xyz_list[i].get() == "":
+                    self.settings[param1][param2][i] = 0
+                else:
+                    print("Incorrect input. Please write a number here. If your number uses a comma, please replace it with '.'")
+                    return
         else:
-            self.settings[param1][param2] = self.entry_new_parameter.get()
+            if self.entry_new_parameter.get().isdigit():
+                self.settings[param1][param2] = round(float(self.entry_new_parameter.get()),2) 
+            elif self.entry_new_parameter.get() == "":
+                return
+            else:
+                print("Incorrect input. Please write a number here. If your number uses a comma, please replace it with '.'")
+                return
         self.parameter_frame.place_forget()
         self.parameter_frame = tk.Frame(self.tab[tab_index])
         self.parameter_frame.place(relx = 0.1, rely=0.1, relheight=0.8)
@@ -409,26 +438,27 @@ in which you can select UP TO 6 wells to use. You can then press the save button
                     item = self.parameter_treeview.insert(item1, 'end', text=sub_name[i], values=[str(value[i])])	
             else:
                 item = self.parameter_treeview.insert(parent, 'end', text=key, values=[str(value)])
+    
         
-        
+    #### Functions related to the Well plate tab ####    
     def set_tab_well_plate(self):
         
-        tab_index = self.tab_orders[3]
+        tab_index = self.tabs_name.index("Well plate")
         
         self.clicked = tk.StringVar()
         self.clicked.set(" ")
         
-        self.drop = ttk.OptionMenu(self.tab[tab_index], ## eventuellement changer pour un combobox.
+        self.well_menu = ttk.OptionMenu(self.tab[tab_index], ## eventuellement changer pour un combobox.
                                   self.clicked,
                                   self.options[0],
                                   *self.options,
                                   command=self.show_wells)    
              
-        # self.drop = ttk.Combobox(self.tab[tab_index], ## eventuellement changer pour un combobox.
+        # self.well_menu = ttk.Combobox(self.tab[tab_index], ## eventuellement changer pour un combobox.
         #                          state="readonly",
         #                          values=self.options,
         #                          command=self.show_wells) #look how to bind command to combobox
-        self.drop.place(relx=0.3, rely=0.3, anchor=tk.CENTER)
+        self.well_menu.place(relx=0.3, rely=0.3, anchor=tk.CENTER)
         
         self.well_menu_description = tk.Label(self.tab[tab_index], text="Select a well plate")
         self.well_menu_description.place(relx=0.3, rely=0.2, anchor=tk.CENTER)
@@ -471,17 +501,18 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         
         
     def show_wells(self, click):
-        tab_index = self.tab_orders[3]
+        
+        ## rewrite this to include a try except for place_forget()
+        tab_index = self.tabs_name.index("Well plate")
         self.selected_well_plate = click
         if self.well_plate_label is not None: # check if it exists
             self.well_plate_label.place_forget()
             self.selected_wells = []
             self.text_well_results.set("")
             self.text_remaining_wells.set("")
-            for i in range(len(self.well_buttons)):
+            for i in range(len(self.well_buttons)): 
                 self.well_buttons[i].grid_forget()
             self.well_buttons = []
-            self.selected_wells = []
             
         if self.well_plate is not None:
             self.well_plate.place_forget()
@@ -537,11 +568,6 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         else:
             self.text_remaining_wells.set("You can still select "+str(6-len(self.selected_wells))+" wells")
             self.remaining_wells.config(fg="black")
-            
-         
-    def delete_well_plate(self):
-        self.well_plate_label.place_forget()
-        self.well_plate.place_forget() 
         
         
     def save_well_settings(self):
@@ -555,9 +581,10 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         # ici on garde les ancienne cultures en memoires, mais on a number of well qui est bien defini
         # pbm ou pas ?
       
-        
-    def set_tab_xyz_control(self):
-        tab_index = self.tab_orders[4]
+    
+    #### Functions related to the motion control tab ####   
+    def set_tab_motion_control(self):
+        tab_index = self.tabs_name.index("Motion Control")
         
         self.set_motor_control(tab_index)
         self.set_servo_control(tab_index)
@@ -697,17 +724,17 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         button_height = 8
         self.servo_unit_text = tk.StringVar()
         self.servo_unit_text.set("Unit currently set to : steps")
-        self.servo_unit_value = 'steps'
+        self.is_unit_percentage = False
         
         self.servo_gui_position = ttk.Frame(self.tab[tab_index])
         self.servo_gui_position.place(relx=gui_x_pos, rely=gui_y_pos, anchor=tk.CENTER)
         
-        self.servo_temp_warning = ttk.Label(self.tab[tab_index], text="!! This button is currently useless, please ignore it !!")
-        self.servo_temp_warning.place(relx=gui_x_pos-0.033, rely=0.1, anchor=tk.CENTER)
-        self.servo_unit_button = ttk.Button(self.tab[tab_index], textvariable=self.servo_unit_text, command=self.change_unit_servo)
+        self.servo_unit_button = ttk.Button(self.tab[tab_index], 
+                                            textvariable=self.servo_unit_text, 
+                                            command=self.change_unit_servo)
         self.servo_unit_button.place(relx=gui_x_pos-0.033, rely=0.15, anchor=tk.CENTER)
         
-        for i in range(3):
+        for i in range(len(self.servo_names)):
             self.servo_frame.append(ttk.Frame(self.servo_gui_position))
             self.servo_frame[i].grid(column=i, row=0, ipadx=spacing)
             
@@ -771,24 +798,29 @@ in which you can select UP TO 6 wells to use. You can then press the save button
      
      
     def move_servo(self, sign, idx):
-        
-        ## add buttons for the servo pipette selector
-        
-        ## add a button lock when at limit ?
+        if not(self.is_unit_percentage) or idx == 2:
+            delta = self.servo_step*(1 if sign == '+' else -1)
+
+        else:
+            delta = self.servo_step*(1 if sign == '+' else -1)*self.pipette_empty/100
+            
+        self.servo_pos[idx] = round(self.servo_pos[idx] + delta,1)
+            
         if idx == 2:
-            ## TODO add maybe a way to still control this servo's position freely
-            return
-        
-        # useless bug makes p2 go to 0, then its all fine
-        delta = self.servo_step*(1 if sign == '+' else -1)
-        
-        self.servo_pos[idx] = self.servo_pos[idx] + delta
-        if self.servo_pos[idx] > self.pipette_empty:
-            self.servo_pos[idx] = self.pipette_empty
-        elif self.servo_pos[idx] < 0:
-            self.servo_pos[idx] = 0
-        self.dynamixel.write_pipette_ul(volume_ul=self.servo_pos[idx], ID=idx+1)
-        self.servo_values_text[idx].set(self.servo_pos[idx])
+            if self.servo_pos[idx] > 100:
+                self.servo_pos[idx] = 100
+            elif self.servo_pos[idx] < 0:
+                self.servo_pos[idx] = 0
+            self.dynamixel.write_profile_velocity(self.servo_pos[idx], ID=[1,2])
+            self.servo_values_text[idx].set(self.servo_pos[idx])
+        else:
+            # useless bug makes p2 go to 0, then its all fine
+            if self.servo_pos[idx] > self.pipette_empty:
+                self.servo_pos[idx] = self.pipette_empty
+            elif self.servo_pos[idx] < 0:
+                self.servo_pos[idx] = 0
+            self.dynamixel.write_pipette_ul(volume_ul=self.servo_pos[idx], ID=idx+1)
+            self.display_servo_pos()
         
         
     def set_camera_for_control(self, tab_index):
@@ -813,14 +845,25 @@ in which you can select UP TO 6 wells to use. You can then press the save button
     
         
     def change_unit_servo(self):
-        if self.servo_unit_text.get() == "Unit currently set to : steps":
+        if not(self.is_unit_percentage):
             self.servo_unit_text.set("Unit currently set to : percentage")
-            self.servo_unit_value = 'percentage'
+            self.is_unit_percentage = True
         else:
             self.servo_unit_text.set("Unit currently set to : steps")
-            self.servo_unit_value = 'steps'
-     
-          
+            self.is_unit_percentage = False
+        self.display_servo_pos()
+            
+    
+    def display_servo_pos(self):
+        
+        if self.is_unit_percentage:
+            self.servo_values_text[0].set(str(round(self.servo_pos[0]/self.pipette_empty*100,1))+"%")
+            self.servo_values_text[1].set(str(round(self.servo_pos[1]/self.pipette_empty*100,1))+"%")   
+        else:
+            self.servo_values_text[0].set(str(self.servo_pos[0]))
+            self.servo_values_text[1].set(str(self.servo_pos[1]))
+            
+            
     def toggle_step(self, step, idx, type):
         if type == 'xyz':
             self.xyz_step = step 
