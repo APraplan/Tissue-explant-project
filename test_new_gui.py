@@ -9,6 +9,10 @@ sys.path.append('Pictures')
 sys.path.append('Communication')
     
 from Communication.ports_gestion import *
+import Platform.computer_vision as cv
+from PIL import Image, ImageTk
+import Developpement.Cam_gear as cam_gear
+import cv2
 
 debug = True
 
@@ -17,6 +21,8 @@ if debug:
 else:
     from Communication.dynamixel_controller import *
     from Communication.printer_communications import * 
+    import Developpement.Cam_gear as cam_gear
+    
 
 ### ATTENTION AU OFFSET  !!!
 
@@ -143,17 +149,17 @@ class RoundButton(tk.Canvas):
         
 class MyWindow(tk.Tk):
     def __init__(self): 
+        super().__init__()
         # eventuellement ajouter des class pour les boutons, pour mieux gerer les scenarios, dui gnre les well plate button
         self.create_variables()
-        self.window = tk.Tk()
-
+        self.isOpen = True
         
-        self.window.protocol("WM_DELETE_WINDOW", self.close_window)
-        self.window.geometry("1200x700")
-        self.window.title("X-Plant control panel")
+        self.title("X-Plant control panel")
+        self.geometry("1200x700")
+        self.protocol("WM_DELETE_WINDOW", self.close_window)
 
-        self.title = tk.Label(self.window, text="X-plant", font=("Arial Bold", 18))
-        self.title.grid()
+        self.title_ = tk.Label(self, text="X-plant", font=("Arial Bold", 18))
+        self.title_.grid()
 
         # Create a style to configure the notebook
         self.style = ttk.Style()
@@ -161,17 +167,16 @@ class MyWindow(tk.Tk):
         
         self.style.configure('cameraStyle.TFrame', background="black")  
 
-        self.tabControl = ttk.Notebook(self.window)
+        self.tabControl = ttk.Notebook(self)
 
         for i in range(len(self.tabs_name)):
             self.tab.append(ttk.Frame(self.tabControl))
             self.tabControl.add(self.tab[i], text=self.tabs_name[i])
             self.set_tabs(i)
         self.tabControl.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")  # Adjust as needed
-        self.window.columnconfigure(0, minsize=400, weight=1)
-        self.window.rowconfigure(1, minsize=400,weight=1)
+        self.columnconfigure(0, minsize=400, weight=1)
+        self.rowconfigure(1, minsize=400,weight=1)
 
-        self.window.mainloop()
         
         
     def create_variables(self):
@@ -185,14 +190,18 @@ class MyWindow(tk.Tk):
         '''
         self.is_homed = False
         self.load_parameters()
-        # TODO replace by some get id from tabs_name
         self.tab        = []
-        self.title      = []
         self.style      = None
         self.tabControl = None
         
-        self.tabs_name      = ["Mode", "Cameras", "Parameters", "Well plate", "Motion Control", "Documentation"]
+        self.tabs_name      = ["Mode", "Cameras", "Parameters", "Well plate", 
+                               "Motion Control", "Documentation"]
         
+        self.frames         = [[],[]]
+        self.camera_feed    = [[None, None, None],
+                            [None, None, None]]
+        self.displayed_cameras = [2, 'both', 2]
+        self.camera_button_text = [None, None]
         self.create_well_variables()
         self.create_motion_variables()
         self.connect_printer_dynamixel()
@@ -311,17 +320,87 @@ in which you can select UP TO 6 wells to use. You can then press the save button
             
                   
     def debug(self):
-        print(self.parameter_clicked_1.get(), self.parameter_clicked_2.get())
+        print("test")
         
     
     #### Functions related to the mode tab ####            
     def set_tab_mode(self):
-        None
+        tab_index = self.tabs_name.index("Mode")
+        self.mode_camera_frame = tk.Frame(self.tab[tab_index])
+        self.mode_camera_frame.pack()
+        
+        self.camera_button_text[0] = tk.StringVar()
+        self.camera_button_text[0].set("Camera 2")
+        self.mode_camera_button = ttk.Button(self.mode_camera_frame, 
+                                             textvariable=self.camera_button_text[0], 
+                                             command= lambda idx = 0:self.show_camera_control(idx))
+        self.mode_camera_button.pack()
+        self.camera_feed[0][0] = tk.Label(self.mode_camera_frame, width=480, height=270)
+        self.camera_feed[1][0] = tk.Label(self.mode_camera_frame, width=480, height=270)
+        # self.camera_feed[1][0].pack()  ## this creates a bugged image
         
     
     #### Functions related to the camera tab ####
     def set_tab_cameras(self):
-        None
+        tab_index = self.tabs_name.index("Cameras")
+        self.cameras_camera_frame = tk.Frame(self.tab[tab_index])
+        self.cameras_camera_frame.pack()
+        
+        
+        self.camera_feed[0][1] = tk.Label(self.mode_camera_frame, width=480, height=270)
+        self.camera_feed[0][1].place(relx=0.1, rely=0.1)
+        self.camera_feed[1][1] = tk.Label(self.mode_camera_frame, width=480, height=270)
+        self.camera_feed[1][1].place(relx=0.5, rely=0.1)
+        
+        self.camera_feed
+        if debug == False:
+            self.stream1 = cam_gear.camThread("Camera 1", get_cam_index("TV Camera")) 
+            self.stream1.start()
+            frame = cam_gear.get_cam_frame(self.stream1)  
+            self.cam = cv.Camera(frame)
+            self.frame = self.cam.undistort(frame)
+            self.invert = cv.invert(self.frame)
+            self.mask = cv.create_mask(200, self.frame.shape[0:2], (self.frame.shape[1]//2, self.frame.shape[0]//2))
+            self.intruder_detector = cv.create_intruder_detector()
+            self.min_radius = 15
+            self.max_radius = 38
+            self.detect_attempt = 0
+            self.max_detect_attempt = 50
+            
+            # Camera 2 - Macro Camera
+            self.stream2 = cam_gear.camThread("Camera 2", get_cam_index("USB2.0 UVC PC Camera"))
+        else:
+            self.stream2 = cam_gear.camThread("Camera 2", 0) # laptop camera
+        self.stream2.start()
+        self.macro_frame = cam_gear.get_cam_frame(self.stream2)
+        self.picture_pos = -self.settings["Offset"]["Tip one"][0]
+        
+        
+    def update_cameras(self):
+        
+        ## We capture the frame and format it accordingly to be used by tkinter, 
+        if debug == False:
+            frame = cam_gear.get_cam_frame(self.stream1) 
+            self.frame = self.cam.undistort(frame)
+            self.invert = cv.invert(self.frame)
+            img = self.frame.copy()
+            self.format_image(img, idx = 0)
+            
+        self.macro_frame = cam_gear.get_cam_frame(self.stream2) 
+        self.format_image(self.macro_frame, idx = 1)
+            
+        
+    def format_image(self, img, idx):
+        img = cv2.resize(img, (320, 180))
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        img = Image.fromarray(img)
+        self.frames[idx] = ImageTk.PhotoImage(image=img)
+        for i in range(len(self.camera_feed[idx])):
+            if self.displayed_cameras[i] == 'both' or self.displayed_cameras[i] == idx+1:
+            
+                self.camera_feed[idx][i].configure(image=self.frames[idx])
+                self.camera_feed[idx][i].image = self.frames[idx]
+        
         
     #### Functions related to the parameter tab ####    
     def set_tab_parameters(self):
@@ -825,23 +904,41 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         
     def set_camera_for_control(self, tab_index):
         self.camera_control_frame = tk.Frame(self.tab[tab_index])
-        self.camera_control_frame.place(relx=0.5, rely=0.5, anchor=tk.CENTER)  
+        self.camera_control_frame.place(relx=0.5, rely=0.1, anchor=tk.CENTER)  
         
-        options = ["Camera 1", "Camera 2"]
-        self.clicked_camera_control= tk.StringVar()
-        self.camera_menu = tk.OptionMenu(self.camera_control_frame, 
-                                          self.clicked_camera_control, 
-                                          *options, 
-                                          command=self.show_camera_control)
+        self.camera_button_text[1] = tk.StringVar()
+        self.camera_button_text[1].set("Camera 2")    
+        self.control_camera_button = ttk.Button(self.camera_control_frame, 
+                                                textvariable=self.camera_button_text[1], 
+                                                command= lambda idx = 2:self.show_camera_control(idx))
+        self.control_camera_button.pack()
         
-        self.camera_menu.pack()
-        self.camera_frame = tk.Canvas(self.camera_control_frame, width=300, height=300)
-        self.camera_frame.pack()
-        self.camera_frame.create_rectangle(0, 0, 300, 300, fill="lightgray")
+        self.control_camera_frame = tk.Frame(self.camera_control_frame)
+        self.control_camera_frame.pack()
+         ## why two label. We can use the same one for both camera, and just switch the images
+        self.camera_feed[0][2] = tk.Label(self.mode_camera_frame, width=480, height=270)
+        self.camera_feed[1][2] = tk.Label(self.mode_camera_frame, width=480, height=270)
     
     
-    def show_camera_control(self, click):
-        pass
+    def show_camera_control(self,idx): ### make it useful for tab mode
+        ### there's a bug somehow... 
+        ### try to display one camera feed by default.
+        if self.camera_button_text[int(idx/2)].get() == "Camera 1":
+            try:
+                self.camera_feed[1][idx].pack_forget()
+            except:
+                pass
+            self.camera_feed[0][idx].pack()
+            self.camera_button_text[int(idx/2)].set("Camera 2")
+            self.displayed_cameras[idx] = 2
+        else:
+            try:
+                self.camera_feed[0][idx].pack_forget()
+            except:
+                pass
+            # self.camera_feed[1][idx].pack()
+            self.camera_button_text[int(idx/2)].set("Camera 1")
+            self.displayed_cameras[idx] = 1
     
         
     def change_unit_servo(self):
@@ -897,13 +994,25 @@ in which you can select UP TO 6 wells to use. You can then press the save button
     def close_window(self):  
         with open("TEST.json", "w") as jsonFile:
             json.dump(self.settings, jsonFile, indent=4)
-        self.window.destroy()
+        try :
+            self.stream2.stop()
+        except:
+            pass
+        try:
+            self.stream1.stop()
+        except:
+            pass
+        self.destroy()
+        self.isOpen = False
         
-window = MyWindow()
 
 
+if __name__ == "__main__":
+    window = MyWindow()
+    
+    while window.isOpen:
+        window.update_cameras()
+        window.update()
+        window.update_idletasks()
 
-
-## ajouter le fait que d'ecrire dans la box bouge limprimante
-## tout pareil avec les servos
 ## peut etre un bouton pour reset les positions des servos

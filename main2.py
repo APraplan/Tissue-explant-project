@@ -12,5 +12,15 @@ elif platform.system() == 'Linux':
     
 from Platform.platform_lib import platform_pick_and_place
 from Platform.test_new_gui import MyWindow
+import Developpement.Cam_gear as cam_gear
     
 window = MyWindow()
+
+
+# while window.isOpen:
+#     window.update_cameras()
+#     window.update()
+#     window.update_idletasks()
+
+window.debug()
+window.mainloop()

@@ -18,6 +18,7 @@ else:
     from vidgear.gears import VideoGear
     from Communication.dynamixel_controller import *
     from Communication.printer_communications import *
+    import Developpement.Cam_gear as cam_gear
 
 
 class platform_pick_and_place:
