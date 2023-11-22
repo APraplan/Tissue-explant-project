@@ -110,7 +110,7 @@ class Dynamixel:
     def select_tip(self, tip_number, ID = None):
             self.write_position(pos=TIP_POSITION[tip_number], ID = id)       
         
-    def write_pipette_ul(self, volume_ul, ID = None):
+    def write_pipette_ul(self, volume_ul, ID = None, purging = False):
         if volume_ul  > self.pipette_empty:
             volume_ul = self.pipette_empty
         elif volume_ul < 0:

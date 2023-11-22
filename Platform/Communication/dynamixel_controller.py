@@ -367,7 +367,6 @@ class Dynamixel:
         else:
             return False
         
-
         
     def select_tip(self, tip_number, ID = None):
         '''
@@ -407,8 +406,6 @@ class Dynamixel:
         for selected_ID in selected_IDs:
             pos = int(PIPETTE_MIN[selected_ID-1] + volume_ul/620.0*(PIPETTE_MAX[selected_ID-1]-PIPETTE_MIN[selected_ID-1]))
             self.write_position(pos=pos, ID = selected_ID)
-            
-        
             
             
     def pipette_is_in_position_ul(self, volume_ul, ID = None):

@@ -228,6 +228,20 @@ class Printer:
     
     def get_finish_flag(self):
         return self._finish
+    
+    def change_idle_time(self, time = 120):
+        self.send_gcode("M84 S" + str(time), printMsg=False)
+    
+    def disable_axis(self, x = False, y = False, z = False, all = False):
+        command = "M18"
+        if x or all:
+            command = command + " X"
+        if y or all:
+            command = command + " Y"
+        if z or all:
+            command = command + " Z"
+            
+        self.send_gcode(command, printMsg=False)
                         
         
 class position:
@@ -235,5 +249,5 @@ class position:
         self.x = x
         self.y = y
         self.z = z
-        self.e = e
+        self.e = e  
         self.f = f

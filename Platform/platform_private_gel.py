@@ -5,7 +5,7 @@ def vial(name):
     Input:  name :      (string) A or B
     Output: position :  [x, y, z]
     '''
-    if name == 'A':
+    if name == 'A':  # to change to use self.settings I guess
         return [25.5, 120, 60]
     elif name == 'B':
         return [54.5, 120, 60]

@@ -1,6 +1,6 @@
 {
     "Position": {
-        "Pick height": 2.0,
+        "Pick height": 54.0,
         "Drop height": "4.8"
     },
     "Speed": {
@@ -76,5 +76,39 @@
             55.300000000000516,
             0
         ]
+    },
+    "Saved Positions": {
+        "big_pos_1": {
+            "X": "12.5",
+            "Y": "140.0",
+            "Z": "55.0",
+            "Servo 1": "525",
+            "Servo 2": "525",
+            "Servo Speed": "30"
+        },
+        "big_pos_2": {
+            "X": "39.5",
+            "Y": "140.0",
+            "Z": "55.0",
+            "Servo 1": "525",
+            "Servo 2": "525",
+            "Servo Speed": "30"
+        },
+        "big_pos_3": {
+            "X": "66.5",
+            "Y": "140.0",
+            "Z": "55.0",
+            "Servo 1": "525",
+            "Servo 2": "525",
+            "Servo Speed": "30"
+        },
+        "test": {
+            "X": "",
+            "Y": "",
+            "Z": "",
+            "Servo 1": 525,
+            "Servo 2": 523,
+            "Servo Speed": 30
+        }
     }
 }

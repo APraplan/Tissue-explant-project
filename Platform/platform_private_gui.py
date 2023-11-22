@@ -66,7 +66,7 @@ def calibration_sequence(self):
         frame = cam_gear.get_cam_frame(self.stream1) 
         self.frame = self.cam.undistort(frame)
         self.invert = cv.invert(self.frame)
-        imshow = self.frame.copy()
+        imshow = self.frame.copy()  ## why is invert not used ??
         
         # self.macro_frame = cam_gear.get_cam_frame(self.stream2) 
             
