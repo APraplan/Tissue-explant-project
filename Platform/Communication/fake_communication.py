@@ -5,11 +5,12 @@ PIPETTE_MAX = [2880, 1250]
 TIP_POSITION = [3072, 2560, 3584]
 
 class Dynamixel:
-    def __init__(self, ID, descriptive_device_name, port_name, baudrate, pipette_empty, series_name = "xm"):
+    def __init__(self, ID, descriptive_device_name, port_name, baudrate, pipette_max_ul, series_name = "xm"):
         logger.debug(f"Initializing Dynamixel {ID} on port {port_name} with baudrate {baudrate}")
         self.ID = ID
         self.positions = {}
-        self.pipette_empty = pipette_empty
+        self.pipette_max_ul = pipette_max_ul
+        self.pipette_empty = self.pipette_max_ul - 100
         
         if type(ID) == list:
             for id in ID:
@@ -117,15 +118,15 @@ class Dynamixel:
             volume_ul = 0
         if type(ID) == list:
             for id in ID:
-                pos = int(PIPETTE_MIN[id-1] + volume_ul/620.0*(PIPETTE_MAX[id-1]-PIPETTE_MIN[id-1]))
+                pos = int(PIPETTE_MIN[id-1] + volume_ul/self.pipette_max_ul*(PIPETTE_MAX[id-1]-PIPETTE_MIN[id-1]))
                 self.write_position(pos=pos, ID = id)
         else:
-            pos = int(PIPETTE_MIN[ID-1] + volume_ul/620.0*(PIPETTE_MAX[ID-1]-PIPETTE_MIN[ID-1]))
+            pos = int(PIPETTE_MIN[ID-1] + volume_ul/self.pipette_max_ul*(PIPETTE_MAX[ID-1]-PIPETTE_MIN[ID-1]))
             self.write_position(pos=pos, ID = ID)
             
     def pipette_is_in_position_ul(self, volume_ul, ID = None):
         
-        d_pos = int(PIPETTE_MIN[ID-1] + volume_ul/620.0*(PIPETTE_MAX[ID-1]-PIPETTE_MIN[ID-1]))
+        d_pos = int(PIPETTE_MIN[ID-1] + volume_ul/self.pipette_max_ul*(PIPETTE_MAX[ID-1]-PIPETTE_MIN[ID-1]))
         
         a_pos = self.read_position(ID = ID)
         

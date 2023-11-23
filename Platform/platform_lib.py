@@ -62,10 +62,11 @@ class platform_pick_and_place:
         self.pipette_1_pos = 0
         self.pipette_2_pos = 0
         self.pipette_full = 0
-        self.pipette_empty = 525
+        self.pipette_max_ul = 625
+        self.pipette_empty = self.pipette_max_ul - 100
         
         self.dyna = Dynamixel(ID=[1,2,3], descriptive_device_name="XL430 test motor", series_name=["xl", "xl", "xl"], baudrate=57600,
-                pipette_empty= self.pipette_empty, port_name=get_com_port("0403", "6014")) 
+                pipette_max_ul= self.pipette_max_ul, port_name=get_com_port("0403", "6014")) 
 
         
         # Tissues

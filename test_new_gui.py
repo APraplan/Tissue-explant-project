@@ -8,13 +8,13 @@ sys.path.append('Platform')
 sys.path.append('Pictures')
 sys.path.append('Communication')
     
-from Communication.ports_gestion import *
+from Communication.ports_gestion import * # check how to get rid of this warning
 import Platform.computer_vision as cv
 from PIL import Image, ImageTk
 import Developpement.Cam_gear as cam_gear
 import cv2
 
-debug = False
+debug = True
 
 if debug:
     from Communication.fake_communication import * 
@@ -283,8 +283,8 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         
         
         self.tip_number = 0
-        self.pipette_empty = 525
-        self.pipette_max_ul = 550 ## this variable shouldn't exists! We should calibrate with the value inside write_pipette_ul
+        self.pipette_max_ul = 650 ## this variable shouldn't exists! We should calibrate with the value inside write_pipette_ul
+        self.pipette_empty = self.pipette_max_ul-100
         self.servo_pos = [self.pipette_empty, self.pipette_empty, 30]
                 
                 
@@ -297,7 +297,7 @@ in which you can select UP TO 6 wells to use. You can then press the save button
                                    descriptive_device_name="XL430 test motor", 
                                    series_name=["xl", "xl", "xl"], 
                                    baudrate=57600,
-                                   pipette_empty= 525, 
+                                   pipette_max_ul = self.pipette_max_ul,
                                    port_name=get_com_port("0403", "6014"))
         
         self.anycubic.connect()
@@ -392,7 +392,7 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         if debug == False:
             frame = cam_gear.get_cam_frame(self.stream1) 
             self.frame = self.cam.undistort(frame)
-            self.invert = cv.invert(self.frame)
+            self.invert = cv.invert(self.frame)  ### a quoi sert ce invert ??
             img = self.frame.copy()
             self.format_image(img, idx = 0)
         else:
@@ -400,6 +400,7 @@ in which you can select UP TO 6 wells to use. You can then press the save button
             self.format_image(frame, idx = 0)    
         self.macro_frame = cam_gear.get_cam_frame(self.stream2) 
         self.format_image(self.macro_frame, idx = 1)
+        self.display_camera_feed()
         
         
     def format_image(self, img, idx):
@@ -407,8 +408,6 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         img = Image.fromarray(img)
         self.frames[idx] = ImageTk.PhotoImage(image=img)
-        
-        self.display_camera_feed()
         
         
     def display_camera_feed(self):
@@ -428,22 +427,16 @@ in which you can select UP TO 6 wells to use. You can then press the save button
     def set_tab_parameters(self):
         tab_index = self.tabs_name.index("Parameters")
         
-        self.parameter_frame = tk.Frame(self.tab[tab_index])
-        self.parameter_frame.place(relx = 0.1, rely=0.1, relheight=0.8)
-        
-        self.parameter_treeview = ttk.Treeview(self.parameter_frame, columns = ('Value',))
-        self.parameter_treeview.heading('#0', text='Element')
-        self.parameter_treeview.heading('Value', text='Value')
-        
+        self.update_parameters()
         self.populate_tree('', self.settings)
         self.parameter_treeview.pack(expand=True, fill ='both')
-        
         
         self.edit_parameter_frame = tk.Frame(self.tab[tab_index])
         self.edit_parameter_frame.place(relx = 0.6, rely=0.3)
         
         self.param_list = list(self.settings.keys())
         self.param_list.remove("Well")
+        self.param_list.remove("Saved Positions")
         
         self.parameter_clicked_1 = tk.StringVar()
         self.parameter_clicked_1.set(self.param_list[0])
@@ -473,6 +466,7 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         self.parameter_menu_2.grid(column=0, row=0, sticky="w")
         
         self.empty_label_param_2 = tk.Label(self.sub_parameter_frame, text=" ").grid(column=0, row=1, sticky="w")
+        
         if type(list(self.settings[self.parameter_clicked_1.get()].values())[0]) == list: 
             self.entry_param_xyz = tk.Frame(self.sub_parameter_frame)
             self.entry_param_xyz.grid(column=0, row=2, sticky="w")
@@ -518,7 +512,10 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         
         
     def update_parameters(self):
-        self.parameter_frame.place_forget()
+        try:
+            self.parameter_frame.place_forget()
+        except:
+            pass
         self.parameter_frame = tk.Frame(self.tab[self.tabs_name.index("Parameters")])
         self.parameter_frame.place(relx = 0.1, rely=0.1, relheight=0.8)
         
@@ -547,13 +544,15 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         
     #### Functions related to the Well plate tab ####    
     def set_tab_well_plate(self):
+        # call menu function
+        # call well plate function
         
         tab_index = self.tabs_name.index("Well plate")
         
         self.clicked = tk.StringVar()
         self.clicked.set(" ")
         
-        self.well_menu = ttk.OptionMenu(self.tab[tab_index], ## eventuellement changer pour un combobox.
+        self.well_menu = ttk.OptionMenu(self.tab[tab_index],
                                   self.clicked,
                                   self.options[0],
                                   *self.options,
@@ -598,7 +597,6 @@ in which you can select UP TO 6 wells to use. You can then press the save button
                                             command= lambda: self.show_wells(self.clicked.get())) 
         
         self.well_reset_button.grid(column=1, row=0)
-        # add the number of remaining cell one can select
         
         
     def show_wells(self, click):
@@ -626,7 +624,7 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         self.well_plate_label = ttk.Label(self.tab[tab_index], text=self.clicked.get()) 
         self.well_plate_label.place(relx=0.7, rely=0.05, anchor=tk.CENTER)
         
-        self.well_plate = tk.Frame(self.tab[tab_index], width=well_dim_x, height=well_dim_y, bg="lightgray") # make it look better, yikes
+        self.well_plate = tk.Frame(self.tab[tab_index], width=well_dim_x, height=well_dim_y, bg="lightgray") # make it look better, yikes, maybe use radiobutton
         self.well_plate.place(relx=0.7, rely=0.5, anchor=tk.CENTER)
         
         
@@ -642,7 +640,7 @@ in which you can select UP TO 6 wells to use. You can then press the save button
                                                    width=5, 
                                                    relief="raised", 
                                                    command=lambda idx = index: (self.toggle_well(idx, self.layout[well_id]))))
-                self.well_buttons[index].grid(column=i, row=j)  # issue here when switching between well plates
+                self.well_buttons[index].grid(column=i, row=j) 
                 index = index + 1
                 
     
@@ -664,7 +662,7 @@ in which you can select UP TO 6 wells to use. You can then press the save button
             self.text_well_results.set("You have selected the following wells:"+str(self.selected_wells))
             
         if len(self.selected_wells)==6:
-            self.text_remaining_wells.set("You cannot select more wells") ### write in red pls
+            self.text_remaining_wells.set("You cannot select more wells") 
             self.remaining_wells.config(fg="red")
         else:
             self.text_remaining_wells.set("You can still select "+str(6-len(self.selected_wells))+" wells")
@@ -678,9 +676,6 @@ in which you can select UP TO 6 wells to use. You can then press the save button
             self.settings["Well"][f"Culture {i+1}"] = self.selected_wells[i]    
         with open('TEST.json', 'w') as f:
             json.dump(self.settings, f, indent=4)
-            
-        # ici on garde les ancienne cultures en memoires, mais on a number of well qui est bien defini
-        # pbm ou pas ?
       
     
     #### Functions related to the motion control tab ####   
@@ -980,12 +975,10 @@ in which you can select UP TO 6 wells to use. You can then press the save button
     def move_servo(self, sign, idx):
         
         ## add something for the purge here
-        if (self.servo_unit_clicked.get() == self.unit_list[0]) or idx == 2:
+        if not(self.servo_unit_clicked.get() == self.unit_list[1]) or idx == 2:
             delta = self.servo_step*(1 if sign == '+' else -1)
-        elif self.servo_unit_clicked.get() == self.unit_list[1]:
-            delta = self.servo_step*(1 if sign == '+' else -1)*self.pipette_empty/100
         else:
-            delta = self.servo_step*(1 if sign == '+' else -1)*self.pipette_empty/self.pipette_max_ul
+            delta = self.servo_step*(1 if sign == '+' else -1)*self.pipette_empty/100
             
         self.servo_pos[idx] = round(self.servo_pos[idx] + delta,1)
             
@@ -999,8 +992,8 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         else:
             if self.servo_pos[idx] > self.pipette_empty and self.purging == False:
                 self.servo_pos[idx] = self.pipette_empty
-            elif self.servo_pos[idx] > self.pipette_empty+100 and self.purging == False:
-                self.servo_pos[idx] = self.pipette_empty+100
+            elif self.servo_pos[idx] > self.pipette_max_ul and self.purging == True:
+                self.servo_pos[idx] = self.pipette_max_ul
             elif self.servo_pos[idx] < 0:
                 self.servo_pos[idx] = 0
                 
@@ -1047,8 +1040,8 @@ in which you can select UP TO 6 wells to use. You can then press the save button
             self.servo_values_text[0].set(str(round(self.servo_pos[0]/self.pipette_empty*100,1))+"%")
             self.servo_values_text[1].set(str(round(self.servo_pos[1]/self.pipette_empty*100,1))+"%")   
         elif self.servo_unit_clicked.get() == self.unit_list[2]:
-            self.servo_values_text[0].set(str(round(self.pipette_max_ul-self.servo_pos[0]*self.pipette_max_ul/self.pipette_empty,1))+"μl")
-            self.servo_values_text[1].set(str(round(self.pipette_max_ul-self.servo_pos[1]*self.pipette_max_ul/self.pipette_empty,1))+"μl")   
+            self.servo_values_text[0].set(str(round(self.pipette_empty-self.servo_pos[0],1))+"μl")
+            self.servo_values_text[1].set(str(round(self.pipette_empty-self.servo_pos[1],1))+"μl")   
         else:
             self.servo_values_text[0].set(str(self.servo_pos[0]))
             self.servo_values_text[1].set(str(self.servo_pos[1]))
@@ -1116,7 +1109,8 @@ if __name__ == "__main__":
     
     while window.isOpen:
         window.update_cameras()
+        # maybe create a liste of coordinate, that is the waitlist for the commands, and then execute them one by one, once the one prior is done ?
+        # check how the code handles 2 xyz moves commands in a row, maybe it's just between the anycubic and the dynamixel that there is no wait time
         window.update()
         window.update_idletasks()
 
-## peut etre un bouton pour reset les positions des servos
