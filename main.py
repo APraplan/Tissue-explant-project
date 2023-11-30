@@ -10,6 +10,7 @@ elif platform.system() == 'Linux':
     # sys.path.append(sys.path[0]+'/Pictures/*')
     # sys.path.append(sys.path[0]+'/TEP_convNN_96')
 
+
     # sudo chmod a+rw /dev/ttyUSB0 if connection issues (Errno 13)
 from Platform.platform_lib import platform_pick_and_place
 

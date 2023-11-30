@@ -1,25 +1,32 @@
 
-def vial(name):
+def vial(settings, name):
     '''
     Returns the position of the vials A and B. These should be the water's vial and the cellmatrix solution's vial.
-    Input:  name :      (string) A or B
+    Input:  settings :  (json) The settings.json file (should be self.settings)
+            name :      (string) A, B, or Wash
     Output: position :  [x, y, z]
     '''
     if name == 'A':  # to change to use self.settings I guess
-        return [25.5, 120, 60]
+        # return [25.5, 120, 60]
+        return settings["Positions"]["Solution A"]
     elif name == 'B':
-        return [54.5, 120, 60]
+        # return [54.5, 120, 60]
+        return settings["Positions"]["Solution B"]
+    elif name =='Wash':
+        return settings["Positions"]["Wash"]
     else:
         print('Wrong vial name')
         
         
-def tube(name):
+def tube(settings, name):
     '''
     Returns the position of the desired tube (for the first part of the mixture, without the cellmatrix solution)
-    Input:  name :      (string) A, B, C, D, E or F
+    Input:  settings :  (json) The settings.json file (should be self.settings)
+            name :      (string) A, B, C, D, E or F
     Output: position :  [x, y]
     '''
-    pos = [5, 140, 42]
+    # pos = [5, 140, 42]
+    pos = settings["Positions"]["Mixing tubes"]
     offset = 14
     
     if name == 'A':
@@ -486,11 +493,20 @@ def homming(self):
         elif self.anycubic.get_finish_flag():
             ''' Once the z-movement is done, defines the different mixing tubes, culture well and solution well's positions, selects the firt tip
             and changes the substate to go to petridish'''
-            self.mixing_well = [tube('A'), tube('B'), tube('C'), tube('D'), tube('E'), tube('F')]
+            self.mixing_well = [tube(self.settings, 'A'), 
+                                tube(self.settings, 'B'),
+                                tube(self.settings, 'C'), 
+                                tube(self.settings, 'D'), 
+                                tube(self.settings, 'E'), 
+                                tube(self.settings, 'F')]
             self.culture_well = [well_plate(self.settings["Well"]["Culture 1"], self.settings["Well"]["Type"]), well_plate(self.settings["Well"]["Culture 2"], self.settings["Well"]["Type"]),
                                  well_plate(self.settings["Well"]["Culture 3"], self.settings["Well"]["Type"]), well_plate(self.settings["Well"]["Culture 4"], self.settings["Well"]["Type"]),
                                  well_plate(self.settings["Well"]["Culture 5"], self.settings["Well"]["Type"]), well_plate(self.settings["Well"]["Culture 6"], self.settings["Well"]["Type"])]
-            self.solution_well = {'Sol A' : vial('A'), 'Sol B' : vial('B'), 'Washing' : vial('A'), 'Dump' : vial('A')}
+            self.solution_well = {'Sol A' : vial(self.settings, 'A'),
+                                  'Sol B' : vial(self.settings, 'B'),
+                                  'Washing' : vial(self.settings, 'Wash'),
+                                  'Dump' : vial(self.settings, 'Wash')}
+            
 
             
             self.tip_number = 1

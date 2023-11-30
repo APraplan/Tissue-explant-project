@@ -4,7 +4,7 @@
         "Drop height": "4.8"
     },
     "Speed": {
-        "Slow speed": "",
+        "Slow speed": 1.0,
         "Medium speed": 8,
         "Fast speed": 100
     },
@@ -45,21 +45,26 @@
     },
     "Well": {
         "Well preparation": true,
-        "Type": "TPP48",
+        "Type": "TPP6",
         "Number of sample per well": 4,
-        "Number of well": 0,
-        "Culture 1": "C1",
-        "Culture 2": "D1",
-        "Culture 3": "E1",
-        "Culture 4": "F1",
-        "Culture 5": "E1",
-        "Culture 6": "F1"
+        "Number of well": 6,
+        "Culture 1": "A2",
+        "Culture 2": "A1",
+        "Culture 3": "B2",
+        "Culture 4": "B1",
+        "Culture 5": "B3",
+        "Culture 6": "A3"
     },
     "Offset": {
+        "None": [
+            1.0,
+            1.0,
+            1.0
+        ],
         "Calibration point": [
-            80.0,
-            0.0,
-            0.0
+            1.1,
+            0.1,
+            2.0
         ],
         "Tip one": [
             38.00000000000027,
@@ -75,6 +80,28 @@
             49.30000000000043,
             55.300000000000516,
             0
+        ]
+    },
+    "Positions": {
+        "Solution A": [
+            26,
+            119,
+            60
+        ],
+        "Solution B": [
+            66,
+            119,
+            60
+        ],
+        "Wash": [
+            46,
+            119,
+            60
+        ],
+        "Mixing tubes": [
+            5,
+            140,
+            42
         ]
     },
     "Saved Positions": {

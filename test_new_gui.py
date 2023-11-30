@@ -2,13 +2,9 @@ import tkinter as tk
 from tkinter import ttk 
 import json
 
-import sys
 
-sys.path.append('Platform')
-sys.path.append('Pictures')
-sys.path.append('Communication')
     
-from Communication.ports_gestion import * # check how to get rid of this warning
+from Platform.Communication.ports_gestion import * # check how to get rid of this warning
 import Platform.computer_vision as cv
 from PIL import Image, ImageTk
 import Developpement.Cam_gear as cam_gear
@@ -17,9 +13,9 @@ import cv2
 debug = True
 
 if debug:
-    from Communication.fake_communication import * 
+    from Platform.Communication.fake_communication import * 
 else:
-    from Communication.dynamixel_controller import *
+    from Platform.Communication.dynamixel_controller import *
     from Communication.printer_communications import * 
     import Developpement.Cam_gear as cam_gear
     
@@ -28,9 +24,9 @@ else:
 
 SETTINGS = "TEST.json"
 X_MIN = 0.0
-X_MAX = 230.0
+X_MAX = 145.0
 Y_MIN = 0.0
-Y_MAX = 230.0
+Y_MAX = 145.0
 Z_MIN = 0.0
 Z_MAX = 180.0
 
@@ -177,6 +173,8 @@ class MyWindow(tk.Tk):
         self.tabControl.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")  # Adjust as needed
         self.columnconfigure(0, minsize=400, weight=1)
         self.rowconfigure(1, minsize=400,weight=1)
+        
+        self.tabControl.select(self.tabs_name.index("Parameters"))
 
         
     def create_variables(self):
@@ -195,7 +193,7 @@ class MyWindow(tk.Tk):
         self.tabControl = None
         
         self.tabs_name      = ["Mode", "Cameras", "Parameters", "Well plate", 
-                               "Motion Control", "Documentation"] # Change the orders of the tabs, good for debugging
+                               "Motion Control", "Documentation"] 
         
         self.camera_displayed_text = tk.StringVar()
         self.displayed_cameras = 1
@@ -215,10 +213,16 @@ class MyWindow(tk.Tk):
             
             
     def create_well_variables(self):
+        # You can add any plates you want here, by defining the name in self.options and its layout in self.layout
         self.options        = ["TPP6", "TPP12", "TPP24", "TPP48", "NUNC48", "FALCON48"]
         self.label_col      = ["A", "B", "C", "D", "E", "F"]
         self.label_row      = ["1", "2", "3", "4", "5", "6", "7", "8"]
-        self.layout         = [[2,3], [3,4], [4,6], [6,8], [6,8], [6,8]]
+        self.layout         = [[2,3], # TPP6
+                               [3,4], # TPP12
+                               [4,6], # TPP24
+                               [6,8], # TPP48
+                               [6,8], # NUNC48
+                               [6,8]] # FALCON48
         self.selected_wells = []
         self.well_dim_x     = 300
         self.well_dim_y     = 480
@@ -283,9 +287,11 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         
         
         self.tip_number = 0
-        self.pipette_max_ul = 650 ## this variable shouldn't exists! We should calibrate with the value inside write_pipette_ul
-        self.pipette_empty = self.pipette_max_ul-100
+        self.pipette_empty = 575 ## this variable shouldn't exists! We should calibrate with the value inside write_pipette_ul
+        self.pipette_max_ul = self.pipette_empty+100 # ONLY FOR PURGING
         self.servo_pos = [self.pipette_empty, self.pipette_empty, 30]
+        
+        self.buffer_moves = []
                 
                 
     def connect_printer_dynamixel(self):
@@ -428,7 +434,7 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         tab_index = self.tabs_name.index("Parameters")
         
         self.update_parameters()
-        self.populate_tree('', self.settings)
+        # self.populate_tree('', self.settings)
         self.parameter_treeview.pack(expand=True, fill ='both')
         
         self.edit_parameter_frame = tk.Frame(self.tab[tab_index])
@@ -488,29 +494,37 @@ in which you can select UP TO 6 wells to use. You can then press the save button
 
 
     def save_new_parameter(self):
-        tab_index = self.tabs_name.index("Parameters")
+        
         param1 = self.parameter_clicked_1.get()
         param2 = self.parameter_clicked_2.get()
         if type(list(self.settings[param1].values())[0]) == list:
+            temp_value = [None,None, None]
             for i in range(3):
-                if self.entry_param_xyz_list[i].get().isdigit():
-                    self.settings[param1][param2][i] = round(float(self.entry_param_xyz_list[i].get()),2)
-                elif self.entry_param_xyz_list[i].get() == "":
-                    self.settings[param1][param2][i] = 0
-                else:
-                    print("Incorrect input. Please write a number here. If your number uses a comma, please replace it with '.'")
+                val = self.check_param_value(self.entry_param_xyz_list[i].get())
+                if val == "Wrong value" :
                     return
+                else:
+                    temp_value[i] = val
+            self.settings[param1][param2] = temp_value
         else:
-            if self.entry_new_parameter.get().isdigit():
-                self.settings[param1][param2] = round(float(self.entry_new_parameter.get()),2) 
-            elif self.entry_new_parameter.get() == "":
+            val = self.check_param_value(self.entry_new_parameter.get())
+            if val == "Wrong value" :
                 return
             else:
-                print("Incorrect input. Please write a number here. If your number uses a comma, please replace it with '.'")
-                return
+                self.settings[param1][param2] = val
         self.update_parameters()
-        
-        
+   
+   
+    def check_param_value(self, val):
+        val_return = True
+        try:
+            val_return = round(float(val), 2)
+        except:
+            print("Incorrect input. Please write a number here. If your number uses a comma, please replace it with '.'")
+            return "Wrong value"    
+        return val_return
+    
+    
     def update_parameters(self):
         try:
             self.parameter_frame.place_forget()
@@ -531,7 +545,7 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         sub_name = ['X', 'Y', 'Z']
         for key, value in dictionary.items():
             if type(value) == dict:
-                item = self.parameter_treeview.insert(parent, 'end', text=key, open=True)
+                item = self.parameter_treeview.insert(parent, 'end', text=key, open=False)
                 self.populate_tree(item, value)
          
             elif type(value) == list:
@@ -597,8 +611,8 @@ in which you can select UP TO 6 wells to use. You can then press the save button
                                             command= lambda: self.show_wells(self.clicked.get())) 
         
         self.well_reset_button.grid(column=1, row=0)
-        
-        
+    
+            
     def show_wells(self, click):
         
         ## rewrite this to include a try except for place_forget()
@@ -676,7 +690,8 @@ in which you can select UP TO 6 wells to use. You can then press the save button
             self.settings["Well"][f"Culture {i+1}"] = self.selected_wells[i]    
         with open('TEST.json', 'w') as f:
             json.dump(self.settings, f, indent=4)
-      
+        self.update_parameters()
+
     
     #### Functions related to the motion control tab ####   
     def set_tab_motion_control(self):
@@ -708,20 +723,21 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         
         self.pipette_selector_frame = ttk.Frame(self.tab[tab_index])
         self.pipette_selector_frame.place(relx=gui_x_pos+0.015, rely=0.12, anchor=tk.CENTER)
-        pipette_name = list(self.settings.get("Offset").keys())[1:]
+        self.pipette_name = list(self.settings.get("Offset").keys())[1:]
         
-        self.offset_selector_text = tk.Label(self.pipette_selector_frame, text="Select the toolhead's offset")
-        self.offset_selector_text.grid(column=0, row=0)
+        self.offset_selector_text = tk.Label(self.pipette_selector_frame, text="Toolhead's offset")
+        self.offset_selector_text.grid(column=0, row=0, padx=10, pady=5)
         
         self.clicked_offset = tk.StringVar()
         self.pipette_offset_selector = tk.OptionMenu(self.pipette_selector_frame,
                                                      self.clicked_offset,
-                                                     *pipette_name,
+                                                     *self.pipette_name,
                                                      command=self.select_offset)
+        self.clicked_offset.set(self.pipette_name[0])
         self.pipette_offset_selector.grid(column=0, row=1)
 
-        self.pipette_selector_text = tk.Label(self.pipette_selector_frame, text="Select the toolhead's servo's position")
-        self.pipette_selector_text.grid(column=0, row=2)
+        self.pipette_selector_text = tk.Label(self.pipette_selector_frame, text="Toolhead's servo's position")
+        self.pipette_selector_text.grid(column=1, row=0, padx=10, pady=5)
         
         self.clicked_pipette = tk.StringVar()
         self.pipette_selector = tk.OptionMenu(self.pipette_selector_frame,
@@ -729,16 +745,10 @@ in which you can select UP TO 6 wells to use. You can then press the save button
                                               *self.toolhead_position,
                                               command=self.select_tip)
         self.clicked_pipette.set(self.toolhead_position[0])
-        self.pipette_selector.grid(column=0, row = 3)
+        self.pipette_selector.grid(column=1, row = 1)
         
         self.reset_axis_button = ttk.Button(self.tab[tab_index], text="Reset axis", command=self.reset_axis)
         self.reset_axis_button.place(relx=gui_x_pos+0.015, rely=0.9, anchor=tk.CENTER)
-        # self.firmware_limit_overwrites_text = tk.StringVar()
-        # self.firmware_limit_overwrites_text.set("Firmware limit overwrites : OFF")
-        # self.firmware_limit_overwrites_button = tk.Button(self.tab[tab_index], 
-        #                                                   textvariable=self.firmware_limit_overwrites_text,
-        #                                                   command=self.firmware_limit_overwrites)
-        # self.firmware_limit_overwrites_button.place(relx=gui_x_pos+0.015, rely=0.9, anchor=tk.CENTER)
         
         ### TODO     ALREADY APPLY OFFSET IF PRINTER IS HOMED TODO
         
@@ -792,7 +802,7 @@ in which you can select UP TO 6 wells to use. You can then press the save button
             self.coord_value.append(tk.Entry(self.coord_value_grid, 
                                              width=7, 
                                              textvariable=self.coord_value_text[i],
-                                             state='readonly'))  ### ajouter les vraies valeurs ici
+                                             state='readonly'))  
             self.coord_value[i].grid(column=i, row=6, padx=17, pady=10)
         
         self.move_xyz_button = ttk.Button(self.coord_value_grid, text="Move", command=lambda: self.move_xyz(move_button_cmd=True))
@@ -816,17 +826,20 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         ## maybe add a drop down menu with a list of every known position as to make everything faster
         ## maybe add a drop down menu setting the speeds !
         for i in range(len(self.coord_value_text)):
-            if not(self.coord_value_text[i].get().isdigit()) and move_button_cmd:
-                print("You need to enter XYZ coords as value, with '.', not letters or other symbols")
-                return
+            if move_button_cmd:
+                try:
+                    float(self.coord_value_text[i].get())
+                except:
+                    print("You need to enter XYZ coords as value, with '.', not letters or other symbols")
+                    return
         if move_button_cmd or go_safe_height:
-            x = round(float(self.coord_value_text[0].get()),1)
-            y = round(float(self.coord_value_text[1].get()),1)
-            z = round(float(self.coord_value_text[2].get()),1)
+            x = round(float(self.coord_value_text[0].get()),2)
+            y = round(float(self.coord_value_text[1].get()),2)
+            z = round(float(self.coord_value_text[2].get()),2)
         else:
-            x = round(float(self.coord_value_text[0].get()) + x,1)
-            y = round(float(self.coord_value_text[1].get()) + y,1)
-            z = round(float(self.coord_value_text[2].get()) + z,1)
+            x = round(float(self.coord_value_text[0].get()) + x,2)
+            y = round(float(self.coord_value_text[1].get()) + y,2)
+            z = round(float(self.coord_value_text[2].get()) + z,2)
             
         if go_safe_height:
             z = self.safe_height
@@ -856,6 +869,7 @@ in which you can select UP TO 6 wells to use. You can then press the save button
     def reset_axis(self):
         self.anycubic.disable_axis(all=True)
         self.offset = [0,0,0]
+        self.clicked_offset.set(self.pipette_name[0])
         for i in range(3):
             self.coord_value_text[i].set("")
             self.coord_value[i].configure(state='readonly')
@@ -1076,7 +1090,23 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         self.settings['Saved Positions'][var]["Servo Speed"] = self.servo_pos[2] 
         self.update_parameters()
             
-     
+    def add_function_to_buffer(self, function, *args):
+        # add a function to the buffer
+        # function is the function to be executed
+        # *args are the arguments of the function
+        self.buffer_moves.append([function, args])
+        
+        
+    def execute_function_from_buffer(self):
+        # check if current move is done
+        # if yes, removes first entry from buffer and executes it
+        # if no, return
+        # if move is done:
+        #     self.buffer_moves.pop(0)
+        #     self.buffer_moves[0][0](*self.buffer_moves[0][1]) ## maybe remove star
+        pass
+        
+        
     def set_tab_documentation(self):
         self.documentation_frame = tk.Frame(self.tab[self.tabs_name.index("Documentation")])
         self.documentation_frame.pack(expand=True, fill ='both')
@@ -1088,6 +1118,7 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         self.doc_text.insert(tk.END, self.documentation_text)
         self.doc_text.configure(state='disabled')
         self.doc_text.configure(relief="flat")
+     
                
     def close_window(self):  
         with open("TEST.json", "w") as jsonFile:
@@ -1109,6 +1140,7 @@ if __name__ == "__main__":
     
     while window.isOpen:
         window.update_cameras()
+        window.execute_function_from_buffer()
         # maybe create a liste of coordinate, that is the waitlist for the commands, and then execute them one by one, once the one prior is done ?
         # check how the code handles 2 xyz moves commands in a row, maybe it's just between the anycubic and the dynamixel that there is no wait time
         window.update()

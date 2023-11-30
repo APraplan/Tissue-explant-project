@@ -44,7 +44,7 @@
         "Inertia min": 0.3
     },
     "Well": {
-        "Well preparation": true,
+        "Well preparation": false,
         "Type": "NUNC48",
         "Number of sample per well": 4,
         "Number of well": 1,
@@ -56,15 +56,20 @@
         "Culture 6": "F1"
     },
     "Offset": {
-        "Calibration point": [
-            80,
+        "None": [
+            0,
             0,
             0
         ],
+        "Calibration point": [
+            80.0,
+            0.0,
+            0.0
+        ],
         "Tip one": [
-            38.00000000000027,
-            76.09999999999995,
-            4.100000000000001
+            36.00000000000024,
+            74.20000000000006,
+            2.7000000000000006
         ],
         "Tip two": [
             38.400000000000276,
@@ -75,6 +80,28 @@
             49.30000000000043,
             55.300000000000516,
             0
+        ]
+    },
+    "Positions": {
+        "Solution A": [
+            26,
+            119,
+            60
+        ],
+        "Solution B": [
+            66,
+            119,
+            60
+        ],
+        "Wash": [
+            46,
+            119,
+            60
+        ],
+        "Mixing tubes": [
+            215,
+            140,
+            42
         ]
     }
 }
