@@ -1,4 +1,3 @@
-
 def vial(settings, name):
     '''
     Returns the position of the vials A and B. These should be the water's vial and the cellmatrix solution's vial.

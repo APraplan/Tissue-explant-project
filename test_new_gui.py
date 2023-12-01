@@ -1,7 +1,7 @@
 import tkinter as tk                     
 from tkinter import ttk 
 import json
-
+import customtkinter as ctk
 
     
 from Platform.Communication.ports_gestion import * # check how to get rid of this warning
@@ -144,7 +144,7 @@ class RoundButton(tk.Canvas):
         [self.target_class.coord_value[i].configure(state='normal') for i in range(3)]
         
         
-class MyWindow(tk.Tk):
+class MyWindow(ctk.CTk):
     def __init__(self): 
         super().__init__()
         # eventuellement ajouter des class pour les boutons, pour mieux gerer les scenarios, dui gnre les well plate button
@@ -155,7 +155,7 @@ class MyWindow(tk.Tk):
         self.geometry("1200x700")
         self.protocol("WM_DELETE_WINDOW", self.close_window)
 
-        self.title_ = tk.Label(self, text="X-plant", font=("Arial Bold", 18))
+        self.title_ = ctk.CTkLabel(self, text="X-plant", font=("Arial Bold", 18))
         self.title_.grid()
 
         # Create a style to configure the notebook
@@ -164,10 +164,10 @@ class MyWindow(tk.Tk):
         
         self.style.configure('cameraStyle.TFrame', background="black")  
 
-        self.tabControl = ttk.Notebook(self)
+        self.tabControl = ctk.CTkTabview(self)
 
         for i in range(len(self.tabs_name)):
-            self.tab.append(ttk.Frame(self.tabControl))
+            self.tab.append(ctk.CTkFrame(self.tabControl))
             self.tabControl.add(self.tab[i], text=self.tabs_name[i])
             self.set_tabs(i)
         self.tabControl.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")  # Adjust as needed
