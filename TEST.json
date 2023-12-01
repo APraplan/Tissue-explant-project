@@ -1,7 +1,7 @@
 {
     "Position": {
-        "Pick height": 1.0,
-        "Drop height": "4.8"
+        "Pick height": 11.0,
+        "Drop height": 11.1
     },
     "Speed": {
         "Slow speed": 1.0,
@@ -45,14 +45,14 @@
     },
     "Well": {
         "Well preparation": true,
-        "Type": "TPP6",
+        "Type": "TPP48",
         "Number of sample per well": 4,
-        "Number of well": 6,
-        "Culture 1": "A2",
-        "Culture 2": "A1",
-        "Culture 3": "B2",
-        "Culture 4": "B1",
-        "Culture 5": "B3",
+        "Number of well": 1,
+        "Culture 1": "C3",
+        "Culture 2": "B1",
+        "Culture 3": "B3",
+        "Culture 4": "A3",
+        "Culture 5": "A4",
         "Culture 6": "A3"
     },
     "Offset": {
@@ -84,9 +84,9 @@
     },
     "Positions": {
         "Solution A": [
-            26,
-            119,
-            60
+            1.0,
+            1.0,
+            1.1
         ],
         "Solution B": [
             66,

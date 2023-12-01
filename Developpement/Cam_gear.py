@@ -77,8 +77,8 @@ def get_cam_frame(cam):  # function to be called externally to get the frame.
 if __name__ == "__main__":
     
     # Create two threads as follows
-    thread1 = camThread("Camera 1", get_cam_index("TV Camera"), preview = True) 
-    thread2 = camThread("Camera 2", get_cam_index("USB2.0 UVC PC Camera"), preview = True)
+    thread1 = camThread("Camera 1", 0, preview = True) 
+    # thread2 = camThread("Camera 2", get_cam_index("USB2.0 UVC PC Camera"), preview = True)
     thread1.start()
-    thread2.start()
+    # thread2.start()
     time.sleep(30)
