@@ -267,7 +267,8 @@ class platform_pick_and_place:
             self.state = self.last_state
         if self.state == 'Done':
             if self.settings["Well"]["Well preparation"]:
-                self.state = 'preparing gel'
+                # self.state = 'preparing gel' ## add here prep sol A
+                self.state = 'spreading solution A'
             else:
                 self.state = 'detect'
             self.sub_state = 'go to position'

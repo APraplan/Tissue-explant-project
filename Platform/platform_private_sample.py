@@ -83,7 +83,7 @@ def check_pickup_two(self):
     logger.info(f"🔮 Prediciton results {res[0, 0]}")
     
     if res > 0.5:
-        return True
+        return False ## change here to take picture repeatedlz
     else:
         return False
     
@@ -250,14 +250,18 @@ def picture(self):
                 self.anycubic.move_axis_relative(x=self.picture_pos, y=100, f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip one"])
             else:
                 self.anycubic.move_axis_relative(x=self.picture_pos, y=dest[1], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip one"])
+            
+            self.anycubic.set_position(x=-self.x_firmware_limit_overwrite) 
+            self.anycubic.move_axis_relative(x=self.picture_pos, offset=self.settings["Offset"]["Tip one"])
             self.anycubic.finish_request()
             self.com_state = 'send'
             
         elif self.anycubic.get_finish_flag():
             
             # print(check_pickup_two(self))
-            if delay(self, 0.5):
+            if delay(self, 1.5):
                 if check_pickup_two(self):
+                    # add pause here to check on the camera status
                     self.state = 'place'
                     self.sub_state = 'go to position'
                     self.com_state = 'not send' 
@@ -266,7 +270,11 @@ def picture(self):
                 else:
                     self.state = 'reset'
                     self.sub_state = 'go to position'
-                    self.com_state = 'not send'     
+                    self.com_state = 'not send'  
+                  
+                self.anycubic.move_axis_relative(z=self.safe_height, offset=self.settings["Offset"]["Tip one"])
+                self.anycubic.move_axis_relative(x = -self.x_firmware_limit_overwrite)
+                self.anycubic.set_position(x = 0)   
                 
 def place(self):
 

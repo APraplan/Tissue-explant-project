@@ -25,7 +25,7 @@ def tube(settings, name):
     Output: position :  [x, y]
     '''
     # pos = [5, 140, 42]
-    pos = settings["Positions"]["Mixing tubes"]
+    pos = settings["Positions"]["Mixing tubes"].copy()
     offset = 14
     
     if name == 'A':
@@ -137,12 +137,12 @@ def spreading_solution_A(self):
             
              
     elif self.sub_state == 'go to sol A':
-        '''' Moves to the vial containing the solution A'''
+        ''' Moves to the vial containing the solution A'''
         if self.com_state == 'not send':
             ''' Moves up (z) to a safe position, as to not break anything, moves to the vial containing the solution A, and finally enters'''
             self.anycubic.move_axis_relative(z=self.solution_well['Sol A'][2], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
             self.anycubic.move_axis_relative(x=self.solution_well['Sol A'][0], y=self.solution_well['Sol A'][1], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
-            self.anycubic.move_axis_relative(z=self.settings["Gel"]["Vial pumping height"], f=self.settings["Offset"]["Camera"], offset=self.settings["Offset"]["Tip two"]) 
+            self.anycubic.move_axis_relative(z=self.settings["Gel"]["Vial pumping height"], f=self.settings["Speed"]["Medium speed"], offset=self.settings["Offset"]["Tip two"]) 
             self.anycubic.finish_request() 
             self.com_state = 'send'  
             
@@ -253,6 +253,7 @@ def preparing_gel(self):
                 self.dyna.write_pipette_ul(self.pipette_2_pos, ID = 2, purging = False)
             elif self.prep_gel_done:
                 self.state = 'detect'
+                self.sub_state = 'go to position'
                 self.com_state = 'not send'
             else:
                 self.sub_state = 'go to sol B' 
@@ -391,7 +392,8 @@ def preparing_gel(self):
             # self.state = 'detect'
             # self.sub_state = 'go to position'
             # self.com_state = 'not send'
-
+            
+    ## TODO THIS IS MISSING NOW
             # Only gel prep
             # self.well_num += 1
             # if self.well_num >= len(self.culture_well) or self.well_num >= self.settings["Well"]["Number of well"]:
@@ -599,7 +601,7 @@ def homming(self):
         if self.anycubic.get_finish_flag():
             ''' Changes stat  to preparing well if the parameter has been set to true, else changes state to detect'''
             if self.settings["Well"]["Well preparation"]:
-                self.state = 'preparing gel'
+                self.state = 'spreading solution A'
                 self.prep_gel_done = False
             else:
                 self.state = 'detect'

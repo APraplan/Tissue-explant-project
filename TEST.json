@@ -45,12 +45,12 @@
     },
     "Well": {
         "Well preparation": true,
-        "Type": "TPP48",
+        "Type": "TPP6",
         "Number of sample per well": 4,
-        "Number of well": 1,
-        "Culture 1": "C3",
+        "Number of well": 3,
+        "Culture 1": "A1",
         "Culture 2": "B1",
-        "Culture 3": "B3",
+        "Culture 3": "A2",
         "Culture 4": "A3",
         "Culture 5": "A4",
         "Culture 6": "A3"
