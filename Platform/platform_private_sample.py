@@ -272,7 +272,6 @@ def picture(self):
                     self.sub_state = 'go to position'
                     self.com_state = 'not send'  
                   
-                self.anycubic.move_axis_relative(z=self.safe_height, offset=self.settings["Offset"]["Tip one"])
                 self.anycubic.move_axis_relative(x = -self.x_firmware_limit_overwrite)
                 self.anycubic.set_position(x = 0)   
                 

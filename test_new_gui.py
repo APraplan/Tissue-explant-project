@@ -4,13 +4,13 @@ import json
 import customtkinter as ctk
 
     
-from Platform.Communication.ports_gestion import * # check how to get rid of this warning
+from Platform.Communication.ports_gestion import * 
 import Platform.computer_vision as cv
 from PIL import Image, ImageTk
 import Developpement.Cam_gear as cam_gear
 import cv2
 
-debug = False
+debug = True
 
 if debug:
     from Platform.Communication.fake_communication import * 
@@ -273,6 +273,8 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         self.z_button_up    = None
         self.z_button_down  = None
         
+        self.last_pos = [0,0,0]
+        
         self.z_label = None                  
                 
         self.offset = [0,0,0]
@@ -439,7 +441,7 @@ in which you can select UP TO 6 wells to use. You can then press the save button
     #### Functions related to the parameter tab ####    
     def set_tab_parameters(self):
         self.param_tree_frame = ctk.CTkFrame(self.tabControl.tab("Parameters"))
-        self.param_tree_frame.place(relx = 0.1, rely=0.1, relheight=0.8)
+        self.param_tree_frame.place(relx = 0.1, rely=0.1, relheight=0.8, relwidth=0.5)
         self.update_parameters()
         
         self.edit_parameter_frame = ctk.CTkFrame(self.tabControl.tab("Parameters"))
@@ -533,27 +535,26 @@ in which you can select UP TO 6 wells to use. You can then press the save button
             self.parameter_frame.place_forget()
         except:
             pass
-        # self.parameter_frame = tk.Frame(self.tabControl.tab("Parameters"))
-        # self.parameter_frame.place(relx = 0.1, rely=0.1, relheight=0.8)
-        
         
         bg_color = self._apply_appearance_mode(ctk.ThemeManager.theme["CTkFrame"]["fg_color"])
         text_color = self._apply_appearance_mode(ctk.ThemeManager.theme["CTkLabel"]["text_color"])
         selected_color = self._apply_appearance_mode(ctk.ThemeManager.theme["CTkButton"]["fg_color"])
         treestyle = ttk.Style()
         treestyle.theme_use('default')
-        treestyle.configure("Treeview", background=bg_color, foreground=text_color, fieldbackground=bg_color, borderwidth=0)
+        treestyle.configure("Treeview", background=bg_color, foreground=text_color, fieldbackground=bg_color, borderwidth=0, font=('Arial', 12))
         treestyle.map('Treeview', background=[('selected', bg_color)], foreground=[('selected', selected_color)])
         self.bind("<<TreeviewSelect>>", lambda event: self.focus_set())
         
-        self.parameter_treeview = ttk.Treeview(self.param_tree_frame, columns = ('Value',), show="tree")
+        self.parameter_treeview = ttk.Treeview(self.param_tree_frame, columns = ('Value',))
         self.parameter_treeview.heading('#0', text='Element')
+        self.parameter_treeview.column("#0", width= 250)
+        
         self.parameter_treeview.heading('Value', text='Value')
+        self.parameter_treeview.column("Value", width= 100)
         
         self.populate_tree('', self.settings)
         self.parameter_treeview.place(relx=0.3, relheight=1)
-        
-        # self.parameter_treeview.pack(expand=True, fill ='both')      
+              
         
            
     def populate_tree(self, parent, dictionary):
@@ -853,10 +854,25 @@ in which you can select UP TO 6 wells to use. You can then press the save button
             
         print("Setting position to X={}, Y={}, Z={}".format(x,y,z))
         print("Offset is {}".format(self.offset))
+         # ATTENTION DIFFERENCE BETWEEN STEPS AND MOVE COMMAND !!
+         # When we do a move command, currently, we lose the last position, 
+         # which is important for setting the correct negativ pos
+         # also, once this is done, there may be a bug, when changing the offset, while in negative
+        if x < 0 or self.last_pos[0] < 0:
+            print("GOING IN X-NEGATIVE DOMAIN")
+            delta = round(x - self.last_pos[0],2)
+            if delta < 0: # we go further into the negative
+                self.anycubic.set_position(x = -delta) 
+            elif x < 0: # we go in positive direction, but still in negative
+                self.anycubic.set_position(x = delta)
+            else: # we return to positive domain
+                self.anycubic.set_position(x = self.last_pos[0])
+            # WARNING, BE SURE IT WORKS PROPERLY WHEN WE GO BACK IN POSITIV
         self.anycubic.move_axis_relative(x=x, y=y, z=z, offset=self.offset)
         self.coord_value_text[0].set(str(x))
         self.coord_value_text[1].set(str(y))
         self.coord_value_text[2].set(str(z))
+        self.last_pos = [x,y,z]
         # Maybe find a way to read the coordinate instead of writing them manually into self.coord_value_text  
         
     

@@ -500,15 +500,17 @@ def homming(self):
                                 tube(self.settings, 'D'), 
                                 tube(self.settings, 'E'), 
                                 tube(self.settings, 'F')]
-            self.culture_well = [well_plate(self.settings["Well"]["Culture 1"], self.settings["Well"]["Type"]), well_plate(self.settings["Well"]["Culture 2"], self.settings["Well"]["Type"]),
-                                 well_plate(self.settings["Well"]["Culture 3"], self.settings["Well"]["Type"]), well_plate(self.settings["Well"]["Culture 4"], self.settings["Well"]["Type"]),
-                                 well_plate(self.settings["Well"]["Culture 5"], self.settings["Well"]["Type"]), well_plate(self.settings["Well"]["Culture 6"], self.settings["Well"]["Type"])]
+            self.culture_well = [well_plate(self.settings["Well"]["Culture 1"], self.settings["Well"]["Type"]),
+                                 well_plate(self.settings["Well"]["Culture 2"], self.settings["Well"]["Type"]),
+                                 well_plate(self.settings["Well"]["Culture 3"], self.settings["Well"]["Type"]),
+                                 well_plate(self.settings["Well"]["Culture 4"], self.settings["Well"]["Type"]),
+                                 well_plate(self.settings["Well"]["Culture 5"], self.settings["Well"]["Type"]),
+                                 well_plate(self.settings["Well"]["Culture 6"], self.settings["Well"]["Type"])]
             self.solution_well = {'Sol A' : vial(self.settings, 'A'),
                                   'Sol B' : vial(self.settings, 'B'),
                                   'Washing' : vial(self.settings, 'Wash'),
                                   'Dump' : vial(self.settings, 'Wash')}
             
-
             
             self.tip_number = 1
             self.dyna.select_tip(tip_number=self.tip_number, ID=3)
