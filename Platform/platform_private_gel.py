@@ -471,6 +471,7 @@ def preparing_gel(self):
             # self.state = 'detect'
             # self.sub_state = 'go to position'
             self.prep_gel_done = True
+            self.well_num += 1
             self.sub_state = 'go to purge position'
             self.com_state = 'not send'  
             
@@ -610,3 +611,5 @@ def homming(self):
 
             self.sub_state = 'go to position'
             self.com_state = 'not send'   
+            
+        
