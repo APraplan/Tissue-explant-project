@@ -139,12 +139,11 @@ def spreading_solution_A(self):
     elif self.sub_state == 'go to sol A':
         ''' Moves to the vial containing the solution A'''
         if self.com_state == 'not send':
-            ''' Moves up (z) to a safe position, as to not break anything, moves to the vial containing the solution A, and finally enters'''
-            self.anycubic.move_axis_relative(z=self.solution_well['Sol A'][2], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
-            self.anycubic.move_axis_relative(x=self.solution_well['Sol A'][0], y=self.solution_well['Sol A'][1], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
-            self.anycubic.move_axis_relative(z=self.settings["Gel"]["Vial pumping height"], f=self.settings["Speed"]["Medium speed"], offset=self.settings["Offset"]["Tip two"]) 
-            self.anycubic.finish_request() 
-            self.com_state = 'send'  
+            self.move_tool_head(pos=self.solution_well['Sol A'],
+                                height= self.settings["Gel"]["Vial pumping height"], 
+                                move_speed=self.settings["Speed"]["Fast speed"], 
+                                z_move_speed=self.settings["Speed"]["Medium speed"], 
+                                offset=self.settings["Offset"]["Tip two"])
             
         elif self.anycubic.get_finish_flag():
             ''' Once it is done entering the vial, changes the substate to pumping'''
@@ -170,12 +169,11 @@ def spreading_solution_A(self):
     elif self.sub_state == 'fill well':
         '''Moves to the mixing tubes'''
         if self.com_state == 'not send':
-            ''' Moves up (z) to a safe position, as to not break anything, moves to the tubes, and finally enters'''
-            self.anycubic.move_axis_relative(z=self.mixing_well[self.solution_prep_num][2], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
-            self.anycubic.move_axis_relative(x=self.mixing_well[self.solution_prep_num][0], y=self.mixing_well[self.solution_prep_num][1], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
-            self.anycubic.move_axis_relative(z=self.settings["Gel"]["Well plate pumping height"], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"]) 
-            self.anycubic.finish_request() 
-            self.com_state = 'send'  
+            self.move_tool_head(pos=self.mixing_well[self.solution_prep_num],
+                                height= self.settings["Gel"]["Well plate pumping height"], 
+                                move_speed=self.settings["Speed"]["Fast speed"], 
+                                z_move_speed=self.settings["Speed"]["Medium speed"], 
+                                offset=self.settings["Offset"]["Tip two"])
             
         elif self.anycubic.get_finish_flag():
             ''' Waits until the movement is done, then changes the substate to mix down'''
@@ -263,12 +261,11 @@ def preparing_gel(self):
     elif self.sub_state == 'go to sol B':
         ''' Moves to the vial containing the solution B'''
         if self.com_state == 'not send':
-            
-            self.anycubic.move_axis_relative(z=self.solution_well['Sol B'][2], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
-            self.anycubic.move_axis_relative(x=self.solution_well['Sol B'][0], y=self.solution_well['Sol B'][1], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
-            self.anycubic.move_axis_relative(z=self.settings["Gel"]["Vial pumping height"], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"]) 
-            self.anycubic.finish_request() 
-            self.com_state = 'send'  
+            self.move_tool_head(pos=self.solution_well['Sol B'],
+                                height= self.settings["Gel"]["Vial pumping height"], 
+                                move_speed=self.settings["Speed"]["Fast speed"], 
+                                z_move_speed=self.settings["Speed"]["Medium speed"], 
+                                offset=self.settings["Offset"]["Tip two"])
             
         elif self.anycubic.get_finish_flag():
             ''' Once it is done entering the vial, changes the substate to pumping'''
@@ -293,12 +290,11 @@ def preparing_gel(self):
     elif self.sub_state == 'fill well':
         ''' Moves to the mixing tubes'''
         if self.com_state == 'not send':
-            ''' Moves up (z) to a safe position, as to not break anything, moves to the tubes, and finally enters'''
-            self.anycubic.move_axis_relative(z=self.solution_well['Sol B'][2], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
-            self.anycubic.move_axis_relative(x=self.mixing_well[self.well_num][0], y=self.mixing_well[self.well_num][1], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
-            self.anycubic.move_axis_relative(z=self.settings["Gel"]["Well plate pumping height"], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"]) 
-            self.anycubic.finish_request() 
-            self.com_state = 'send'  
+            self.move_tool_head(pos=self.solution_well['Sol B'],
+                                height= self.settings["Gel"]["Well plate pumping height"], 
+                                move_speed=self.settings["Speed"]["Fast speed"], 
+                                z_move_speed=self.settings["Speed"]["Medium speed"], 
+                                offset=self.settings["Offset"]["Tip two"])
             
         elif self.anycubic.get_finish_flag():
             ''' Waits until the movement is done, then changes the substate to mix down and sets the counter to 0'''
@@ -359,13 +355,20 @@ def preparing_gel(self):
     elif self.sub_state == 'place gel':
         ''' Moves to the well plate to place the gel'''
         if self.com_state == 'not send':
-            ''' Moves up (z) to a safe position, as to not break anything, moves to the well plate, and finally enters'''
-            self.anycubic.move_axis_relative(z=self.mixing_well[self.well_num][2], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
-            self.anycubic.move_axis_relative(x=75, y=140, f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
-            self.anycubic.move_axis_relative(x=self.culture_well[self.well_num][0], y=self.culture_well[self.well_num][1], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
-            self.anycubic.move_axis_relative(z=self.settings["Gel"]["Well plate pumping height"], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"]) 
-            self.anycubic.finish_request() 
-            self.com_state = 'send'  
+            # WATCH OUT FOR HEIGHT HERE
+            self.move_tool_head(pos=self.culture_well[self.well_num],
+                                height= self.settings["Gel"]["Well plate pumping height"], 
+                                move_speed=self.settings["Speed"]["Fast speed"], 
+                                z_move_speed=self.settings["Speed"]["Medium speed"], 
+                                offset=self.settings["Offset"]["Tip two"])
+            # ''' Moves up (z) to a safe position, as to not break anything, moves to the well plate, and finally enters'''
+            # self.anycubic.move_axis_relative(z=self.mixing_well[self.well_num][2], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
+            # # a quoi sert cette ligne
+            # self.anycubic.move_axis_relative(x=75, y=140, f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"]) 
+            # self.anycubic.move_axis_relative(x=self.culture_well[self.well_num][0], y=self.culture_well[self.well_num][1], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
+            # self.anycubic.move_axis_relative(z=self.settings["Gel"]["Well plate pumping height"], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"]) 
+            # self.anycubic.finish_request() 
+            # self.com_state = 'send'   
             
         elif self.anycubic.get_finish_flag():
             ''' Waits until the movement is done, then changes the substate to dropping'''
@@ -409,12 +412,11 @@ def preparing_gel(self):
     elif self.sub_state == 'washing':
         ''' Washes the pipette'''
         if self.com_state == 'not send':
-            ''' Moves up (z) to a safe position, as to not break anything, moves to the washing vial, and finally enters'''
-            self.anycubic.move_axis_relative(z=self.solution_well['Washing'][2], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
-            self.anycubic.move_axis_relative(x=self.solution_well['Washing'][0], y=self.solution_well['Washing'][1], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
-            self.anycubic.move_axis_relative(z=self.settings["Gel"]["Vial pumping height"], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"]) 
-            self.anycubic.finish_request() 
-            self.com_state = 'send'  
+            self.move_tool_head(pos=self.solution_well['Washing'],
+                                height= self.settings["Gel"]["Vial pumping height"], 
+                                move_speed=self.settings["Speed"]["Fast speed"], 
+                                z_move_speed=self.settings["Speed"]["Medium speed"], 
+                                offset=self.settings["Offset"]["Tip two"])
             
         elif self.anycubic.get_finish_flag():
             ''' Waits until the movement is done, then changes the substate to wash up and sets the wash counter to 0'''
@@ -568,12 +570,11 @@ def homming(self):
     elif self.sub_state == 'go to dump':
         ''' Moves to the dump vial, as the second pipette is the one responsible for the mixing.'''
         if self.com_state == 'not send':
-            ''' Moves up (z) to a safe position, as to not break anything, moves to the dump vial, and finally enters'''
-            self.anycubic.move_axis_relative(z=self.solution_well['Dump'][2], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
-            self.anycubic.move_axis_relative(x=self.solution_well['Dump'][0], y=self.solution_well['Dump'][1], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
-            self.anycubic.move_axis_relative(z=self.settings["Gel"]["Vial pumping height"], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"]) 
-            self.anycubic.finish_request() 
-            self.com_state = 'send'  
+            self.move_tool_head(pos=self.solution_well['Dump'],
+                                height= self.settings["Gel"]["Vial pumping height"], 
+                                move_speed=self.settings["Speed"]["Fast speed"], 
+                                z_move_speed=self.settings["Speed"]["Fast speed"], 
+                                offset=self.settings["Offset"]["Tip two"])
             
         elif self.anycubic.get_finish_flag():
             ''' Once it is done entering the vial, changes the substate to empty second pipette'''
@@ -613,3 +614,18 @@ def homming(self):
             self.com_state = 'not send'   
             
         
+def move_tool_head(self, pos, height, move_speed, z_move_speed, offset):
+    '''
+    Moves the tool head to the defined position, at the defined speed, with the defined offset.
+    It will first go to the specified z height in the variable pos, then move to the x and y position. Finally, it will go down to the height variable.
+    
+    '''
+    ### TODO: Maybe change the first move to a safe z height, and remove the argument: would make everything shorter
+    ### TODO: See if we can reformulate or move the function, so it is known elsewhere, or reusable in other files
+    self.anycubic.move_axis_relative(z=pos[2], f=z_move_speed, offset=offset)
+    self.anycubic.move_axis_relative(x=pos[0], y=pos[1], f=move_speed, offset=offset)
+    self.anycubic.move_axis_relative(z=height, f=z_move_speed, offset=offset) 
+    self.anycubic.finish_request() 
+    self.com_state = 'send'  
+        
+# def change_pipette(self, )
