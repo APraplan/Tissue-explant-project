@@ -2,7 +2,6 @@ import tkinter as tk
 from tkinter import ttk 
 import json
 import customtkinter as ctk
-
     
 from Platform.Communication.ports_gestion import * 
 import Platform.computer_vision as cv
@@ -23,7 +22,7 @@ else:
 ### ATTENTION AU OFFSET  !!!
 
 SETTINGS = "TEST.json"
-X_MIN = 0.0
+X_MIN = -9.0
 X_MAX = 145.0
 Y_MIN = 0.0
 Y_MAX = 145.0
@@ -142,16 +141,7 @@ class RoundButton(tk.Canvas):
 
     def on_click(self, event):
         print("home position")
-        self.printer_class.homing()
-        # self.anycubic.set_home_pos(x=0, y=0, z=0)
-        self.printer_class.max_x_feedrate(300)
-        self.printer_class.max_y_feedrate(300)
-        self.printer_class.max_z_feedrate(25)   
-        self.printer_class.move_home()
-        
-        self.target_class.is_homed = True    
-        [self.target_class.coord_value_text[i].set(0) for i in range(3)]
-        [self.target_class.coord_value[i].configure(state='normal') for i in range(3)]
+        self.target_class.move_home()
         
         
 class MyWindow(ctk.CTk):
@@ -188,8 +178,7 @@ class MyWindow(ctk.CTk):
         self.columnconfigure(0, minsize=400, weight=1)
         self.rowconfigure(1, minsize=400,weight=1)
         
-        
-        self.tabControl.set(self.tabs_name[2])
+        self.tabControl.set(self.tabs_name[0])
         self.isOpen = True
 
 
@@ -273,24 +262,20 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         self.z_button_up    = None
         self.z_button_down  = None
         
-        self.last_pos = [0,0,0]
-        
-        self.z_label = None                  
-                
-        self.offset = [0,0,0]
         
         self.safe_height        = 55
         
+        self.offset             = [0, 0, 0]
         self.coord_label        = []
         self.coord_value        = []
         self.coord_value_text   = []
+        self.last_pos           = [0, 0, 0]
         
         self.servo_buttons      = []
         self.servo_frame        = []
         self.servo_labels       = []
         self.servo_values       = []
         self.servo_values_text  = []
-        self.servo_gui_position = None
         self.unit_list          = ["steps", "percentage", "μl"] 
         self.is_unit_percentage = False
         self.servo_step_buttons = []
@@ -301,8 +286,8 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         
         
         self.tip_number     = 0
-        self.pipette_empty  = 575 ## this variable shouldn't exists! We should calibrate with the value inside write_pipette_ul
-        self.pipette_max_ul = self.pipette_empty+100 # ONLY FOR PURGING
+        self.pipette_empty  = 570 ## this variable shouldn't exists! We should calibrate with the value inside write_pipette_ul
+        self.pipette_max_ul = 680 # ONLY FOR PURGING
         self.servo_pos      = [self.pipette_empty, self.pipette_empty, 30]
         
         self.buffer_moves = []
@@ -318,6 +303,7 @@ in which you can select UP TO 6 wells to use. You can then press the save button
                                    series_name=["xl", "xl", "xl"], 
                                    baudrate=57600,
                                    pipette_max_ul = self.pipette_max_ul,
+                                   pipette_empty=self.pipette_empty,    
                                    port_name=get_com_port("0403", "6014"))
         
         self.anycubic.connect()
@@ -358,23 +344,64 @@ in which you can select UP TO 6 wells to use. You can then press the save button
     
     #### Functions related to the mode tab ####            
     def set_tab_mode(self):
+        self.mode_control_frame = ctk.CTkFrame(self.tabControl.tab("Mode"))
+        self.mode_control_frame.place(relx=0.1, rely=0.1)
+        self.calibration_buttons()
+        self.step_buttons()
         
-        self.mode_camera_button = ctk.CTkButton(self.tabControl.tab("Mode"), 
+        self.camera_mode_frame = ctk.CTkFrame(self.tabControl.tab("Mode"))
+        self.camera_mode_frame.place(relx=0.8, rely=0.7, anchor=tk.CENTER)
+        self.mode_camera_button = ctk.CTkButton(self.camera_mode_frame, 
                                              textvariable=self.camera_displayed_text,
                                              command= self.show_camera_control)
         self.mode_camera_button.grid(row=0)
-        #### CHANGE TO CTK, FIND HOW TO MAKE IT CLEAN AND WORK
-        self.camera_feed_mode = tk.Label(self.tabControl.tab("Mode"), width=480, height=270)
+        ## CHANGE TO CTK, FIND HOW TO MAKE IT CLEAN AND WORK
+        self.camera_feed_mode = ctk.CTkLabel(self.camera_mode_frame, text = "", width=480, height=270)
         self.camera_feed_mode.grid(row=1)  
+        
+        
+    def calibration_buttons(self):
+        
+        self.calibration_frame = ctk.CTkFrame(self.mode_control_frame)
+        self.calibration_frame.grid(row = 0, column = 0, padx = 10)
+        
+        self.calibration_label = ctk.CTkLabel(self.calibration_frame, text="Calibrations:")
+        self.calibration_label.grid(row=0, column=0, padx=10, pady=10)
+        
+        self.full_calibration_button = ctk.CTkButton(self.calibration_frame, text="Full calibration", command=self.debug)  
+        self.full_calibration_button.grid(row=1, column=0, padx=10, pady=10)
+        
+        self.xyz_homing_button = ctk.CTkButton(self.calibration_frame, text="XYZ homing", command=self.debug)
+        self.xyz_homing_button.grid(row=2, column=0, padx=10, pady=10)
+        
+        self.calibrate_offset_button = ctk.CTkButton(self.calibration_frame, text="Calibrate offsets", command=self.debug) 
+        self.calibrate_offset_button.grid(row=3, column=0, padx=10, pady=10)
+        
+    
+    def step_buttons(self):
+        self.steps_frame = ctk.CTkFrame(self.mode_control_frame)
+        self.steps_frame.grid(row = 0, column = 1, padx = 10)
+        
+        self.steps_label = ctk.CTkLabel(self.steps_frame, text="Steps:")
+        self.steps_label.grid(row=0, column=0, padx=10, pady=10)
+        
+        self.run_all_button = ctk.CTkButton(self.steps_frame, text="Run all", command=self.debug)
+        self.run_all_button.grid(row=1, column=0, padx=10, pady=10)
+        
+        self.prep_gel_button = ctk.CTkButton(self.steps_frame, text="Prepare gel", command=self.debug)
+        self.prep_gel_button.grid(row=2, column=0, padx=10, pady=10)
+        
+        self.pnp_button = ctk.CTkButton(self.steps_frame, text="Pick and place", command=self.debug)
+        self.pnp_button.grid(row=3, column=0, padx=10, pady=10)
         
     
     #### Functions related to the camera tab ####
     def set_tab_cameras(self):
         
         ## find how to increase image size according to label size
-        self.camera_feed_camera_0 = tk.Label(self.tabControl.tab("Cameras"), width=640, height=360)
+        self.camera_feed_camera_0 = ctk.CTkLabel(self.tabControl.tab("Cameras"), text="", width=640, height=360)
         self.camera_feed_camera_0.place(relx=0.1, rely=0.2)
-        self.camera_feed_camera_1 = tk.Label(self.tabControl.tab("Cameras"), width=640, height=360)
+        self.camera_feed_camera_1 = ctk.CTkLabel(self.tabControl.tab("Cameras"), text="", width=640, height=360)
         self.camera_feed_camera_1.place(relx=0.6, rely=0.2)
         
         if debug == False:
@@ -402,7 +429,7 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         
         
     def update_cameras(self):
-        ### change this, we don't need to undistort everytime i think
+        ## Change this, we don't need to undistort everytime i think
         ## We capture the frame and format it accordingly to be used by tkinter, 
         if debug == False:
             frame = cam_gear.get_cam_frame(self.stream1) 
@@ -423,6 +450,7 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         img = Image.fromarray(img)
         self.frames[idx] = ImageTk.PhotoImage(image=img)
+        # self.frames[idx] = ctk.CTkImage(img)
         
         
     def display_camera_feed(self):
@@ -701,17 +729,7 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         self.set_servo_control()
         self.set_camera_for_control()
 
-
-    def firmware_limit_overwrites(self):
-        ## add a condition to make it work only when at x=0
-        if self.firmware_limit_overwrites_text.get() == "Firmware limit overwrites : OFF":
-            self.anycubic.set_position(-9)
-            self.firmware_limit_overwrites_text.set("Firmware limit overwrites : ON")  
-        else:
-            self.anycubic.set_position(0)
-            self.firmware_limit_overwrites_text.set("Firmware limit overwrites : OFF")
-              
-                              
+           
     def set_motor_control(self):
         
         gui_x_pos = 0.15
@@ -779,7 +797,7 @@ in which you can select UP TO 6 wells to use. You can then press the save button
        
         self.pipette_selector_frame = ctk.CTkFrame(self.tabControl.tab("Motion Control"))
         self.pipette_selector_frame.place(relx=gui_x_pos+0.015, rely=0.07, anchor=tk.CENTER)
-        self.pipette_name = list(self.settings.get("Offset").keys())[1:]
+        self.pipette_name = list(self.settings.get("Offset").keys())
         
         self.offset_selector_text = ctk.CTkLabel(self.pipette_selector_frame, text="Toolhead's offset")
         self.offset_selector_text.grid(column=0, row=0, padx=10, pady=5)
@@ -815,11 +833,27 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         self.offset = self.settings["Offset"][value]  
         ### ajouter un wait peut etre pour pas qu'il le fasse en même temps
         self.move_xyz(go_safe_height=True) 
+      
         
-    
+    def move_home(self):
+        
+        self.anycubic.homing()
+        self.anycubic.max_x_feedrate(300)
+        self.anycubic.max_y_feedrate(300)
+        self.anycubic.max_z_feedrate(25)   
+        self.anycubic.move_home()
+        
+        self.is_homed = True    
+        [self.coord_value_text[i].set(0) for i in range(3)]
+        [self.coord_value[i].configure(state='normal') for i in range(3)]
+        
+        
     def move_xyz(self, x=0, y=0, z=0, move_button_cmd=False, go_safe_height = False):
+        # REWRITE THIS FUNCTION TO HAVE ONE PER AXIS, SO ITS EASIER TO HANDLE AXIS SPECIFIC COMMANDS
         ## maybe add a drop down menu with a list of every known position as to make everything faster
         ## maybe add a drop down menu setting the speeds !
+        
+        offset = self.offset.copy()
         for i in range(len(self.coord_value_text)):
             if move_button_cmd:
                 try:
@@ -839,8 +873,8 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         if go_safe_height:
             z = self.safe_height
             
-        if x < X_MIN:
-            x = X_MIN
+        if x < X_MIN-offset[0]:
+            x = X_MIN-offset[0]
         elif x > X_MAX:
             x = X_MAX
         if y < Y_MIN:
@@ -854,21 +888,25 @@ in which you can select UP TO 6 wells to use. You can then press the save button
             
         print("Setting position to X={}, Y={}, Z={}".format(x,y,z))
         print("Offset is {}".format(self.offset))
+        
+        #### Il faudrait coder ca pour qu'il aille dynamiquement dans le négatif, en prennant compte de l'offset, pour un code plus clean+
          # ATTENTION DIFFERENCE BETWEEN STEPS AND MOVE COMMAND !!
          # When we do a move command, currently, we lose the last position, 
          # which is important for setting the correct negativ pos
          # also, once this is done, there may be a bug, when changing the offset, while in negative
-        if x < 0 or self.last_pos[0] < 0:
-            print("GOING IN X-NEGATIVE DOMAIN")
+        if (x < -offset[0]) or (self.last_pos[0] < -offset[0]):
             delta = round(x - self.last_pos[0],2)
+            # print(delta)
             if delta < 0: # we go further into the negative
                 self.anycubic.set_position(x = -delta) 
             elif x < 0: # we go in positive direction, but still in negative
-                self.anycubic.set_position(x = delta)
+                self.anycubic.set_position(x = -delta) # I DON'T UNDERSTAND WHY THIS WORKS, BUT IT WORKS
             else: # we return to positive domain
                 self.anycubic.set_position(x = self.last_pos[0])
-            # WARNING, BE SURE IT WORKS PROPERLY WHEN WE GO BACK IN POSITIV
-        self.anycubic.move_axis_relative(x=x, y=y, z=z, offset=self.offset)
+            
+        print("offset is {}".format(offset))
+        print("x is {}".format(x))
+        self.anycubic.move_axis_relative(x=x, y=y, z=z, offset=offset)
         self.coord_value_text[0].set(str(x))
         self.coord_value_text[1].set(str(y))
         self.coord_value_text[2].set(str(z))
@@ -1017,7 +1055,7 @@ in which you can select UP TO 6 wells to use. You can then press the save button
                                                 command=self.show_camera_control)
         self.control_camera_button.pack()
         
-        self.camera_feed_control = tk.Label(self.camera_control_frame, width=480, height=270)
+        self.camera_feed_control = ctk.CTkLabel(self.camera_control_frame, text="", width=480, height=270)
         self.camera_feed_control.pack()
     
     
@@ -1099,7 +1137,6 @@ in which you can select UP TO 6 wells to use. You can then press the save button
             self.stream1.stop()
         except:
             pass
-        self.destroy()
         self.isOpen = False
         
 
@@ -1108,9 +1145,7 @@ if __name__ == "__main__":
     
     while window.isOpen:
         window.update_cameras()
-        window.execute_function_from_buffer()
-        # maybe create a liste of coordinate, that is the waitlist for the commands, and then execute them one by one, once the one prior is done ?
-        # check how the code handles 2 xyz moves commands in a row, maybe it's just between the anycubic and the dynamixel that there is no wait time
+        window.execute_function_from_buffer()   
         window.update()
         window.update_idletasks()
 

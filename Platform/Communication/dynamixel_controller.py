@@ -8,7 +8,7 @@ PIPETTE_MAX = [2880, 1250]
 TIP_POSITION = [3072, 2560, 3584]
 
 class Dynamixel:
-    def __init__(self, ID, descriptive_device_name, port_name, baudrate, pipette_max_ul, series_name = "xm"):
+    def __init__(self, ID, descriptive_device_name, port_name, baudrate, pipette_max_ul, pipette_empty, series_name = "xm"):
         # Communication inputs
         if type(ID) == list:
             self.multiple_motors = True
@@ -20,7 +20,7 @@ class Dynamixel:
         self.port_name = port_name
         self.baudrate = baudrate
         self.pipette_max_ul = pipette_max_ul    
-        self.pipette_empty = self.pipette_max_ul-100
+        self.pipette_empty = pipette_empty
         
         # Set series name
         if type(self.ID) == list:
@@ -396,7 +396,7 @@ class Dynamixel:
         ## add offset according to the pipette empty
         selected_IDs = self.fetch_and_check_ID(ID)
         if purging:
-            offset = 100
+            offset = self.pipette_max_ul-self.pipette_empty
         else:   
             offset = 0
         if volume_ul  > self.pipette_empty + offset:

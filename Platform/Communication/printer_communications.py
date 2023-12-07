@@ -108,7 +108,6 @@ class Printer:
         offset[0] = offset[0] + self.home_pos[0]
         offset[1] = offset[1] + self.home_pos[1]
         offset[2] = offset[2] + self.home_pos[2]
-            
         command = "G0"
         
         if x is not None:

@@ -5,12 +5,12 @@ PIPETTE_MAX = [2880, 1250]
 TIP_POSITION = [3072, 2560, 3584]
 
 class Dynamixel:
-    def __init__(self, ID, descriptive_device_name, port_name, baudrate, pipette_max_ul, series_name = "xm"):
+    def __init__(self, ID, descriptive_device_name, port_name, baudrate, pipette_max_ul, pipette_empty, series_name = "xm"):
         logger.debug(f"Initializing Dynamixel {ID} on port {port_name} with baudrate {baudrate}")
         self.ID = ID
         self.positions = {}
         self.pipette_max_ul = pipette_max_ul
-        self.pipette_empty = self.pipette_max_ul - 100
+        self.pipette_empty = pipette_empty
         
         if type(ID) == list:
             for id in ID:

@@ -56,6 +56,7 @@ def release_tracker(self):
     self.tracker = cv2.TrackerCSRT.create()  
     
 def check_pickup(self):
+    ## check how this is done
     
     x, y, w, h = [int(i) for i in self.bbox]
     tracker_pos = [int(x+w/2), int(y+h/2)]
@@ -91,7 +92,7 @@ def check_pickup_two(self):
 def delay(self, delay):
 
     if not self.chrono_set:
-        self.chrono = delay/1000.0 + time.time()
+        self.chrono = delay + time.time()
         self.chrono_set = True
     elif time.time() >= self.chrono:
         self.chrono_set = False
@@ -130,6 +131,17 @@ def detect(self):
             self.sub_state = 'empty pipette'
             self.com_state = 'not send'
             self.detect_attempt = 0
+            out = self.frame.copy()
+
+            macro_dir = r"Pictures/cam2"
+            
+            if not os.path.exists(macro_dir):
+                os.makedirs(macro_dir)
+            
+            _, _, files = next(os.walk(macro_dir))
+            file_count = len(files)
+            cv2.imwrite("Pictures/cam2/successful_capture_" + str(file_count) + ".png", out)
+            
         else:
             self.detect_attempt += 1
             
@@ -137,6 +149,16 @@ def detect(self):
                 self.state = 'pause'
                 self.last_state = 'detect'
                 self.detect_attempt = 0
+                out = self.frame.copy()
+    
+                macro_dir = r"Pictures/cam2"
+                
+                if not os.path.exists(macro_dir):
+                    os.makedirs(macro_dir)
+                
+                _, _, files = next(os.walk(macro_dir))
+                file_count = len(files)
+                cv2.imwrite("Pictures/cam2/failed_capture_" + str(file_count) + ".png", out)
                 logger.info('🔎 No tissue detected')
     
 def pick(self):
@@ -259,19 +281,19 @@ def picture(self):
         elif self.anycubic.get_finish_flag():
             
             # print(check_pickup_two(self))
-            if delay(self, 1.5):
+            if delay(self, 0.5):
+                
+                self.pause()
                 if check_pickup_two(self):
                     # add pause here to check on the camera status
                     self.state = 'place'
-                    self.sub_state = 'go to position'
-                    self.com_state = 'not send' 
                     self.place_attempt = 0
                    
                 else:
                     self.state = 'reset'
-                    self.sub_state = 'go to position'
-                    self.com_state = 'not send'  
-                  
+                
+                self.sub_state = 'go to position'
+                self.com_state = 'not send' 
                 self.anycubic.move_axis_relative(x = -self.x_firmware_limit_overwrite)
                 self.anycubic.set_position(x = 0)   
                 
@@ -342,29 +364,29 @@ def second_picture(self):
             if dest[1] > 100:
                 self.anycubic.move_axis_relative(x=80, y=100, f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip one"])
             self.anycubic.move_axis_relative(x=self.picture_pos, f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip one"])
+            
+            self.anycubic.set_position(x=-self.x_firmware_limit_overwrite) 
+            self.anycubic.move_axis_relative(x=self.picture_pos, offset=self.settings["Offset"]["Tip one"])
             self.anycubic.finish_request()
             self.com_state = 'send'
             
         elif self.anycubic.get_finish_flag():
             
             # print(check_pickup_two(self))
-            if delay(self, 0.5):
+            if delay(self, 1.5):
                 if check_pickup_two(self):
                     if self.place_attempt >= self.settings["Detection"]["Max place attempts"]:
                         self.state = 'reset'
-                        self.sub_state = 'go to position'
-                        self.com_state = 'not send' 
-                        
                     else:
                         self.state = 'place'
-                        self.sub_state = 'go to position'
-                        self.com_state = 'not send' 
                     
                 else:
                     self.nb_sample += 1
                     self.state = 'reset'
-                    self.sub_state = 'go to position'
-                    self.com_state = 'not send'            
+                self.sub_state = 'go to position'
+                self.com_state = 'not send'
+                self.anycubic.move_axis_relative(x = -self.x_firmware_limit_overwrite)
+                self.anycubic.set_position(x = 0)              
               
 def reset(self):
     
@@ -402,6 +424,7 @@ def reset(self):
                 else:
                     if self.settings["Well"]["Well preparation"]:
                         self.state = 'preparing gel'
+                        # maybe add a not send com state here
                     else:
                         self.state = 'detect'
                     self.sub_state = 'go to position'
