@@ -31,7 +31,7 @@
         "Vial pumping height": 4.299999999999999,
         "Well plate pumping height": 5,
         "Number of mix": 5,
-        "Proportion of mixing volume": 0.7,
+        "Proportion of mixing volume": 0.9,
         "Number of wash": 2
     },
     "Detection": {

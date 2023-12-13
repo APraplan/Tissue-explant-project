@@ -78,15 +78,30 @@ def check_pickup_two(self):
     _, _, files = next(os.walk(macro_dir))
     file_count = len(files)
     cv2.imwrite("Pictures/macro/macro_image_" + str(file_count) + ".png", self.macro_frame)
-    
-    res = self.NN.predict(cv2.cvtColor(self.macro_frame, cv2.COLOR_BGR2RGB).reshape(1, 480, 640, 3), verbose=0)
+    #### The first line was the one being used. In the future, update the neural network by taking a series of picture, 
+    #### and re-enable it instead of waiting for a user's confirmation
+    # res = self.NN.predict(cv2.cvtColor(self.macro_frame, cv2.COLOR_BGR2RGB).reshape(1, 480, 640, 3), verbose=0)
     # res = self.NN.predict(cv2.cvtColor(self.macro_frame, cv2.COLOR_BGR2GRAY).reshape(1, 480, 640, 1), verbose=0)
-    logger.info(f"🔮 Prediciton results {res[0, 0]}")
+    # logger.info(f"🔮 Prediciton results {res[0, 0]}")
+    # how to write a pause here, so were check the prediction for a few seconds
     
-    if res > 0.5:
-        return False ## change here to take picture repeatedlz
-    else:
-        return False
+    
+    while True:      
+
+        # Inputs
+        key = cv2.waitKeyEx(5)  
+        
+        if key == 13: #enter
+            return True
+        if key == 8: ## BAD IDEA
+            return False
+        
+        self.macro_frame = self.stream2.read() 
+        cv2.imshow('Macro camera', self.macro_frame) 
+    # if res > 0.5:
+    #     return False ## change here to take picture repeatedlz
+    # else:
+    #     return False
     
 
 def delay(self, delay):
@@ -161,8 +176,7 @@ def detect(self):
                 cv2.imwrite("Pictures/cam2/failed_capture_" + str(file_count) + ".png", out)
                 logger.info('🔎 No tissue detected')
     
-def pick(self):
-            
+def pick(self):   
     
     if self.sub_state == 'empty pipette':
     

@@ -355,7 +355,7 @@ in which you can select UP TO 6 wells to use. You can then press the save button
                                              textvariable=self.camera_displayed_text,
                                              command= self.show_camera_control)
         self.mode_camera_button.grid(row=0)
-        ## CHANGE TO CTK, FIND HOW TO MAKE IT CLEAN AND WORK
+        
         self.camera_feed_mode = ctk.CTkLabel(self.camera_mode_frame, text = "", width=480, height=270)
         self.camera_feed_mode.grid(row=1)  
         
@@ -1148,4 +1148,3 @@ if __name__ == "__main__":
         window.execute_function_from_buffer()   
         window.update()
         window.update_idletasks()
-
