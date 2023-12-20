@@ -1,3 +1,5 @@
+import time 
+
 def vial(settings, name):
     '''
     Returns the position of the vials A and B. These should be the water's vial and the cellmatrix solution's vial.
@@ -173,7 +175,7 @@ def spreading_solution_A(self):
             ''' Moves up (z) to a safe position, as to not break anything, moves to the tubes, and finally enters'''
             self.anycubic.move_axis_relative(z=self.mixing_well[self.solution_prep_num][2], f=self.settings["Speed"]["Slow speed"], offset=self.settings["Offset"]["Tip two"])
             self.anycubic.move_axis_relative(x=self.mixing_well[self.solution_prep_num][0], y=self.mixing_well[self.solution_prep_num][1], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
-            self.anycubic.move_axis_relative(z=self.settings["Gel"]["Well plate pumping height"], f=self.settings["Speed"]["Slow speed"], offset=self.settings["Offset"]["Tip two"]) 
+            self.anycubic.move_axis_relative(z=self.settings["Gel"]["Vial pumping height"], f=self.settings["Speed"]["Slow speed"], offset=self.settings["Offset"]["Tip two"]) 
             self.anycubic.finish_request() 
             self.com_state = 'send'  
             
@@ -286,9 +288,19 @@ def preparing_gel(self):
             
         elif self.dyna.pipette_is_in_position_ul(self.pipette_2_pos, ID = 2):
             ''' Waits until the pumping is done, then change the substate to fill well'''
-            self.sub_state = 'fill well'
+            self.sub_state = 'waiting'
+            self.next_sub_state = 'fill well'
             self.com_state = 'not send'   
             
+    elif self.sub_state == 'waiting':
+        ''' We add a wait here, because of the viscosity of the gel. It is so dense that if we don't wait, the pumping hasn't actually finished
+        and the air will fill the gap as soon as we exit the vial.'''
+        if self.timer_started == False:
+            self.timer_started = True
+            self.timer = time.time()
+        elif time.time() - self.timer > self.settings["Gel"]["Waiting time"]:
+            self.timer_started = False
+            self.sub_state = self.next_sub_state           
             
     elif self.sub_state == 'fill well':
         ''' Moves to the mixing tubes'''
@@ -296,7 +308,7 @@ def preparing_gel(self):
             ''' Moves up (z) to a safe position, as to not break anything, moves to the tubes, and finally enters'''
             self.anycubic.move_axis_relative(z=self.solution_well['Sol B'][2], f=self.settings["Speed"]["Slow speed"], offset=self.settings["Offset"]["Tip two"])
             self.anycubic.move_axis_relative(x=self.mixing_well[self.well_num][0], y=self.mixing_well[self.well_num][1], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
-            self.anycubic.move_axis_relative(z=self.settings["Gel"]["Well plate pumping height"], f=self.settings["Speed"]["Slow speed"], offset=self.settings["Offset"]["Tip two"]) 
+            self.anycubic.move_axis_relative(z=self.settings["Gel"]["Vial pumping height"], f=self.settings["Speed"]["Slow speed"], offset=self.settings["Offset"]["Tip two"]) 
             self.anycubic.finish_request() 
             self.com_state = 'send'  
             
@@ -320,7 +332,8 @@ def preparing_gel(self):
         elif self.dyna.pipette_is_in_position_ul(self.pipette_2_pos, ID = 2):
             ''' Waits until the pumping is done, then changes the substate to mix up or take gel, depending on the number of mix'''
             if self.mix > self.settings["Gel"]["Number of mix"]:
-                self.sub_state = 'take gel'
+                self.sub_state = 'waiting'
+                self.next_sub_state = 'take gel'
                 self.com_state = 'not send'               
             else:     
                 self.sub_state = 'mix up'
@@ -352,7 +365,8 @@ def preparing_gel(self):
 
         elif self.dyna.pipette_is_in_position_ul(self.pipette_2_pos, ID = 2):
             ''' Waits until the pumping is done, then changes the substate to place gel'''
-            self.sub_state = 'place gel'
+            self.sub_state = 'waiting'
+            self.next_sub_state = 'place gel'
             self.com_state = 'not send'
             
                 
@@ -385,7 +399,8 @@ def preparing_gel(self):
         elif self.dyna.pipette_is_in_position_ul(self.pipette_2_pos, ID = 2):
             ''' Waits until the pumping is done, then changes the substate to washing'''
             # Normal experiment
-            self.sub_state = 'washing'
+            self.sub_state = 'waiting'
+            self.next_sub_state = 'washing'
             self.com_state = 'not send'
 
             # Experiment without washing
@@ -571,7 +586,7 @@ def homming(self):
             ''' Moves up (z) to a safe position, as to not break anything, moves to the dump vial, and finally enters'''
             self.anycubic.move_axis_relative(z=self.solution_well['Dump'][2], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
             self.anycubic.move_axis_relative(x=self.solution_well['Dump'][0], y=self.solution_well['Dump'][1], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
-            self.anycubic.move_axis_relative(z=self.settings["Gel"]["Vial pumping height"], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"]) 
+            self.anycubic.move_axis_relative(z=self.settings["Gel"]["Vial pumping height"], f=self.settings["Speed"]["Slow speed"], offset=self.settings["Offset"]["Tip two"]) 
             self.anycubic.finish_request() 
             self.com_state = 'send'  
             
@@ -604,7 +619,8 @@ def homming(self):
         if self.anycubic.get_finish_flag():
             ''' Changes stat  to preparing well if the parameter has been set to true, else changes state to detect'''
             if self.settings["Well"]["Well preparation"]:
-                self.state = 'spreading solution A'
+                # self.state = 'spreading solution A'
+                self.state = 'preparing gel'
                 self.prep_gel_done = False
             else:
                 self.state = 'detect'

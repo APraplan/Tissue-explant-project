@@ -9,7 +9,8 @@ from PIL import Image, ImageTk
 import Developpement.Cam_gear as cam_gear
 import cv2
 
-debug = True
+
+debug = False
 
 if debug:
     from Platform.Communication.fake_communication import * 

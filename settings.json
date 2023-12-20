@@ -27,11 +27,12 @@
         "Solution B pumping volume": 400
     },
     "Gel": {
-        "Tube pumping height": 3.3,
-        "Vial pumping height": 4.299999999999999,
-        "Well plate pumping height": 5,
+        "Tube pumping height": 1.5,
+        "Vial pumping height": 1.5000000000000004,
+        "Well plate pumping height": 4,
+        "Waiting time": 3.5,
         "Number of mix": 5,
-        "Proportion of mixing volume": 0.9,
+        "Proportion of mixing volume": 0.95,
         "Number of wash": 2
     },
     "Detection": {
@@ -44,8 +45,8 @@
         "Inertia min": 0.3
     },
     "Well": {
-        "Well preparation": false,
-        "Type": "TPP6",
+        "Well preparation": true,
+        "Type": "TPP12",
         "Number of sample per well": 4,
         "Number of well": 3,
         "Culture 1": "A1",
@@ -67,13 +68,13 @@
             0.0
         ],
         "Tip one": [
-            37.90000000000027,
-            75.69999999999997,
+            37.700000000000266,
+            79.19999999999978,
             3.000000000000001
         ],
         "Tip two": [
-            37.90000000000027,
-            73.80000000000008,
+            38.00000000000027,
+            78.39999999999982,
             2.7000000000000006
         ],
         "Camera": [

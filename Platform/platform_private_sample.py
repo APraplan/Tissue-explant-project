@@ -93,7 +93,7 @@ def check_pickup_two(self):
         
         if key == 13: #enter
             return True
-        if key == 8: ## BAD IDEA
+        if key == 8: #backspace
             return False
         
         self.macro_frame = self.stream2.read() 

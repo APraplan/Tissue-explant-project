@@ -39,6 +39,7 @@ class platform_pick_and_place:
         self.last_state = 'homming'
         self.sub_state = 'go to position'
         self.com_state = 'not send'
+        self.next_sub_state = None
         self.flag = True
         
         # Picking zone
@@ -106,6 +107,7 @@ class platform_pick_and_place:
         self.well_num = 0
         self.mix = 0
         self.wash = 0
+        self.timer_started = False
 
     # Public methods
     
