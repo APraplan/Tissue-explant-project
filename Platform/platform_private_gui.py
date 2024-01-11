@@ -5,6 +5,7 @@ from keras.models import load_model
 import computer_vision as cv
 import json
 import platform
+import Developpement.Cam_gear as cam_gear
 
 def linux_to_windows_arrow_conversion(key):
 
@@ -21,14 +22,24 @@ def linux_to_windows_arrow_conversion(key):
     
 
 def calibration_sequence(self):
-
+    '''
+    1) Moves the tip 1 in front of the maccro camera, to make sure it is in focus. If it is, press enter to procceed.
+    2) Moves the tip 1 to the calibration point. Make sure it is perfectly alligned with the center of the hole in the
+    plate, and make sure the z height matches the surface of the plate. Controls: up, down, left, right, u, d.
+    3) Do the same for the tip 2                                        Controls: up, down, left, right, u, d.
+    4) Calibrate the camera by aligned the blue cross to the center of the same hole, inside the camera window. Press enter once this is done
+    Controls: up, down, left, right.'''
     # Macro camera calibration
     self.anycubic.move_axis_relative(z=self.safe_height, offset=self.settings["Offset"]["Tip one"])
     self.anycubic.move_axis_relative(x=self.picture_pos, offset=self.settings["Offset"]["Tip one"])
+    # This is to overcome the firmware limit. The z endstop is programmed to be at -9, and the firmware limit is 0.
+    # We move the position to the firmware limit (0), then tell the printer thez are at -endstop position(9), so we 
+    # can move another 9 mm, thus overcoming the firmware limit.
+    self.anycubic.set_position(x=-self.x_firmware_limit_overwrite)  
+    self.anycubic.move_axis_relative(x=self.picture_pos, offset=self.settings["Offset"]["Tip one"])
     
     while True:
-    
-        self.macro_frame = self.stream2.read()            
+        self.macro_frame = cam_gear.get_cam_frame(self.stream2)         
 
         # Inputs
         key = cv2.waitKeyEx(5)  
@@ -39,21 +50,25 @@ def calibration_sequence(self):
         cv2.imshow('Macro camera', self.macro_frame) 
         
     cv2.destroyAllWindows()  
+    self.anycubic.move_axis_relative(z=self.safe_height, offset=self.settings["Offset"]["Tip one"])
+    self.anycubic.move_axis_relative(x = -self.x_firmware_limit_overwrite)
+    self.anycubic.set_position(x = 0)
         
         
     # Offset first tip calibration
     self.anycubic.move_axis_relative(z=5, offset=self.settings["Offset"]["Tip one"])
+    self.anycubic.move_axis_relative(x=5, y=-15, offset=self.settings["Offset"]["Tip one"])
     self.anycubic.move_axis_relative(x=self.settings["Offset"]["Calibration point"][0], y=self.settings["Offset"]["Calibration point"][1], offset=self.settings["Offset"]["Tip one"])
     self.anycubic.move_axis_relative(z=self.settings["Offset"]["Calibration point"][2], offset=self.settings["Offset"]["Tip one"])
     
     while True:
     
-        frame = self.stream1.read() 
+        frame = cam_gear.get_cam_frame(self.stream1) 
         self.frame = self.cam.undistort(frame)
         self.invert = cv.invert(self.frame)
-        imshow = self.frame.copy()
+        imshow = self.frame.copy()  ## why is invert not used ??
         
-        # self.macro_frame = self.stream2.read()
+        # self.macro_frame = cam_gear.get_cam_frame(self.stream2) 
             
         # Inputs
         key = cv2.waitKeyEx(5)
@@ -66,7 +81,6 @@ def calibration_sequence(self):
         if key == 13: #enter
             print("Offset tip one: ", self.settings["Offset"]["Tip one"])
             break
-        
         cv2.imshow('Camera', imshow) 
         
         
@@ -74,7 +88,7 @@ def calibration_sequence(self):
     self.anycubic.move_axis_relative(z=self.safe_height, offset=self.settings["Offset"]["Tip one"])
     self.anycubic.finish_request()
     while not self.anycubic.get_finish_flag():
-        frame = self.stream1.read() 
+        frame = cam_gear.get_cam_frame(self.stream1)  
         self.frame = self.cam.undistort(frame)
         imshow = self.frame.copy()
 
@@ -90,12 +104,12 @@ def calibration_sequence(self):
     
     while True:
     
-        frame = self.stream1.read() 
+        frame = cam_gear.get_cam_frame(self.stream1)  
         self.frame = self.cam.undistort(frame)
         self.invert = cv.invert(self.frame)
         imshow = self.frame.copy()
         
-        # self.macro_frame = self.stream2.read()
+        # self.macro_frame = cam_gear.get_cam_frame(self.stream2) 
             
         # Inputs
         key = cv2.waitKeyEx(5)
@@ -115,7 +129,7 @@ def calibration_sequence(self):
     self.anycubic.move_axis_relative(z=self.safe_height, offset=self.settings["Offset"]["Tip one"])
     self.anycubic.finish_request()
     while not self.anycubic.get_finish_flag():
-        frame = self.stream1.read() 
+        frame = cam_gear.get_cam_frame(self.stream1)  
         self.frame = self.cam.undistort(frame)
         imshow = self.frame.copy()
 
@@ -129,13 +143,14 @@ def calibration_sequence(self):
     self.anycubic.move_axis_relative(z=self.safe_height, offset=self.settings["Offset"]["Camera"])
     
     while True:
-    
-        frame = self.stream1.read() 
+    #### Maybe try to change the control for calibrating the camera, to make it more intuitive
+    #### We can also try to flip the camera if it is better
+        frame = cam_gear.get_cam_frame(self.stream1)  
         self.frame = self.cam.undistort(frame)
         self.invert = cv.invert(self.frame)
         imshow = self.frame.copy()
         
-        # self.macro_frame = self.stream2.read()
+        # self.macro_frame = cam_gear.get_cam_frame(self.stream2) 
             
         # Inputs
         key = cv2.waitKeyEx(5)
@@ -161,7 +176,12 @@ def calibration_sequence(self):
 
     
 def gui_parameter(self, direction=None):
+    '''
+    This function defines every parameter accessible inside the GUI, and how each parameters is affected. These value are saved into the settings.json if the program is exit properly
+    '''
     
+    
+    ### Maybe rewrite this, if we keep this GUI
     if direction == 'up':
         
         if self.gui_menu == 0:
@@ -489,7 +509,9 @@ def display_gui_txt(self, imshow, position):
 
 
 def display_gui(self, imshow, key, position):
-    
+    '''
+    Defines the different inputs in the GUI
+    '''
     # if key == ord('d'):
     #     cv2.imwrite("Pictures\Realsample\image_on_the_go.png", self.frame)
     

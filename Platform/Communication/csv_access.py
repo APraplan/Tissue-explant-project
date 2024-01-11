@@ -1,7 +1,7 @@
 import pandas as pd
 import os
 
-csv_file = 'results.csv'
+csv_file = 'results_cv.csv'
 
 def save_datas(results_list)->None:
     """
@@ -11,7 +11,7 @@ def save_datas(results_list)->None:
         results_list (list): list of the results of the detection
     """
     if not os.path.exists(csv_file):
-        df_name = pd.DataFrame({'Sample nb': ['Nb attempts', 'Accuracy first detection']})
+        df_name = pd.DataFrame({'Sample nb': ['First detection', 'Second detection', 'Ground truth']})
         df = pd.DataFrame({'0': results_list})
         df = pd.concat([df_name, df], axis=1)
         df.to_csv(csv_file, index=False)

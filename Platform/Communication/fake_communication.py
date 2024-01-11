@@ -5,10 +5,12 @@ PIPETTE_MAX = [2880, 1250]
 TIP_POSITION = [3072, 2560, 3584]
 
 class Dynamixel:
-    def __init__(self, ID, descriptive_device_name, port_name, baudrate, series_name = "xm"):
+    def __init__(self, ID, descriptive_device_name, port_name, baudrate, pipette_max_ul, pipette_empty, series_name = "xm"):
         logger.debug(f"Initializing Dynamixel {ID} on port {port_name} with baudrate {baudrate}")
         self.ID = ID
         self.positions = {}
+        self.pipette_max_ul = pipette_max_ul
+        self.pipette_empty = pipette_empty
         
         if type(ID) == list:
             for id in ID:
@@ -38,7 +40,10 @@ class Dynamixel:
         logger.debug(f"Setting position gains of Dynamixel {self.ID} to P_gain = {P_gain}, I_gain = {I_gain}, D_gain = {D_gain}")
         
     def read_position(self, ID = None):
-        return self.positions[ID]
+        if type(ID) == list:
+            return self.positions
+        else:
+            return self.positions[ID]
             
     def read_velocity(self, ID = None):
         return 0
@@ -106,24 +111,22 @@ class Dynamixel:
     def select_tip(self, tip_number, ID = None):
             self.write_position(pos=TIP_POSITION[tip_number], ID = id)       
         
-    def write_pipette_ul(self, volume_ul, ID = None):
-            
-        if volume_ul > 625:
-            volume_ul = 625
+    def write_pipette_ul(self, volume_ul, ID = None, purging = False):
+        if volume_ul  > self.pipette_empty:
+            volume_ul = self.pipette_empty
         elif volume_ul < 0:
             volume_ul = 0
-            
         if type(ID) == list:
             for id in ID:
-                pos = int(PIPETTE_MIN[id-1] + volume_ul/620.0*(PIPETTE_MAX[id-1]-PIPETTE_MIN[id-1]))
-                self.write_position(pos=pos, ID = id) 
+                pos = int(PIPETTE_MIN[id-1] + volume_ul/self.pipette_max_ul*(PIPETTE_MAX[id-1]-PIPETTE_MIN[id-1]))
+                self.write_position(pos=pos, ID = id)
         else:
-            pos = int(PIPETTE_MIN[ID-1] + volume_ul/620.0*(PIPETTE_MAX[ID-1]-PIPETTE_MIN[ID-1]))
+            pos = int(PIPETTE_MIN[ID-1] + volume_ul/self.pipette_max_ul*(PIPETTE_MAX[ID-1]-PIPETTE_MIN[ID-1]))
             self.write_position(pos=pos, ID = ID)
             
     def pipette_is_in_position_ul(self, volume_ul, ID = None):
         
-        d_pos = int(PIPETTE_MIN[ID-1] + volume_ul/620.0*(PIPETTE_MAX[ID-1]-PIPETTE_MIN[ID-1]))
+        d_pos = int(PIPETTE_MIN[ID-1] + volume_ul/self.pipette_max_ul*(PIPETTE_MAX[ID-1]-PIPETTE_MIN[ID-1]))
         
         a_pos = self.read_position(ID = ID)
         
@@ -144,7 +147,7 @@ class Printer:
         self.descriptive_device_name = descriptive_device_name
         self.position = position(0,0,0)
         
-        self.home_pos = position(0,0,0)
+        self.home_pos = [0,0,0]
         self._finish = False
 
     def _serial_readline(self):
@@ -192,31 +195,37 @@ class Printer:
         self.move_axis(x = self.home_pos[0], y = self.home_pos[1], z = self.home_pos[2], f = f, printMsg=printMsg)
 
     def move_axis_relative(self, x = None, y = None, z = None, e = None, f = None, printMsg = False, offset = None):
-            self._finish = False
-            if offset is None:
-                offset = [0, 0, 0]
-                
-            offset[0] = offset[0] + self.home_pos.x
-            offset[1] = offset[1] + self.home_pos.y
-            offset[2] = offset[2] + self.home_pos.z
-                
-            command = "G0"
-            
-            if x is not None:
-                command = command + " X" + str(x + offset[0])
-            if y is not None:
-                command = command + " Y" + str(y + offset[1])
-            if z is not None:
-                command = command + " Z" + str(z + offset[2])
-            if e is not None:
-                command = command + " E" + str(e)
-            if f is not None:
-                command = command + " F" + str(float(100*f))
-
-            self.send_gcode(command, wait_until_completion=False, printMsg=printMsg)
-
-    def move_axis(self, x = None, y = None, z = None, e = None, f = None, printMsg = False):
         self._finish = False
+        
+        if offset is None:
+            offset = [0, 0, 0]
+        offset[0] = offset[0] + self.home_pos[0]
+        offset[1] = offset[1] + self.home_pos[1]
+        offset[2] = offset[2] + self.home_pos[2]
+            
+        command = "G0"
+        
+        if x is not None:
+            command = command + " X" + str(x + offset[0])
+        if y is not None:
+            command = command + " Y" + str(y + offset[1])
+        if z is not None:
+            command = command + " Z" + str(z + offset[2])
+        if e is not None:
+            command = command + " E" + str(e)
+        if f is not None:
+            command = command + " F" + str(float(100*f))
+
+        self.send_gcode(command, wait_until_completion=False, printMsg=printMsg)
+
+    def move_axis(self, x = None, y = None, z = None, e = None, f = None, printMsg = False, offset=None):
+        self._finish = False
+        
+        if offset is None:
+            offset = [0, 0, 0]
+        offset[0] = offset[0] + self.home_pos[0]
+        offset[1] = offset[1] + self.home_pos[1]
+        offset[2] = offset[2] + self.home_pos[2]
         command = "G0"
         
         if x is not None:

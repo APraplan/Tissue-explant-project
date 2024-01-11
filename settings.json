@@ -1,7 +1,7 @@
 {
     "Position": {
-        "Pick height": 5.899999999999994,
-        "Drop height": 4.400000000000009
+        "Pick height": 5.599999999999995,
+        "Drop height": 10
     },
     "Speed": {
         "Slow speed": 3,
@@ -9,32 +9,36 @@
         "Fast speed": 100
     },
     "Tissues": {
-        "Pumping Volume": 75.0,
+        "Pumping Volume": 95.0,
         "Pumping speed": 65,
-        "Dropping volume": 4.0,
+        "Dropping volume": 20.0,
         "Dropping speed": 151
     },
     "Solution A": {
-        "Solution A pumping speed": 15,
-        "Solution A dropping speed": 15,
-        "Solution A pumping volume": 100
+        "Solution A pumping speed": 60,
+        "Solution A dropping speed": 60,
+        "Solution A pumping volume": 100,
+        "Purging speed": 100,
+        "Purging volume": 600
     },
     "Solution B": {
-        "Solution B pumping speed": 15,
-        "Solution B dropping speed": 15,
-        "Solution B pumping volume": 350
+        "Solution B pumping speed": 30,
+        "Solution B dropping speed": 35,
+        "Solution B pumping volume": 400
     },
     "Gel": {
-        "Tube pumping height": 6,
-        "Vial pumping height": 6,
-        "Well plate pumping height": 5,
-        "Number of mix": 3,
-        "Proportion of mixing volume": 0.75,
-        "Number of wash": 3
+        "Tube pumping height": 2.5,
+        "Vial pumping height": 1.5000000000000004,
+        "Well plate pumping height": 10,
+        "Waiting time": 3.5,
+        "Number of mix": 4,
+        "Proportion of mixing volume": 0.9,
+        "Number of wash": 2
     },
     "Detection": {
-        "Max attempt": 3,
-        "Size min": 50,
+        "Max attempt": 2,
+        "Max place attempts": 4,
+        "Size min": 63,
         "Size max": 70,
         "Circularity min": 0.0,
         "Convexity min": 0.8,
@@ -42,30 +46,68 @@
     },
     "Well": {
         "Well preparation": true,
-        "Type": "TPP6",
-        "Number of sample per well": 8,
-        "Number of well": 6
+        "Type": "Millicell plate",
+        "Number of sample per well": 2,
+        "Number of well": 1,
+        "Culture 1": "A1",
+        "Culture 2": "B1",
+        "Culture 3": "A2",
+        "Culture 4": "B2",
+        "Culture 5": "A3",
+        "Culture 6": "B3"
     },
     "Offset": {
-        "Calibration point": [
-            80,
+        "None": [
+            0,
             0,
             0
         ],
+        "Calibration point": [
+            80.0,
+            0.0,
+            0.0
+        ],
         "Tip one": [
-            37.30000000000026,
-            74.00000000000007,
-            2.4000000000000004
+            36.40000000000025,
+            77.89999999999985,
+            3.000000000000001
         ],
         "Tip two": [
-            35.40000000000023,
-            72.80000000000014,
-            2.5000000000000004
+            38.70000000000028,
+            76.69999999999992,
+            2.7000000000000006
         ],
         "Camera": [
-            49.10000000000043,
-            54.70000000000051,
+            49.20000000000043,
+            55.40000000000052,
             0
+        ]
+    },
+    "Positions": {
+        "Solution A": [
+            25.5,
+            119,
+            60
+        ],
+        "Solution B": [
+            65.5,
+            119,
+            60
+        ],
+        "Wash": [
+            45.5,
+            119,
+            60
+        ],
+        "Mixing tubes": [
+            5,
+            140,
+            42
+        ],
+        "Millicell plate": [
+            167.5,
+            122.5,
+            25
         ]
     }
 }

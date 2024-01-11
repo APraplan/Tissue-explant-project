@@ -8,7 +8,7 @@ PIPETTE_MAX = [2880, 1250]
 TIP_POSITION = [3072, 2560, 3584]
 
 class Dynamixel:
-    def __init__(self, ID, descriptive_device_name, port_name, baudrate, series_name = "xm"):
+    def __init__(self, ID, descriptive_device_name, port_name, baudrate, pipette_max_ul, pipette_empty, series_name = "xm"):
         # Communication inputs
         if type(ID) == list:
             self.multiple_motors = True
@@ -19,6 +19,8 @@ class Dynamixel:
         self.descriptive_device_name = descriptive_device_name
         self.port_name = port_name
         self.baudrate = baudrate
+        self.pipette_max_ul = pipette_max_ul    
+        self.pipette_empty = pipette_empty
         
         # Set series name
         if type(self.ID) == list:
@@ -223,8 +225,7 @@ class Dynamixel:
         for selected_ID in selected_IDs:
             position, dxl_comm_result, dxl_error = self.packet_handler.read4ByteTxRx(self.port_handler, selected_ID, ADDR_PRESENT_POSITION)
             self._print_error_msg("Read position", dxl_comm_result=dxl_comm_result, dxl_error=dxl_error, selected_ID=selected_ID, print_only_if_error=True)
-            reading.append(self.compensate_twos_complement(position, "position"))
-            
+            reading.append(self.compensate_twos_complement(position, "position")) 
         if len(selected_IDs) == 1:
             return reading[0]
         else:
@@ -367,33 +368,85 @@ class Dynamixel:
         else:
             return False
         
-
         
     def select_tip(self, tip_number, ID = None):
+        '''
+        Sets the position to the desired tip. If it's the same as the current one, it won't do anything.
+        Inputs :    tip_number  : (value) 1 or 2
+                    ID          : (value) 1 2 or 3 PER MY UNDERSTANDING. TO VERIFY: i think it's always 3 when you want to change the current tip
+        '''
         selected_IDs = self.fetch_and_check_ID(ID)
         for selected_ID in selected_IDs:
             self.write_position(pos=TIP_POSITION[tip_number], ID = selected_ID)      
-        
-        
-    def write_pipette_ul(self, volume_ul, ID = None):
             
-        if volume_ul > 625:
-            volume_ul = 625
+    def read_tip(self):
+        '''
+        Reads the currently selected tip. To be used .
+        Inputs :    ID          : (value) 0 1 or 2
+        '''
+        selected_IDs = self.fetch_and_check_ID(3)
+        pos = self.read_position(ID = 3)
+        for selected_ID in selected_IDs:
+            if abs(pos - TIP_POSITION[0]) < 10:
+                return 0
+            elif abs(pos - TIP_POSITION[1]) < 10:
+                return 1
+            elif abs(pos - TIP_POSITION[2]) < 10:
+                return 2
+            else:
+                return False
+        
+    def read_pos_in_ul(self, ID = None):
+        '''
+        Reads the current tip position in ul. To be used with tip 1 and 2.
+        Inputs :    ID          : (value) 1 2 or 3 PER MY UNDERSTANDING. TO VERIFY: i think it's always 3 when you want to change the current tip
+        '''
+        selected_IDs = self.fetch_and_check_ID(ID)
+        pos = []
+        for selected_ID in selected_IDs:
+            pos.append((self.read_position(ID = selected_ID) - PIPETTE_MIN[selected_ID-1])/(PIPETTE_MAX[selected_ID-1]-PIPETTE_MIN[selected_ID-1])*self.pipette_max_ul)
+        return pos
+        
+        
+    def write_pipette_ul(self, volume_ul = 525, ID = None, purging = False):
+        '''
+        Compute the movement of the servo motor, designated to a pipette, w.r.t to the minimum. 
+        The minimum and maximum position of each servo is designated in PIPTTE_MIN and PIPETTE_MAX.
+        The absolute difference is awlays the same (2520), but will include a different sign, as the servo motor
+        are mounted in mirrored position.
+        If the argument purging is set to true, it will overcome the maximum position, to purge the pipette.
+        !!! PURGING SHOULD NEVER BE DONE WHEN THE PIPETTE CONTAINS SOMETHING OR WHEN IT IS INSIDE A LIQUID OTHER THAN WATER !!!
+        Inputs :    volume_ul   : (value) between 0 and self.pipette_max_ul
+                    ID          : (value) 1 or 2
+                    purging     : False or True
+        '''
+        
+        ## add offset according to the pipette empty
+        selected_IDs = self.fetch_and_check_ID(ID)
+        if purging:
+            offset = self.pipette_max_ul-self.pipette_empty
+        else:   
+            offset = 0
+        if volume_ul  > self.pipette_empty + offset:
+            volume_ul = self.pipette_empty + offset
         elif volume_ul < 0:
             volume_ul = 0
             
-        selected_IDs = self.fetch_and_check_ID(ID)
         for selected_ID in selected_IDs:
-            pos = int(PIPETTE_MIN[selected_ID-1] + volume_ul/620.0*(PIPETTE_MAX[selected_ID-1]-PIPETTE_MIN[selected_ID-1]))
+            pos = int(PIPETTE_MIN[selected_ID-1] + volume_ul/self.pipette_max_ul*(PIPETTE_MAX[selected_ID-1]-PIPETTE_MIN[selected_ID-1]))
             self.write_position(pos=pos, ID = selected_ID)
             
             
-    def pipette_is_in_position_ul(self, volume_ul, ID = None):
+            
+    def pipette_is_in_position_ul(self, volume_ul, ID = None, debug=False):
         
-        d_pos = int(PIPETTE_MIN[ID-1] + volume_ul/620.0*(PIPETTE_MAX[ID-1]-PIPETTE_MIN[ID-1]))
+        d_pos = int(PIPETTE_MIN[ID-1] + volume_ul/self.pipette_max_ul*(PIPETTE_MAX[ID-1]-PIPETTE_MIN[ID-1]))
         
         a_pos = self.read_position(ID = ID)
         
+        if debug == True:
+            print(" position should be ", d_pos," but currently is  ", a_pos)   
+            
         if abs(d_pos-a_pos) <= 4:
             return True
         else:

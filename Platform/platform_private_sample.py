@@ -26,12 +26,20 @@ def destination(self):
     
     well_pos = [self.culture_well[self.well_num][0], self.culture_well[self.well_num][1]]
     
-    radius = 3
-    if self.nb_sample == 0:
-        offset = [0, 0]
-    else: 
-        angle = (self.nb_sample-1)*2*math.pi/(self.settings["Well"]["Number of sample per well"]-1)
-        offset = [radius*math.cos(angle), radius*math.sin(angle)]
+    # radius = 3
+    # if self.nb_sample == 0:
+    #     offset = [0, 0]
+    # else: 
+    #     angle = (self.nb_sample-1)*2*math.pi/(self.settings["Well"]["Number of sample per well"]-1)
+    #     offset = [radius*math.cos(angle), radius*math.sin(angle)]
+    offset = [0, 0]
+    
+    if self.nb_sample % 2 == 0: 
+        offset[1] = 1
+    else:   
+        offset[1] = -1
+
+    offset[0] = (self.nb_sample - 2) * 2
 
     return [well_pos[0]+offset[0], well_pos[1]+offset[1]]
 
@@ -48,6 +56,7 @@ def release_tracker(self):
     self.tracker = cv2.TrackerCSRT.create()  
     
 def check_pickup(self):
+    ## check how this is done
     
     x, y, w, h = [int(i) for i in self.bbox]
     tracker_pos = [int(x+w/2), int(y+h/2)]
@@ -69,21 +78,36 @@ def check_pickup_two(self):
     _, _, files = next(os.walk(macro_dir))
     file_count = len(files)
     cv2.imwrite("Pictures/macro/macro_image_" + str(file_count) + ".png", self.macro_frame)
-    
-    res = self.NN.predict(cv2.cvtColor(self.macro_frame, cv2.COLOR_BGR2RGB).reshape(1, 480, 640, 3), verbose=0)
+    #### The first line was the one being used. In the future, update the neural network by taking a series of picture, 
+    #### and re-enable it instead of waiting for a user's confirmation
+    # res = self.NN.predict(cv2.cvtColor(self.macro_frame, cv2.COLOR_BGR2RGB).reshape(1, 480, 640, 3), verbose=0)
     # res = self.NN.predict(cv2.cvtColor(self.macro_frame, cv2.COLOR_BGR2GRAY).reshape(1, 480, 640, 1), verbose=0)
-    logger.info(f"🔮 Prediciton results {res[0, 0]}")
+    # logger.info(f"🔮 Prediciton results {res[0, 0]}")
+    # how to write a pause here, so were check the prediction for a few seconds
     
-    if res > 0.5:
-        return True
-    else:
-        return False
+    
+    while True:      
+
+        # Inputs
+        key = cv2.waitKeyEx(5)  
+        
+        if key == 13: #enter
+            return True
+        if key == 8: #backspace
+            return False
+        
+        self.macro_frame = self.stream2.read() 
+        cv2.imshow('Macro camera', self.macro_frame) 
+    # if res > 0.5:
+    #     return False ## change here to take picture repeatedlz
+    # else:
+    #     return False
     
 
 def delay(self, delay):
 
     if not self.chrono_set:
-        self.chrono = delay/1000.0 + time.time()
+        self.chrono = delay + time.time()
         self.chrono_set = True
     elif time.time() >= self.chrono:
         self.chrono_set = False
@@ -95,7 +119,7 @@ def detect(self):
     if self.sub_state == 'go to position':
         
         if self.com_state == 'not send':
-            self.anycubic.move_axis_relative(z=self.safe_height, f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Camera"])
+            # self.anycubic.move_axis_relative(z=self.safe_height, f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Camera"])
             self.anycubic.move_axis_relative(x=self.detection_place[0], y=self.detection_place[1], z=self.detection_place[2], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Camera"])
             self.anycubic.finish_request()
             self.com_state = 'send'
@@ -122,6 +146,17 @@ def detect(self):
             self.sub_state = 'empty pipette'
             self.com_state = 'not send'
             self.detect_attempt = 0
+            out = self.frame.copy()
+
+            macro_dir = r"Pictures/cam2"
+            
+            if not os.path.exists(macro_dir):
+                os.makedirs(macro_dir)
+            
+            _, _, files = next(os.walk(macro_dir))
+            file_count = len(files)
+            cv2.imwrite("Pictures/cam2/successful_capture_" + str(file_count) + ".png", out)
+            
         else:
             self.detect_attempt += 1
             
@@ -129,10 +164,19 @@ def detect(self):
                 self.state = 'pause'
                 self.last_state = 'detect'
                 self.detect_attempt = 0
+                out = self.frame.copy()
+    
+                macro_dir = r"Pictures/cam2"
+                
+                if not os.path.exists(macro_dir):
+                    os.makedirs(macro_dir)
+                
+                _, _, files = next(os.walk(macro_dir))
+                file_count = len(files)
+                cv2.imwrite("Pictures/cam2/failed_capture_" + str(file_count) + ".png", out)
                 logger.info('🔎 No tissue detected')
     
-def pick(self):
-            
+def pick(self):   
     
     if self.sub_state == 'empty pipette':
     
@@ -173,8 +217,8 @@ def pick(self):
                     self.com_state = 'not send'         
                     self.pick_attempt = 0    
                 else:              
-                    man_corr = 0.02 # Small manual offset to correct dynamic offset
-                    self.anycubic.move_axis_relative(x=self.target_pos[0]-man_corr*self.offset_check[0], y=self.target_pos[1]-man_corr*self.offset_check[1], z=self.settings["Position"]["Pick height"], f=self.settings["Speed"]["Slow speed"], offset=self.settings["Offset"]["Tip one"])
+                    man_corr = [0., 1.0] # Small manual offset to correct dynamic offset
+                    self.anycubic.move_axis_relative(x=self.target_pos[0]+man_corr[0], y=self.target_pos[1]+man_corr[1], z=self.settings["Position"]["Pick height"], f=self.settings["Speed"]["Slow speed"], offset=self.settings["Offset"]["Tip one"])
                     # indirect move to go on top
                     # self.anycubic.move_axis_relative(x=self.target_pos[0], y=self.target_pos[1], z=self.settings["Position"]["Pick height"]+2, f=self.settings["Speed"]["Slow speed"])
                     # self.anycubic.move_axis_relative(z=self.settings["Position"]["Pick height"], f=self.settings["Speed"]["Slow speed"])
@@ -195,7 +239,6 @@ def pick(self):
             self.com_state = 'send'
             
         elif self.dyna.pipette_is_in_position_ul(self.pipette_1_pos, ID = 1):
-            self.results_attempts += 1
             self.sub_state = 'check'
             self.com_state = 'not send'
             
@@ -212,26 +255,26 @@ def pick(self):
             
             # print(check_pickup(self))
             self.pick_attempt += 1
+            print(self.pick_attempt, self.settings["Detection"]["Max attempt"])
             
             if check_pickup(self):
-                           
                 release_tracker(self)
                 self.state = 'picture'
                 self.sub_state = 'go to position'
                 self.com_state = 'not send' 
                 self.pick_attempt = 0
                 
-            elif self.pipette_1_pos - self.settings["Tissues"]["Pumping Volume"] >= 0 and self.pick_attempt < self.settings["Detection"]["Max attempt"]:
-                self.sub_state = 'correction'
-                self.com_state = 'not send'
-                
-            else:
-                release_tracker(self)
+            elif self.pick_attempt >= self.settings["Detection"]["Max attempt"]:
                 self.state = 'reset'
                 self.sub_state = 'go to position'
-                self.com_state = 'not send'         
-                self.pick_attempt = 0    
-
+                self.com_state = 'not send'
+                self.pick_attempt = 0 
+                
+            else:
+                self.sub_state = 'correction'
+                self.com_state = 'not send' 
+                  
+                
 def picture(self):
     
     if self.sub_state == 'go to position':
@@ -243,6 +286,9 @@ def picture(self):
                 self.anycubic.move_axis_relative(x=self.picture_pos, y=100, f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip one"])
             else:
                 self.anycubic.move_axis_relative(x=self.picture_pos, y=dest[1], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip one"])
+            
+            self.anycubic.set_position(x=-self.x_firmware_limit_overwrite) 
+            self.anycubic.move_axis_relative(x=self.picture_pos, offset=self.settings["Offset"]["Tip one"])
             self.anycubic.finish_request()
             self.com_state = 'send'
             
@@ -250,21 +296,20 @@ def picture(self):
             
             # print(check_pickup_two(self))
             if delay(self, 0.5):
+                
+                self.pause()
                 if check_pickup_two(self):
-                    self.results_acc_first = (self.resutls_attempts - self.results_false_pos)/self.results_attempts
-                    save_datas([self.results_attempts, self.results_acc_first])
-                    self.results_false_pos = 0
-                    self.results_attempts = 0
-                    self.results_acc_first = 0
+                    # add pause here to check on the camera status
                     self.state = 'place'
-                    self.sub_state = 'go to position'
-                    self.com_state = 'not send' 
-                    
+                    self.place_attempt = 0
+                   
                 else:
-                    self.results_false_pos += 1
                     self.state = 'reset'
-                    self.sub_state = 'go to position'
-                    self.com_state = 'not send'            
+                
+                self.sub_state = 'go to position'
+                self.com_state = 'not send' 
+                self.anycubic.move_axis_relative(x = -self.x_firmware_limit_overwrite)
+                self.anycubic.set_position(x = 0)   
                 
 def place(self):
 
@@ -303,6 +348,7 @@ def place(self):
             self.dyna.write_profile_velocity(self.settings["Tissues"]["Dropping speed"], ID = 1)
             self.pipette_1_pos = self.pipette_1_pos + self.settings["Tissues"]["Dropping volume"]
             self.dyna.write_pipette_ul(self.pipette_1_pos, ID = 1)
+            self.place_attempt += 1
             self.com_state = 'send'
             
         elif self.dyna.pipette_is_in_position_ul(self.pipette_1_pos, ID = 1):
@@ -332,23 +378,29 @@ def second_picture(self):
             if dest[1] > 100:
                 self.anycubic.move_axis_relative(x=80, y=100, f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip one"])
             self.anycubic.move_axis_relative(x=self.picture_pos, f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip one"])
+            
+            self.anycubic.set_position(x=-self.x_firmware_limit_overwrite) 
+            self.anycubic.move_axis_relative(x=self.picture_pos, offset=self.settings["Offset"]["Tip one"])
             self.anycubic.finish_request()
             self.com_state = 'send'
             
         elif self.anycubic.get_finish_flag():
             
             # print(check_pickup_two(self))
-            if delay(self, 0.5):
+            if delay(self, 1.5):
                 if check_pickup_two(self):
-                    self.state = 'place'
-                    self.sub_state = 'go to position'
-                    self.com_state = 'not send' 
+                    if self.place_attempt >= self.settings["Detection"]["Max place attempts"]:
+                        self.state = 'reset'
+                    else:
+                        self.state = 'place'
                     
                 else:
                     self.nb_sample += 1
                     self.state = 'reset'
-                    self.sub_state = 'go to position'
-                    self.com_state = 'not send'            
+                self.sub_state = 'go to position'
+                self.com_state = 'not send'
+                self.anycubic.move_axis_relative(x = -self.x_firmware_limit_overwrite)
+                self.anycubic.set_position(x = 0)              
               
 def reset(self):
     
@@ -386,6 +438,7 @@ def reset(self):
                 else:
                     if self.settings["Well"]["Well preparation"]:
                         self.state = 'preparing gel'
+                        # maybe add a not send com state here
                     else:
                         self.state = 'detect'
                     self.sub_state = 'go to position'
@@ -401,5 +454,7 @@ def done(self):
     if self.com_state == 'not send':
         self.anycubic.move_axis_relative(z=self.safe_height, printMsg=False, offset=self.settings["Offset"]["Tip one"])
         self.anycubic.move_axis_relative(x=2200, y=220, printMsg=False, offset=self.settings["Offset"]["Tip one"])
+        self.tip_number = 1
+        self.dyna.select_tip(tip_number=self.tip_number, ID=3)
         logger.info('🦾 Done')
         self.com_state = 'send'  

@@ -108,7 +108,6 @@ class Printer:
         offset[0] = offset[0] + self.home_pos[0]
         offset[1] = offset[1] + self.home_pos[1]
         offset[2] = offset[2] + self.home_pos[2]
-            
         command = "G0"
         
         if x is not None:
@@ -122,10 +121,17 @@ class Printer:
         if f is not None:
             command = command + " F" + str(float(100*f))
 
-        self.send_gcode(command, wait_until_completion=False, printMsg=printMsg)
+        self.send_gcode(command, wait_until_completion=True, printMsg=printMsg)
 
-    def move_axis(self, x = None, y = None, z = None, e = None, f = None, printMsg = False):
+    def move_axis(self, x = None, y = None, z = None, e = None, f = None, printMsg = False, offset=None):
         self._finish = False
+        if offset is None:
+            offset = [0, 0, 0]
+            
+        offset[0] = offset[0] + self.home_pos[0]
+        offset[1] = offset[1] + self.home_pos[1]
+        offset[2] = offset[2] + self.home_pos[2]
+        
         command = "G0"
         
         if x is not None:
@@ -158,6 +164,18 @@ class Printer:
             command = command + " F" + str(float(100*f))
 
         self.send_gcode(command, wait_until_completion=True, printMsg=printMsg)
+        
+    def set_position(self, x = None, y = None, z = None, e = None, f = None, printMsg = False):
+        self._finish = False
+        command = "G92"
+        if x is not None:
+            command = command + " X" + str(x)
+        if y is not None:
+            command = command + " Y" + str(y)
+        if z is not None:
+            command = command + " Z" + str(z)
+            
+        self.send_gcode(command, wait_until_completion=False, printMsg=printMsg)
 
     def read_position(self, printMsg=False):
         while True: 
@@ -209,6 +227,20 @@ class Printer:
     
     def get_finish_flag(self):
         return self._finish
+    
+    def change_idle_time(self, time = 120):
+        self.send_gcode("M84 S" + str(time), printMsg=False)
+    
+    def disable_axis(self, x = False, y = False, z = False, all = False):
+        command = "M18"
+        if x or all:
+            command = command + " X"
+        if y or all:
+            command = command + " Y"
+        if z or all:
+            command = command + " Z"
+            
+        self.send_gcode(command, printMsg=False)
                         
         
 class position:
@@ -216,5 +248,5 @@ class position:
         self.x = x
         self.y = y
         self.z = z
-        self.e = e
+        self.e = e  
         self.f = f

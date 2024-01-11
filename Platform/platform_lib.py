@@ -1,14 +1,16 @@
 import numpy as np
 import cv2
+import threading
 from loguru import logger
 import computer_vision as cv
 from platform_private_sample import *
 from platform_private_gel import *
 from platform_private_gui import *
 from Communication.ports_gestion import *
+import Developpement.Cam_gear as cam_gear
 
 
-debug = True
+debug = False
 
 if debug:
     from Communication.fake_communication import *
@@ -16,6 +18,7 @@ else:
     from vidgear.gears import VideoGear
     from Communication.dynamixel_controller import *
     from Communication.printer_communications import *
+    import Developpement.Cam_gear as cam_gear
 
 
 class platform_pick_and_place:
@@ -23,15 +26,11 @@ class platform_pick_and_place:
     def __init__(self):
         
         load_parameters(self)
-        
+        ###### Add comment to these parameters to make it clearer
         # Temp
         self.save = 0
         self.counter = 0
         self.record = True
-        
-        self.results_false_pos = 0
-        self.results_attempts = 0
-        self.results_acc_first = 0
 
         # FSM
         self.chrono_set = False
@@ -40,6 +39,8 @@ class platform_pick_and_place:
         self.last_state = 'homming'
         self.sub_state = 'go to position'
         self.com_state = 'not send'
+        self.next_sub_state = None
+        self.flag = True
         
         # Picking zone
         self.safe_height = 25
@@ -55,29 +56,28 @@ class platform_pick_and_place:
         
         # Anycubic
         self.anycubic = Printer(descriptive_device_name="printer", port_name=get_com_port("1A86", "7523"), baudrate=115200)
-        
+        self.x_firmware_limit_overwrite = -9
         # Dynamixel
-        self.dyna = Dynamixel(ID=[1,2,3], descriptive_device_name="XL430 test motor", series_name=["xl", "xl", "xl"], baudrate=57600,
-                 port_name=get_com_port("0403", "6014"))
-
+        
         self.tip_number = 1
         self.pipette_1_pos = 0
         self.pipette_2_pos = 0
         self.pipette_full = 0
-        self.pipette_empty = 625
+        self.pipette_empty = 570
+        self.pipette_max_ul = 680
+        
+        self.dyna = Dynamixel(ID=[1,2,3], descriptive_device_name="XL430 test motor", series_name=["xl", "xl", "xl"], baudrate=57600,
+                pipette_max_ul= self.pipette_max_ul, pipette_empty=self.pipette_empty, port_name=get_com_port("0403", "6014")) 
+
         
         # Tissues
         self.target_pos = (0,0)
         self.nb_sample = 0
         
-        # Camera 1 
-        options = {
-            "CAP_PROP_FRAME_WIDTH": 1280,
-            "CAP_PROP_FRAME_HEIGHT": 720,
-            "CAP_PROP_FPS": 30,
-        }
-        self.stream1 = VideoGear(source=get_cam_index("TV Camera"), logging=True, **options).start() 
-        frame = self.stream1.read() 
+        # Camera 1 - Toolhead Camera
+        self.stream1 = cam_gear.camThread("Camera 1", get_cam_index("TV Camera")) 
+        self.stream1.start()
+        frame = cam_gear.get_cam_frame(self.stream1)  
         self.cam = cv.Camera(frame)
         self.frame = self.cam.undistort(frame)
         self.invert = cv.invert(self.frame)
@@ -88,9 +88,10 @@ class platform_pick_and_place:
         self.detect_attempt = 0
         self.max_detect_attempt = 50
         
-        # Camera 2
-        self.stream2 = VideoGear(source=get_cam_index("USB2.0 UVC PC Camera"), logging=True).start() 
-        self.macro_frame = self.stream2.read()
+        # Camera 2 - Macro Camera
+        self.stream2 = cam_gear.camThread("Camera 2", get_cam_index("USB2.0 UVC PC Camera"))
+        self.stream2.start()
+        self.macro_frame = cam_gear.get_cam_frame(self.stream2)
         self.picture_pos = -self.settings["Offset"]["Tip one"][0]
                 
         # Tracker
@@ -106,17 +107,13 @@ class platform_pick_and_place:
         self.well_num = 0
         self.mix = 0
         self.wash = 0
+        self.timer_started = False
 
-    # Public methodes
+    # Public methods
     
     def init(self):        
-        
+        ''' Initialize most of the parameters and variables. It also sends the homing command to the printer, which uses marlin firmware.'''
         self.anycubic.connect()
-        self.anycubic.homing()
-        # self.anycubic.set_home_pos(x=0, y=0, z=0)
-        self.anycubic.max_x_feedrate(300)
-        self.anycubic.max_y_feedrate(300)
-        self.anycubic.max_z_feedrate(25)
         
         self.dyna.begin_communication()
         self.dyna.set_operating_mode("position", ID="all")
@@ -124,6 +121,26 @@ class platform_pick_and_place:
         self.dyna.set_position_gains(P_gain = 2700, I_gain = 50, D_gain = 5000, ID=1)
         self.dyna.set_position_gains(P_gain = 2700, I_gain = 90, D_gain = 5000, ID=2)
         self.dyna.set_position_gains(P_gain = 2500, I_gain = 40, D_gain = 5000, ID=3)
+        self.tip_number = 0
+        self.dyna.select_tip(tip_number=self.tip_number, ID=3)
+        self.dyna.write_pipette_ul(self.pipette_empty, ID=[1,2])
+        
+        self.anycubic.homing()
+        # self.anycubic.set_home_pos(x=0, y=0, z=0)
+        self.anycubic.max_x_feedrate(300)
+        self.anycubic.max_y_feedrate(300)
+        self.anycubic.max_z_feedrate(25)
+
+        # Select first tip
+        self.anycubic.move_axis_relative(x=15, y=0, z=self.safe_height, offset=self.settings["Offset"]["Tip one"])
+        self.anycubic.finish_request()
+        while not self.anycubic.get_finish_flag():
+            pass
+        
+        if debug == False:
+            self.anycubic.change_idle_time(time = 300)
+        
+
         self.tip_number = 1
         self.dyna.select_tip(tip_number=self.tip_number, ID=3)
 
@@ -140,7 +157,7 @@ class platform_pick_and_place:
     
     
     def calibrate(self):
-        
+        ''' Starts the calibration sequence.'''
         calibration_sequence(self)
             
         self.anycubic.move_axis_relative(z=self.safe_height, offset=self.settings["Offset"]["Tip one"])
@@ -152,7 +169,12 @@ class platform_pick_and_place:
         
     
     def run(self):
-
+        ''' 
+        Main loop of the code.
+        It will continuously run, update the pictures, and run the function update, that switches between the states
+        Pressin the escape key will stop the loop and close the windows. If you close the program this way, the 
+        parameters will be saved to settings.json
+        '''
         if self.record:
             try :
                 _, _, files = next(os.walk(r"Pictures/Videos"))
@@ -165,14 +187,14 @@ class platform_pick_and_place:
 
         while True:
         
-            frame = self.stream1.read() 
+            frame = cam_gear.get_cam_frame(self.stream1)  
             self.frame = self.cam.undistort(frame)
             self.invert = cv.invert(self.frame)
             
             if self.record:
                 out.write(self.frame)
             
-            # self.macro_frame = self.stream2.read()
+            # self.macro_frame = cam_gear.get_cam_frame(self.stream2) 
             
             self.update() 
              
@@ -207,7 +229,7 @@ class platform_pick_and_place:
         if self.state == 'homming':
             homming(self)
           
-        elif   self.state == 'spreading solution A':
+        elif self.state == 'spreading solution A':
             spreading_solution_A(self)
             
         elif self.state == 'preparing gel':
@@ -235,7 +257,7 @@ class platform_pick_and_place:
             done(self)
                    
     def pause(self):
-    
+        '''' Should be called by pressing the button p while on the GUI '''
         if self.state != 'pause':
             logger.info('🚦 Paused')
             self.last_state = self.state
@@ -243,14 +265,22 @@ class platform_pick_and_place:
             
             
     def resume(self):
-        
+        ''' Should be called by pressing the button enter while on the GUI'''
         if self.state == 'pause':
             logger.info('🧫 Resumed')
             self.state = self.last_state
+        if self.state == 'Done':
+            if self.settings["Well"]["Well preparation"]:
+                # self.state = 'preparing gel' ## add here prep sol A
+                self.state = 'spreading solution A'
+            else:
+                self.state = 'detect'
+            self.sub_state = 'go to position'
+            self.com_state = 'not send'
                 
 
     def reset(self):
-        
+        ''' Should be called by pressing the button r while on the GUI'''
         if not (self.state == 'homming' or self.state == 'spreading solution A' or self.state == 'preparing gel'):
         
             logger.info('⚡ Soft reset')

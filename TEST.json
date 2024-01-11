@@ -1,0 +1,141 @@
+{
+    "Position": {
+        "Pick height": 11.0,
+        "Drop height": 11.1
+    },
+    "Speed": {
+        "Slow speed": 1.0,
+        "Medium speed": 8,
+        "Fast speed": 100
+    },
+    "Tissues": {
+        "Pumping Volume": "95.01",
+        "Pumping speed": 65,
+        "Dropping volume": 10.0,
+        "Dropping speed": 151
+    },
+    "Solution A": {
+        "Solution A pumping speed": 60,
+        "Solution A dropping speed": 60,
+        "Solution A pumping volume": 100,
+        "Purging speed": 100,
+        "Purging volume": 600
+    },
+    "Solution B": {
+        "Solution B pumping speed": 30,
+        "Solution B dropping speed": 35,
+        "Solution B pumping volume": 400
+    },
+    "Gel": {
+        "Tube pumping height": 3.3,
+        "Vial pumping height": 4.299999999999999,
+        "Well plate pumping height": 5,
+        "Number of mix": 5,
+        "Proportion of mixing volume": 0.7,
+        "Number of wash": 2
+    },
+    "Detection": {
+        "Max attempt": 2,
+        "Max place attempts": 4,
+        "Size min": 63,
+        "Size max": 70,
+        "Circularity min": 0.0,
+        "Convexity min": 0.8,
+        "Inertia min": 0.3
+    },
+    "Well": {
+        "Well preparation": true,
+        "Type": "Millicell plate",
+        "Number of sample per well": 4,
+        "Number of well": 6,
+        "Culture 1": "A1",
+        "Culture 2": "B1",
+        "Culture 3": "A2",
+        "Culture 4": "B2",
+        "Culture 5": "A3",
+        "Culture 6": "B3"
+    },
+    "Offset": {
+        "None": [
+            0,
+            0,
+            0
+        ],
+        "Calibration point": [
+            80.0,
+            0.0,
+            0.0
+        ],
+        "Tip one": [
+            38.00000000000027,
+            79.19999999999978,
+            3.200000000000001
+        ],
+        "Tip two": [
+            35.20000000000023,
+            77.69999999999986,
+            2.7000000000000006
+        ],
+        "Camera": [
+            49.30000000000043,
+            55.40000000000052,
+            0
+        ]
+    },
+    "Positions": {
+        "Solution A": [
+            1.0,
+            1.0,
+            1.1
+        ],
+        "Solution B": [
+            66,
+            119,
+            60
+        ],
+        "Wash": [
+            46,
+            119,
+            60
+        ],
+        "Mixing tubes": [
+            5,
+            140,
+            42
+        ]
+    },
+    "Saved Positions": {
+        "big_pos_1": {
+            "X": "12.5",
+            "Y": "140.0",
+            "Z": "55.0",
+            "Servo 1": "525",
+            "Servo 2": "525",
+            "Servo Speed": "30"
+        },
+        "big_pos_2": {
+            "X": "39.5",
+            "Y": "140.0",
+            "Z": "55.0",
+            "Servo 1": "525",
+            "Servo 2": "525",
+            "Servo Speed": "30"
+        },
+        "big_pos_3": {
+            "X": "66.5",
+            "Y": "140.0",
+            "Z": "55.0",
+            "Servo 1": "525",
+            "Servo 2": "525",
+            "Servo Speed": "30"
+        },
+        "test": {
+            "X": "",
+            "Y": "",
+            "Z": "",
+            "Servo 1": 525,
+            "Servo 2": 523,
+            "Servo Speed": 30
+        }
+    }
+}
