@@ -57,26 +57,36 @@ def well_plate(id, type='TPP12'):
     '''
     # https://www.tpp.ch/page/downloads/IFU_TechDoc/TechDoc-testplates-measurements-d-e.pdf?m=1643984087&
     
-    border = [170, 134]
+    # border = [170, 134]
+    border = [85, 134]
     
     if type == 'TPP6':
-        position = [border[0]-24, border[1]-24.4, 25]
+        # position = [border[0]-24, border[1]-24.4, 25]
+        position = [border[0]+24, border[1]-24.4, 25]
         well_offset = 37.5
     elif type == 'TPP12':
-        position = [border[0]-17.9, border[1]-26.55, 25]
+        # position = [border[0]-17.9, border[1]-26.55, 25]
+        position = [border[0]+17.9, border[1]-26.55, 25]
         well_offset = 24.9
     elif type == 'TPP24':
-        position = [border[0]-14.85, border[1]-15.4, 25]
+        # position = [border[0]-14.85, border[1]-15.4, 25]
+        position = [border[0]+14.85, border[1]-15.4, 25]
         well_offset = 18.6
     elif type == 'TPP48':
-        position = [border[0]-10.25, border[1]-18.4, 25]
+        # position = [border[0]-10.25, border[1]-18.4, 25]
+        position = [border[0]+10.25, border[1]-18.4, 25]
         well_offset = 13
     elif type == 'NUNC48':
-        position = [border[0]-10, border[1]-15.5, 25]
+        # position = [border[0]-10, border[1]-15.5, 25]
+        position = [border[0]+10, border[1]-15.5, 25]
         well_offset = 13.5
     elif type == 'FALCON48':
-        position = [border[0]-11.0, border[1]-18.5, 25]
+        # position = [border[0]-11.0, border[1]-18.5, 25]
+        position = [border[0]+11.0, border[1]-18.5, 25]
         well_offset = 12.85
+    elif type == 'Millicell plate':
+        position = [112.5, 122.5, 25]
+        well_offset = 55
     else:
         print('Wrong well plate type')
     
@@ -93,26 +103,31 @@ def well_plate(id, type='TPP12'):
     | A7 | B7 | C7 | D7 | E7 | F7 |
     | A8 | B8 | C8 | D8 | E8 | F8 |
      ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅ ̅
-    The letter defines the column (x position), and the number defines the row ( y position).
+    The letter defines the column (x position), and the number defines the row (y position).
     
     '''
-    if id[0] == 'A':
+    if id[0] == 'A': # can probably be written in 3 lines instead of all 6 scenarios
         position[0] = position[0]
         position[1] = position[1] - (int(id[1])-1)*well_offset
     elif id[0] == 'B':
-        position[0] = position[0] - 1*well_offset
+        position[0] = position[0] + 1*well_offset
+        # position[0] = position[0] - 1*well_offset
         position[1] = position[1] - (int(id[1])-1)*well_offset
     elif id[0] == 'C':
-        position[0] = position[0] - 2*well_offset
+        position[0] = position[0] + 2*well_offset
+        # position[0] = position[0] - 2*well_offset
         position[1] = position[1] - (int(id[1])-1)*well_offset
     elif id[0] == 'D':
-        position[0] = position[0] - 3*well_offset
+        position[0] = position[0] + 3*well_offset
+        # position[0] = position[0] - 3*well_offset
         position[1] = position[1] - (int(id[1])-1)*well_offset
     elif id[0] == 'E':
-        position[0] = position[0] - 4*well_offset
+        position[0] = position[0] + 4*well_offset
+        # position[0] = position[0] - 4*well_offset
         position[1] = position[1] - (int(id[1])-1)*well_offset
     elif id[0] == 'F':
-        position[0] = position[0] - 5*well_offset
+        position[0] = position[0] + 5*well_offset
+        # position[0] = position[0] - 5*well_offset
         position[1] = position[1] - (int(id[1])-1)*well_offset
         
     return position
@@ -224,10 +239,12 @@ def preparing_gel(self):
             self.tip_number = 2
             self.dyna.select_tip(tip_number=self.tip_number, ID=3)
             self.solution_prep_num = 0
-            self.sub_state = 'go to purge position'
-            self.com_state = 'not send'
-            # self.sub_state = 'go to sol B'
+            self.pipette_2_pos = self.pipette_empty
+            self.dyna.write_pipette_ul(self.pipette_2_pos, ID = 2)
+            # self.sub_state = 'go to purge position'
             # self.com_state = 'not send'
+            self.sub_state = 'go to sol B'
+            self.com_state = 'not send'
             
     if self.sub_state == 'go to purge position':
         ''' We go to the purge position, which is above the liquid'''
@@ -324,7 +341,7 @@ def preparing_gel(self):
         if self.com_state == 'not send':
             ''' First sets the speed for the pumping, then pumps out the solution B, and then increment the mix counter'''
             self.dyna.write_profile_velocity(self.settings["Solution B"]["Solution B pumping speed"], ID = 2)
-            self.pipette_2_pos = self.pipette_empty
+            self.pipette_2_pos = self.pipette_empty-30
             self.dyna.write_pipette_ul(self.pipette_2_pos, ID = 2)
             self.mix += 1
             self.com_state = 'send'  
@@ -392,7 +409,7 @@ def preparing_gel(self):
         if self.com_state == 'not send':
             ''' First sets the speed for the pumping, then pumps out the solution B'''
             self.dyna.write_profile_velocity(self.settings["Solution B"]["Solution B pumping speed"], ID = 2)
-            self.pipette_2_pos = self.pipette_2_pos + (self.settings["Solution A"]["Solution A pumping volume"] + self.settings["Solution B"]["Solution B pumping volume"])*self.settings["Gel"]["Proportion of mixing volume"]*self.settings["Gel"]["Proportion of mixing volume"]
+            self.pipette_2_pos = self.pipette_2_pos + (self.settings["Solution A"]["Solution A pumping volume"] + self.settings["Solution B"]["Solution B pumping volume"])*self.settings["Gel"]["Proportion of mixing volume"] ##
             self.dyna.write_pipette_ul(self.pipette_2_pos, ID = 2)
             self.com_state = 'send'  
             
@@ -486,7 +503,6 @@ def preparing_gel(self):
             # self.state = 'detect'
             # self.sub_state = 'go to position'
             self.prep_gel_done = True
-            self.well_num += 1
             self.sub_state = 'go to purge position'
             self.com_state = 'not send'  
             
@@ -551,7 +567,6 @@ def homming(self):
     elif self.sub_state == 'empty pipette':
         ''' Sets the speed for the emptying of the pipette, and empties it
         It empties the pipette over the petridish, as the first pipette is the one picking up cells'''
-        ###### Est-ce que c'est bien de faire comme ça ? 
         if self.com_state == 'not send':
             self.dyna.write_profile_velocity(self.settings["Tissues"]["Dropping speed"], ID = 1)
             self.pipette_1_pos = self.pipette_empty
@@ -574,11 +589,24 @@ def homming(self):
             
         elif self.anycubic.get_finish_flag():
             ''' Once it reached the second position, changes the substate to go to dump'''
-            self.tip_number = 2
-            self.dyna.select_tip(tip_number=self.tip_number, ID=3)
-            self.sub_state = 'go to dump'
-            self.com_state = 'not send'
-    
+            # self.tip_number = 2
+            # self.dyna.select_tip(tip_number=self.tip_number, ID=3)
+            # self.sub_state = 'go to dump'
+            # self.com_state = 'not send'
+            
+        
+            ''' Changes stat  to preparing well if the parameter has been set to true, else changes state to detect'''
+            if self.settings["Well"]["Well preparation"]:
+                # self.state = 'spreading solution A'
+                self.state = 'preparing gel'
+                self.prep_gel_done = False
+            else:
+                self.state = 'detect'
+
+            self.sub_state = 'go to position'
+            self.com_state = 'not send'   
+            
+    ####
     
     elif self.sub_state == 'go to dump':
         ''' Moves to the dump vial, as the second pipette is the one responsible for the mixing.'''

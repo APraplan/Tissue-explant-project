@@ -378,6 +378,34 @@ class Dynamixel:
         selected_IDs = self.fetch_and_check_ID(ID)
         for selected_ID in selected_IDs:
             self.write_position(pos=TIP_POSITION[tip_number], ID = selected_ID)      
+            
+    def read_tip(self):
+        '''
+        Reads the currently selected tip. To be used .
+        Inputs :    ID          : (value) 0 1 or 2
+        '''
+        selected_IDs = self.fetch_and_check_ID(3)
+        pos = self.read_position(ID = 3)
+        for selected_ID in selected_IDs:
+            if abs(pos - TIP_POSITION[0]) < 10:
+                return 0
+            elif abs(pos - TIP_POSITION[1]) < 10:
+                return 1
+            elif abs(pos - TIP_POSITION[2]) < 10:
+                return 2
+            else:
+                return False
+        
+    def read_pos_in_ul(self, ID = None):
+        '''
+        Reads the current tip position in ul. To be used with tip 1 and 2.
+        Inputs :    ID          : (value) 1 2 or 3 PER MY UNDERSTANDING. TO VERIFY: i think it's always 3 when you want to change the current tip
+        '''
+        selected_IDs = self.fetch_and_check_ID(ID)
+        pos = []
+        for selected_ID in selected_IDs:
+            pos.append((self.read_position(ID = selected_ID) - PIPETTE_MIN[selected_ID-1])/(PIPETTE_MAX[selected_ID-1]-PIPETTE_MIN[selected_ID-1])*self.pipette_max_ul)
+        return pos
         
         
     def write_pipette_ul(self, volume_ul = 525, ID = None, purging = False):
@@ -410,12 +438,15 @@ class Dynamixel:
             
             
             
-    def pipette_is_in_position_ul(self, volume_ul, ID = None):
+    def pipette_is_in_position_ul(self, volume_ul, ID = None, debug=False):
         
         d_pos = int(PIPETTE_MIN[ID-1] + volume_ul/self.pipette_max_ul*(PIPETTE_MAX[ID-1]-PIPETTE_MIN[ID-1]))
         
         a_pos = self.read_position(ID = ID)
         
+        if debug == True:
+            print(" position should be ", d_pos," but currently is  ", a_pos)   
+            
         if abs(d_pos-a_pos) <= 4:
             return True
         else:

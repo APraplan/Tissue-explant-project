@@ -1,7 +1,7 @@
 {
     "Position": {
         "Pick height": 5.599999999999995,
-        "Drop height": 4.800000000000002
+        "Drop height": 10
     },
     "Speed": {
         "Slow speed": 3,
@@ -11,7 +11,7 @@
     "Tissues": {
         "Pumping Volume": 95.0,
         "Pumping speed": 65,
-        "Dropping volume": 10.0,
+        "Dropping volume": 20.0,
         "Dropping speed": 151
     },
     "Solution A": {
@@ -27,12 +27,12 @@
         "Solution B pumping volume": 400
     },
     "Gel": {
-        "Tube pumping height": 1.5,
+        "Tube pumping height": 2.5,
         "Vial pumping height": 1.5000000000000004,
-        "Well plate pumping height": 4,
+        "Well plate pumping height": 10,
         "Waiting time": 3.5,
-        "Number of mix": 5,
-        "Proportion of mixing volume": 0.95,
+        "Number of mix": 4,
+        "Proportion of mixing volume": 0.9,
         "Number of wash": 2
     },
     "Detection": {
@@ -46,15 +46,15 @@
     },
     "Well": {
         "Well preparation": true,
-        "Type": "TPP12",
-        "Number of sample per well": 4,
-        "Number of well": 3,
+        "Type": "Millicell plate",
+        "Number of sample per well": 2,
+        "Number of well": 1,
         "Culture 1": "A1",
         "Culture 2": "B1",
         "Culture 3": "A2",
-        "Culture 4": "A3",
-        "Culture 5": "A4",
-        "Culture 6": "A3"
+        "Culture 4": "B2",
+        "Culture 5": "A3",
+        "Culture 6": "B3"
     },
     "Offset": {
         "None": [
@@ -68,17 +68,17 @@
             0.0
         ],
         "Tip one": [
-            37.700000000000266,
-            79.19999999999978,
+            36.40000000000025,
+            77.89999999999985,
             3.000000000000001
         ],
         "Tip two": [
-            38.00000000000027,
-            78.39999999999982,
+            38.70000000000028,
+            76.69999999999992,
             2.7000000000000006
         ],
         "Camera": [
-            49.30000000000043,
+            49.20000000000043,
             55.40000000000052,
             0
         ]
@@ -103,6 +103,11 @@
             5,
             140,
             42
+        ],
+        "Millicell plate": [
+            167.5,
+            122.5,
+            25
         ]
     }
 }

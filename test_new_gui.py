@@ -24,7 +24,7 @@ else:
 
 SETTINGS = "TEST.json"
 X_MIN = -9.0
-X_MAX = 145.0
+X_MAX = 183.0
 Y_MIN = 0.0
 Y_MAX = 145.0
 Z_MIN = 0.0
@@ -225,10 +225,11 @@ class MyWindow(ctk.CTk):
             
     def create_well_variables(self):
         # You can add any plates you want here, by defining the name in self.options and its layout in self.layout
-        self.options        = ["TPP6", "TPP12", "TPP24", "TPP48", "NUNC48", "FALCON48"]
+        self.options        = ["TPP6", "Millicell plate", "TPP12", "TPP24", "TPP48", "NUNC48", "FALCON48"]
         self.label_col      = ["A", "B", "C", "D", "E", "F"]
         self.label_row      = ["1", "2", "3", "4", "5", "6", "7", "8"]
         self.layout         = [[2,3], # TPP6
+                               [2,3], # Millicell
                                [3,4], # TPP12
                                [4,6], # TPP24
                                [6,8], # TPP48
@@ -317,8 +318,16 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         self.dynamixel.set_position_gains(P_gain = 2700, I_gain = 50, D_gain = 5000, ID=1)
         self.dynamixel.set_position_gains(P_gain = 2700, I_gain = 90, D_gain = 5000, ID=2)
         self.dynamixel.set_position_gains(P_gain = 2500, I_gain = 40, D_gain = 5000, ID=3)
-        self.dynamixel.select_tip(tip_number=self.tip_number, ID=3)
-        self.dynamixel.write_pipette_ul(self.pipette_empty, ID=[1,2])
+        # self.dynamixel.select_tip(tip_number=self.tip_number, ID=3)
+        self.tip_number = self.dynamixel.read_tip()
+        if self.tip_number == False:
+            self.tip_number = 0
+            self.dynamixel.select_tip(tip_number=self.tip_number, ID=3)
+        pos = [*self.dynamixel.read_pos_in_ul(ID=[1,2]),30]
+        pos[0] = round(pos[0],0)
+        pos[1] = round(pos[1],0)
+        self.servo_pos = pos
+        # self.dynamixel.write_pipette_ul(self.pipette_empty, ID=[1,2])
         self.dynamixel.write_profile_velocity(self.servo_pos[-1], ID=[1,2])
         
         self.purging = False
