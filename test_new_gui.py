@@ -10,7 +10,7 @@ import Developpement.Cam_gear as cam_gear
 import cv2
 
 
-debug = False
+debug = True
 
 if debug:
     from Platform.Communication.fake_communication import * 
@@ -319,14 +319,18 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         self.dynamixel.set_position_gains(P_gain = 2700, I_gain = 90, D_gain = 5000, ID=2)
         self.dynamixel.set_position_gains(P_gain = 2500, I_gain = 40, D_gain = 5000, ID=3)
         # self.dynamixel.select_tip(tip_number=self.tip_number, ID=3)
-        self.tip_number = self.dynamixel.read_tip()
-        if self.tip_number == False:
+        if debug == False:
+            self.tip_number = self.dynamixel.read_tip()
+            if self.tip_number == False:
+                self.tip_number = 0
+                self.dynamixel.select_tip(tip_number=self.tip_number, ID=3)
+            pos = [*self.dynamixel.read_pos_in_ul(ID=[1,2]),30]
+            pos[0] = round(pos[0],0)
+            pos[1] = round(pos[1],0)
+            self.servo_pos = pos
+        else:
             self.tip_number = 0
-            self.dynamixel.select_tip(tip_number=self.tip_number, ID=3)
-        pos = [*self.dynamixel.read_pos_in_ul(ID=[1,2]),30]
-        pos[0] = round(pos[0],0)
-        pos[1] = round(pos[1],0)
-        self.servo_pos = pos
+            self.servo_pos = [self.pipette_empty, self.pipette_empty, 30]
         # self.dynamixel.write_pipette_ul(self.pipette_empty, ID=[1,2])
         self.dynamixel.write_profile_velocity(self.servo_pos[-1], ID=[1,2])
         
@@ -431,7 +435,7 @@ in which you can select UP TO 6 wells to use. You can then press the save button
             # Camera 2 - Macro Camera
             self.stream2 = cam_gear.camThread("Camera 2", get_cam_index("USB2.0 UVC PC Camera"))
         else:
-            self.stream1 = cv2.imread("Developpement/captured_image.jpg")
+            self.stream1 = cv2.imread("Pictures/cam2/failed_capture_0.png")
             self.stream2 = cam_gear.camThread("Camera 2", 0) # laptop camera
         self.stream2.start()
         self.macro_frame = cam_gear.get_cam_frame(self.stream2)
@@ -448,7 +452,7 @@ in which you can select UP TO 6 wells to use. You can then press the save button
             img = self.frame.copy()
             self.format_image(img, idx = 0)
         else:
-            frame = cv2.imread("Developpement/captured_image.jpg")
+            frame = cv2.imread("Pictures/cam2/failed_capture_0.png")
             self.format_image(frame, idx = 0)    
         self.macro_frame = cam_gear.get_cam_frame(self.stream2) 
         self.format_image(self.macro_frame, idx = 1)
