@@ -40,7 +40,7 @@ class camThread(threading.Thread):
             rval, self.frame = cam.read()
         else:
             rval = False
-            print("Error getting frame foor ", self.previewName)
+            print("Error getting frame for ", self.previewName)
 
         while rval:
             self.windowManagement()

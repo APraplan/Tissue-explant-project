@@ -140,13 +140,13 @@ def spreading_solution_A(self):
     if self.sub_state == 'go to position':
         ''' Moves up (z) to a safe position, as to not break anything, and waits'''
         if self.com_state == 'not send':
-            self.anycubic.move_axis_relative(z=self.safe_height, f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
+            self.anycubic.move_axis_relative(z=self.safe_height, f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip one"])
             self.anycubic.finish_request() 
             self.com_state = 'send'  
             
         elif self.anycubic.get_finish_flag():
             ''' Once the z-movement is done, we select the proper tip (the second one), and change the substate to go to the vial'''
-            self.tip_number = 2
+            self.tip_number = 1
             self.dyna.select_tip(tip_number=self.tip_number, ID=3)
             self.solution_prep_num = 0
             self.sub_state = 'go to sol A'
@@ -157,9 +157,9 @@ def spreading_solution_A(self):
         ''' Moves to the vial containing the solution A'''
         if self.com_state == 'not send':
             ''' Moves up (z) to a safe position, as to not break anything, moves to the vial containing the solution A, and finally enters'''
-            self.anycubic.move_axis_relative(z=self.solution_well['Sol A'][2], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
-            self.anycubic.move_axis_relative(x=self.solution_well['Sol A'][0], y=self.solution_well['Sol A'][1], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
-            self.anycubic.move_axis_relative(z=self.settings["Gel"]["Vial pumping height"], f=self.settings["Speed"]["Slow speed"], offset=self.settings["Offset"]["Tip two"]) 
+            self.anycubic.move_axis_relative(z=self.solution_well['Sol A'][2], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip one"])
+            self.anycubic.move_axis_relative(x=self.solution_well['Sol A'][0], y=self.solution_well['Sol A'][1], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip one"])
+            self.anycubic.move_axis_relative(z=self.settings["Gel"]["Vial pumping height"], f=self.settings["Speed"]["Slow speed"], offset=self.settings["Offset"]["Tip one"]) 
             self.anycubic.finish_request() 
             self.com_state = 'send'  
             
@@ -173,24 +173,24 @@ def spreading_solution_A(self):
         ''' Pumps the solution A'''
         if self.com_state == 'not send':
             ''' First sets the speed for the pumping, then pumps the solution A'''
-            self.dyna.write_profile_velocity(self.settings["Solution A"]["Solution A pumping speed"], ID = 2)
-            self.pipette_2_pos -= self.settings["Solution A"]["Solution A pumping volume"]
-            self.dyna.write_pipette_ul(self.pipette_2_pos, ID = 2)
+            self.dyna.write_profile_velocity(self.settings["Solution A"]["Solution A pumping speed"], ID = 1)
+            self.pipette_1_pos -= self.settings["Solution A"]["Solution A pumping volume"]
+            self.dyna.write_pipette_ul(self.pipette_1_pos, ID = 1)
             self.com_state = 'send'
             
-        elif self.dyna.pipette_is_in_position_ul(self.pipette_2_pos, ID = 2):
-            ''' Waits until the pumping is done, then change the substate to fill well'''
-            self.sub_state = 'fill well'
+        elif self.dyna.pipette_is_in_position_ul(self.pipette_1_pos, ID = 1):
+            ''' Waits until the pumping is done, then change the substate to Move to mixing tube'''
+            self.sub_state = 'Move to mixing tube'
             self.com_state = 'not send'   
             
             
-    elif self.sub_state == 'fill well':
+    elif self.sub_state == 'Move to mixing tube':
         '''Moves to the mixing tubes'''
         if self.com_state == 'not send':
             ''' Moves up (z) to a safe position, as to not break anything, moves to the tubes, and finally enters'''
-            self.anycubic.move_axis_relative(z=self.mixing_well[self.solution_prep_num][2], f=self.settings["Speed"]["Slow speed"], offset=self.settings["Offset"]["Tip two"])
-            self.anycubic.move_axis_relative(x=self.mixing_well[self.solution_prep_num][0], y=self.mixing_well[self.solution_prep_num][1], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
-            self.anycubic.move_axis_relative(z=self.settings["Gel"]["Vial pumping height"], f=self.settings["Speed"]["Slow speed"], offset=self.settings["Offset"]["Tip two"]) 
+            self.anycubic.move_axis_relative(z=self.mixing_well[self.solution_prep_num][2], f=self.settings["Speed"]["Slow speed"], offset=self.settings["Offset"]["Tip one"])
+            self.anycubic.move_axis_relative(x=self.mixing_well[self.solution_prep_num][0], y=self.mixing_well[self.solution_prep_num][1], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip one"])
+            self.anycubic.move_axis_relative(z=self.settings["Gel"]["Vial pumping height"], f=self.settings["Speed"]["Slow speed"], offset=self.settings["Offset"]["Tip one"]) 
             self.anycubic.finish_request() 
             self.com_state = 'send'  
             
@@ -204,23 +204,22 @@ def spreading_solution_A(self):
         ''' Pumps out the solution A into the mixing tubes'''
         if self.com_state == 'not send':
             ''' First sets the speed for the pumping, then pumps out the solution A'''
-            self.dyna.write_profile_velocity(self.settings["Solution A"]["Solution A dropping speed"], ID = 2)
-            self.pipette_2_pos = self.pipette_empty
-            self.dyna.write_pipette_ul(self.pipette_2_pos, ID = 2)
+            self.dyna.write_profile_velocity(self.settings["Solution A"]["Solution A dropping speed"], ID = 1)
+            self.pipette_1_pos = self.pipette_empty
+            self.dyna.write_pipette_ul(self.pipette_1_pos, ID = 1)
             self.com_state = 'send'
             
-        elif self.dyna.pipette_is_in_position_ul(self.pipette_2_pos, ID = 2):
+        elif self.dyna.pipette_is_in_position_ul(self.pipette_1_pos, ID = 1):
             ''' Waits until the pumping is done, repeats until all of the mixing tubes are full, and then changes
             the substate to preparing the gel'''
             self.solution_prep_num += 1
-            
-            if self.solution_prep_num < len(self.culture_well) and self.solution_prep_num < self.settings["Well"]["Number of well"]:
+            #TODO CHECK IF THIS WORKS PROPERLY
+            if self.solution_prep_num < len(self.culture_well) and self.solution_prep_num < self.settings["Well"]["Number of well"]: 
                 self.sub_state = 'go to sol A'
                 self.com_state = 'not send'
                 
             else:
                 self.state = 'preparing gel'
-                self.prep_gel_done = False
                 self.sub_state = 'go to position'
                 self.com_state = 'not send'
     
@@ -230,7 +229,7 @@ def preparing_gel(self):
     if self.sub_state == 'go to position':
         ''' Moves up (z) to a safe position, as to not break anything, and waits'''
         if self.com_state == 'not send':
-            self.anycubic.move_axis_relative(z=self.safe_height, f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
+            self.anycubic.move_axis_relative(z=self.safe_height, f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip one"])
             self.anycubic.finish_request() 
             self.com_state = 'send'  
             
@@ -246,6 +245,7 @@ def preparing_gel(self):
             self.sub_state = 'go to sol B'
             self.com_state = 'not send'
             
+            
     if self.sub_state == 'go to purge position':
         ''' We go to the purge position, which is above the liquid'''
         if self.com_state == 'not send':
@@ -255,6 +255,7 @@ def preparing_gel(self):
         elif self.anycubic.get_finish_flag():
             self.sub_state = 'purging'
             self.com_state = 'not send'
+
 
     if self.sub_state == 'purging':
         ''' We start purging, wait until it's over, and then reset the position'''
@@ -282,7 +283,7 @@ def preparing_gel(self):
     elif self.sub_state == 'go to sol B':
         ''' Moves to the vial containing the solution B'''
         if self.com_state == 'not send':
-            
+            #TODO Try to get rid of bubbles here, when dropping into the gel
             self.anycubic.move_axis_relative(z=self.solution_well['Sol B'][2], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
             self.anycubic.move_axis_relative(x=self.solution_well['Sol B'][0], y=self.solution_well['Sol B'][1], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
             self.anycubic.move_axis_relative(z=self.settings["Gel"]["Vial pumping height"], f=self.settings["Speed"]["Slow speed"], offset=self.settings["Offset"]["Tip two"]) 
@@ -304,10 +305,11 @@ def preparing_gel(self):
             self.com_state = 'send'
             
         elif self.dyna.pipette_is_in_position_ul(self.pipette_2_pos, ID = 2):
-            ''' Waits until the pumping is done, then change the substate to fill well'''
+            ''' Waits until the pumping is done, then change the substate to Move to mixing tube'''
             self.sub_state = 'waiting'
-            self.next_sub_state = 'fill well'
+            self.next_sub_state = 'Move to mixing tube'
             self.com_state = 'not send'   
+            
             
     elif self.sub_state == 'waiting':
         ''' We add a wait here, because of the viscosity of the gel. It is so dense that if we don't wait, the pumping hasn't actually finished
@@ -319,7 +321,8 @@ def preparing_gel(self):
             self.timer_started = False
             self.sub_state = self.next_sub_state           
             
-    elif self.sub_state == 'fill well':
+            
+    elif self.sub_state == 'Move to mixing tube':
         ''' Moves to the mixing tubes'''
         if self.com_state == 'not send':
             ''' Moves up (z) to a safe position, as to not break anything, moves to the tubes, and finally enters'''
@@ -338,10 +341,11 @@ def preparing_gel(self):
 
     elif self.sub_state == 'mix down':
         ''' Pumps out the solution B into the mixing tubes'''
+        #TODO Try to get rid of bubbles here
         if self.com_state == 'not send':
             ''' First sets the speed for the pumping, then pumps out the solution B, and then increment the mix counter'''
             self.dyna.write_profile_velocity(self.settings["Solution B"]["Solution B pumping speed"], ID = 2)
-            self.pipette_2_pos = self.pipette_empty-30
+            self.pipette_2_pos = self.pipette_empty#-30 #TODO remove this margin if we put more solution than necessary
             self.dyna.write_pipette_ul(self.pipette_2_pos, ID = 2)
             self.mix += 1
             self.com_state = 'send'  
@@ -360,6 +364,7 @@ def preparing_gel(self):
     elif self.sub_state == 'mix up':
         ''' Pumps the solution B from the mixing tubes'''
         if self.com_state == 'not send':
+            #TODO Check if this is beneficial, when we have more solution than necessary
             ''' First sets the speed for the pumping, then pumps the solution B'''
             self.dyna.write_profile_velocity(self.settings["Solution B"]["Solution B pumping speed"], ID = 2)
             self.pipette_2_pos = self.pipette_empty - (self.settings["Solution A"]["Solution A pumping volume"] + self.settings["Solution B"]["Solution B pumping volume"])*self.settings["Gel"]["Proportion of mixing volume"]
@@ -371,9 +376,11 @@ def preparing_gel(self):
             self.sub_state = 'mix down'
             self.com_state = 'not send'
             
+            
     elif self.sub_state == 'take gel':
         ''' Takes the gel from the mixing tubes'''
         if self.com_state == 'not send':
+            #TODO Check if this is beneficial, when we have more solution than necessary
             ''' First sets the speed for the pumping, then pumps the solution B'''
             self.dyna.write_profile_velocity(self.settings["Solution B"]["Solution B pumping speed"], ID = 2)
             self.pipette_2_pos = self.pipette_empty - (self.settings["Solution A"]["Solution A pumping volume"] + self.settings["Solution B"]["Solution B pumping volume"])*self.settings["Gel"]["Proportion of mixing volume"]
@@ -406,10 +413,12 @@ def preparing_gel(self):
 
     elif self.sub_state == 'dropping':
         ''' Drops the gel into the well plate'''
+        #TODO Change here. Make sure it doesn't create any bubbles
         if self.com_state == 'not send':
             ''' First sets the speed for the pumping, then pumps out the solution B'''
             self.dyna.write_profile_velocity(self.settings["Solution B"]["Solution B pumping speed"], ID = 2)
-            self.pipette_2_pos = self.pipette_2_pos + (self.settings["Solution A"]["Solution A pumping volume"] + self.settings["Solution B"]["Solution B pumping volume"])*self.settings["Gel"]["Proportion of mixing volume"] ##
+            self.pipette_2_pos = self.pipette_empty
+            # self.pipette_2_pos = self.pipette_2_pos + (self.settings["Solution A"]["Solution A pumping volume"] + self.settings["Solution B"]["Solution B pumping volume"])*self.settings["Gel"]["Proportion of mixing volume"] ##
             self.dyna.write_pipette_ul(self.pipette_2_pos, ID = 2)
             self.com_state = 'send'  
             
@@ -444,7 +453,7 @@ def preparing_gel(self):
             ''' Moves up (z) to a safe position, as to not break anything, moves to the washing vial, and finally enters'''
             self.anycubic.move_axis_relative(z=self.solution_well['Washing'][2], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
             self.anycubic.move_axis_relative(x=self.solution_well['Washing'][0], y=self.solution_well['Washing'][1], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
-            self.anycubic.move_axis_relative(z=self.settings["Gel"]["Vial pumping height"], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"]) 
+            self.anycubic.move_axis_relative(z=self.settings["Gel"]["Vial pumping height"], f=self.settings["Speed"]["Slow speed"], offset=self.settings["Offset"]["Tip two"]) 
             self.anycubic.finish_request() 
             self.com_state = 'send'  
             
@@ -456,9 +465,9 @@ def preparing_gel(self):
              
              
     elif self.sub_state == 'wash down':
-        ''' Pumps out the solution B from the washing vial'''
+        ''' Pumps out washing solution from the washing vial'''
         if self.com_state == 'not send':
-            ''' First sets the speed for the pumping, then pumps out the solution B'''
+            ''' First sets the speed for the pumping, then pumps out the washing solution '''
             self.dyna.write_profile_velocity(self.settings["Solution B"]["Solution B pumping speed"], ID = 2)
             self.pipette_2_pos = self.pipette_empty
             self.dyna.write_pipette_ul(self.pipette_2_pos, ID = 2)
@@ -468,16 +477,17 @@ def preparing_gel(self):
             ''' Waits until the pumping is done, then changes the substate to wash up or exit vial, depending on the number of wash'''
             if self.wash >= self.settings["Gel"]["Number of wash"]:
                 self.sub_state = 'exit vial'
-                self.com_state = 'not send'               
+                self.com_state = 'not send'        
+                ##### is a wait necessary here?       
             else:     
                 self.sub_state = 'wash up'
                 self.com_state = 'not send'
             
             
     elif self.sub_state == 'wash up':
-        ''' Pumps the solution B from the washing vial'''
+        ''' Pumps the washing solution from the washing vial'''
         if self.com_state == 'not send':
-            ''' First sets the speed for the pumping, then pumps out the solution B'''
+            ''' First sets the speed for the pumping, then pumps out the washing solution'''
             self.dyna.write_profile_velocity(self.settings["Solution B"]["Solution B pumping speed"], ID = 2)
             self.pipette_2_pos = self.pipette_full
             self.dyna.write_pipette_ul(self.pipette_2_pos, ID = 2)
@@ -594,11 +604,10 @@ def homming(self):
             # self.sub_state = 'go to dump'
             # self.com_state = 'not send'
             
-        
             ''' Changes stat  to preparing well if the parameter has been set to true, else changes state to detect'''
             if self.settings["Well"]["Well preparation"]:
-                # self.state = 'spreading solution A'
-                self.state = 'preparing gel'
+                self.state = 'spreading solution A'
+                # self.state = 'preparing gel'
                 self.prep_gel_done = False
             else:
                 self.state = 'detect'
@@ -606,54 +615,54 @@ def homming(self):
             self.sub_state = 'go to position'
             self.com_state = 'not send'   
             
-    ####
+    # ####
     
-    elif self.sub_state == 'go to dump':
-        ''' Moves to the dump vial, as the second pipette is the one responsible for the mixing.'''
-        if self.com_state == 'not send':
-            ''' Moves up (z) to a safe position, as to not break anything, moves to the dump vial, and finally enters'''
-            self.anycubic.move_axis_relative(z=self.solution_well['Dump'][2], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
-            self.anycubic.move_axis_relative(x=self.solution_well['Dump'][0], y=self.solution_well['Dump'][1], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
-            self.anycubic.move_axis_relative(z=self.settings["Gel"]["Vial pumping height"], f=self.settings["Speed"]["Slow speed"], offset=self.settings["Offset"]["Tip two"]) 
-            self.anycubic.finish_request() 
-            self.com_state = 'send'  
+    # elif self.sub_state == 'go to dump':
+    #     ''' Moves to the dump vial, as the second pipette is the one responsible for the mixing.'''
+    #     if self.com_state == 'not send':
+    #         ''' Moves up (z) to a safe position, as to not break anything, moves to the dump vial, and finally enters'''
+    #         self.anycubic.move_axis_relative(z=self.solution_well['Dump'][2], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
+    #         self.anycubic.move_axis_relative(x=self.solution_well['Dump'][0], y=self.solution_well['Dump'][1], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
+    #         self.anycubic.move_axis_relative(z=self.settings["Gel"]["Vial pumping height"], f=self.settings["Speed"]["Slow speed"], offset=self.settings["Offset"]["Tip two"]) 
+    #         self.anycubic.finish_request() 
+    #         self.com_state = 'send'  
             
-        elif self.anycubic.get_finish_flag():
-            ''' Once it is done entering the vial, changes the substate to empty second pipette'''
-            self.sub_state = 'empty second pipette'
-            self.com_state = 'not send'
+    #     elif self.anycubic.get_finish_flag():
+    #         ''' Once it is done entering the vial, changes the substate to empty second pipette'''
+    #         self.sub_state = 'empty second pipette'
+    #         self.com_state = 'not send'
             
             
-    elif self.sub_state == 'empty second pipette':
-        ''' Sets the speed for the emptying of the pipette, and empties it'''
-        if self.com_state == 'not send':
-            self.dyna.write_profile_velocity(self.settings["Tissues"]["Dropping speed"], ID = 1)
-            self.pipette_2_pos = self.pipette_empty
-            self.dyna.write_pipette_ul(self.pipette_2_pos, ID = 2)
-            self.com_state = 'send'
+    # elif self.sub_state == 'empty second pipette':
+    #     ''' Sets the speed for the emptying of the pipette, and empties it'''
+    #     if self.com_state == 'not send':
+    #         self.dyna.write_profile_velocity(self.settings["Tissues"]["Dropping speed"], ID = 1)
+    #         self.pipette_2_pos = self.pipette_empty
+    #         self.dyna.write_pipette_ul(self.pipette_2_pos, ID = 2)
+    #         self.com_state = 'send'
             
-        elif self.dyna.pipette_is_in_position_ul(self.pipette_2_pos, ID = 2):
-            ''' Waits until the emptying is done, then changes the substate to exit vial'''
-            self.sub_state = 'exit vial'
-            self.com_state = 'not send'
+    #     elif self.dyna.pipette_is_in_position_ul(self.pipette_2_pos, ID = 2):
+    #         ''' Waits until the emptying is done, then changes the substate to exit vial'''
+    #         self.sub_state = 'exit vial'
+    #         self.com_state = 'not send'
                 
-    elif self.sub_state == 'exit vial':
-        ''' self explanatory'''
-        if self.com_state == 'not send':
-            self.anycubic.move_axis_relative(z=self.solution_well['Dump'][2], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
-            self.anycubic.finish_request()
-            self.com_state = 'send'
+    # elif self.sub_state == 'exit vial':
+    #     ''' self explanatory'''
+    #     if self.com_state == 'not send':
+    #         self.anycubic.move_axis_relative(z=self.solution_well['Dump'][2], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip two"])
+    #         self.anycubic.finish_request()
+    #         self.com_state = 'send'
         
-        if self.anycubic.get_finish_flag():
-            ''' Changes stat  to preparing well if the parameter has been set to true, else changes state to detect'''
-            if self.settings["Well"]["Well preparation"]:
-                # self.state = 'spreading solution A'
-                self.state = 'preparing gel'
-                self.prep_gel_done = False
-            else:
-                self.state = 'detect'
+    #     if self.anycubic.get_finish_flag():
+    #         ''' Changes stat  to preparing well if the parameter has been set to true, else changes state to detect'''
+    #         if self.settings["Well"]["Well preparation"]:
+    #             self.state = 'spreading solution A'
+    #             # self.state = 'preparing gel'
+    #             self.prep_gel_done = False
+    #         else:
+    #             self.state = 'detect'
 
-            self.sub_state = 'go to position'
-            self.com_state = 'not send'   
+    #         self.sub_state = 'go to position'
+    #         self.com_state = 'not send'   
             
         

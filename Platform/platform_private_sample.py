@@ -83,7 +83,6 @@ def check_pickup_two(self):
     # res = self.NN.predict(cv2.cvtColor(self.macro_frame, cv2.COLOR_BGR2RGB).reshape(1, 480, 640, 3), verbose=0)
     # res = self.NN.predict(cv2.cvtColor(self.macro_frame, cv2.COLOR_BGR2GRAY).reshape(1, 480, 640, 1), verbose=0)
     # logger.info(f"🔮 Prediciton results {res[0, 0]}")
-    # how to write a pause here, so were check the prediction for a few seconds
     
     
     while True:      
@@ -115,7 +114,7 @@ def delay(self, delay):
     return False        
 
 def detect(self):
-
+    ''' Look at the petridish and look for tissues to pick up'''
     if self.sub_state == 'go to position':
         
         if self.com_state == 'not send':
@@ -159,7 +158,7 @@ def detect(self):
             
         else:
             self.detect_attempt += 1
-            
+            ## Maybe add a bed shake to move the tissues around
             if self.detect_attempt == self.max_detect_attempt:
                 self.state = 'pause'
                 self.last_state = 'detect'
@@ -257,7 +256,7 @@ def pick(self):
             self.pick_attempt += 1
             print(self.pick_attempt, self.settings["Detection"]["Max attempt"])
             
-            if check_pickup(self):
+            if check_pickup(self): 
                 release_tracker(self)
                 self.state = 'picture'
                 self.sub_state = 'go to position'
@@ -294,12 +293,12 @@ def picture(self):
             
         elif self.anycubic.get_finish_flag():
             
-            # print(check_pickup_two(self))
+            
             if delay(self, 0.5):
                 
                 self.pause()
                 if check_pickup_two(self):
-                    # add pause here to check on the camera status
+                    
                     self.state = 'place'
                     self.place_attempt = 0
                    
@@ -436,18 +435,85 @@ def reset(self):
                     self.state = 'done'
                     self.com_state = 'not send'
                 else:
-                    if self.settings["Well"]["Well preparation"]:
-                        self.state = 'preparing gel'
-                        # maybe add a not send com state here
-                    else:
-                        self.state = 'detect'
-                    self.sub_state = 'go to position'
-                    self.com_state = 'not send'   
+                    self.state = 'after wash'
+                    self.sub_state = 'go to wash'
+                    self.com_state = 'not send' 
             else:
                 self.state = 'detect'
                 self.sub_state = 'go to position'
                 self.com_state = 'not send'
+    
+    
+def after_wash(self):
+    ''' After placing the sample, we need to wash the pipette before proceeding to the next sample'''
+    if self.sub_state == 'go to wash':
+        if self.com_state == 'not send':
+            ''' Moves up (z) to a safe position, as to not break anything, moves to the washing vial, and finally enters'''
+            self.anycubic.move_axis_relative(z=self.solution_well['Washing'][2], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip one"])
+            self.anycubic.move_axis_relative(x=self.solution_well['Washing'][0], y=self.solution_well['Washing'][1], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip one"])
+            self.anycubic.move_axis_relative(z=self.settings["Gel"]["Vial pumping height"], f=self.settings["Speed"]["Slow speed"], offset=self.settings["Offset"]["Tip one"]) 
+            self.anycubic.finish_request() 
+            self.com_state = 'send'  
+        elif self.anycubic.get_finish_flag():
+            ''' Waits until the movement is done, then changes the substate to wash up and sets the wash counter to 0'''
+            self.wash = 0
+            self.sub_state = 'wash up'
+            self.com_state = 'not send'
+        
+        
+    elif self.sub_state == 'wash up':
+        ''' Pumps the washing solution from the washing vial'''
+        if self.com_state == 'not send':
+            ''' First sets the speed for the pumping, then pumps out the washing solution'''
+            self.dyna.write_profile_velocity(self.settings["Solution B"]["Solution B pumping speed"], ID = 1)
+            self.pipette_1_pos = self.pipette_full
+            self.dyna.write_pipette_ul(self.pipette_1_pos, ID = 1)
+            self.com_state = 'send'  
+            
+        elif self.dyna.pipette_is_in_position_ul(self.pipette_1_pos, ID = 1):
+            ''' Waits until the pumping is done, then changes the substate to wash down and increment the wash counter'''
+            self.wash += 1
                 
+            self.sub_state = 'wash down'
+            self.com_state = 'not send'
+            
+            
+    elif self.sub_state == 'wash down':
+        ''' Pumps out washing solution from the washing vial'''
+        if self.com_state == 'not send':
+            ''' First sets the speed for the pumping, then pumps out the washing solution '''
+            self.dyna.write_profile_velocity(self.settings["Solution B"]["Solution B pumping speed"], ID = 1)
+            self.pipette_1_pos = self.pipette_empty
+            self.dyna.write_pipette_ul(self.pipette_1_pos, ID = 1)
+            self.com_state = 'send'  
+            
+        elif self.dyna.pipette_is_in_position_ul(self.pipette_1_pos, ID = 1):
+            ''' Waits until the pumping is done, then changes the substate to wash up or exit vial, depending on the number of wash'''
+            if self.wash >= self.settings["Gel"]["Number of wash"]:
+                self.sub_state = 'exit vial'
+                self.com_state = 'not send'        
+                ##### is a wait necessary here?       
+            else:     
+                self.sub_state = 'wash up'
+                self.com_state = 'not send'     
+        
+        
+    elif self.sub_state == 'exit vial':
+        ''' Self explanatory'''
+        if self.com_state == 'not send':
+            self.anycubic.move_axis_relative(z=self.solution_well['Washing'][2], f=self.settings["Speed"]["Fast speed"], offset=self.settings["Offset"]["Tip one"])
+            self.anycubic.finish_request()
+            self.com_state = 'send'
+        
+        if self.anycubic.get_finish_flag():
+            ''' Waits until the movement is done, then changes the sub state to either preparing gel if we have to do that, or detect to continue the
+            detection process. '''    
+            if self.settings["Well"]["Well preparation"]:
+                self.state = 'preparing gel'
+            else:
+                self.state = 'detect'
+            self.sub_state = 'go to position'
+            self.com_state = 'not send'           
                 
 def done(self):
     

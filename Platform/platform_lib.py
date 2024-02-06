@@ -250,6 +250,9 @@ class platform_pick_and_place:
         elif self.state == 'reset':
             reset(self)  
             
+        elif self.state == 'after wash':
+            after_wash(self)
+            
         elif self.state == 'second picture':
             second_picture(self)
             

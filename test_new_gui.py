@@ -179,7 +179,7 @@ class MyWindow(ctk.CTk):
         self.columnconfigure(0, minsize=400, weight=1)
         self.rowconfigure(1, minsize=400,weight=1)
         
-        self.tabControl.set(self.tabs_name[0])
+        self.tabControl.set(self.tabs_name[4])
         self.isOpen = True
 
 
@@ -597,7 +597,6 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         self.populate_tree('', self.settings)
         self.parameter_treeview.place(relx=0.3, relheight=1)
               
-        
            
     def populate_tree(self, parent, dictionary):
         sub_name = ['X', 'Y', 'Z']
@@ -780,6 +779,9 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         self.z_label.grid(column=3, row=2, padx=10, pady=10)                      
         
         #### maybe move this into the self.xyz_gui_position frame
+        self.xyz_step_buttons_text = ctk.CTkLabel(self.tabControl.tab("Motion Control"), text="Step value")
+        self.xyz_step_buttons_text.place(relx=gui_x_pos+0.015, rely=gui_y_pos-.3, anchor=tk.CENTER)
+        
         self.xyz_step_buttons = ctk.CTkSegmentedButton(self.tabControl.tab("Motion Control"),
                                                        values=steps)
         self.xyz_step_buttons.place(relx=gui_x_pos+0.015, rely=gui_y_pos-.23, anchor=tk.CENTER, relwidth=0.22)
@@ -956,9 +958,13 @@ in which you can select UP TO 6 wells to use. You can then press the save button
                                                       variable=self.clicked_servo_unit,
                                                       values=self.unit_list,
                                                       command=self.display_servo_pos)
-        self.servo_unit_list_menu.place(relx=gui_x_pos, rely=0.15, anchor=tk.CENTER)
+        self.servo_unit_list_menu.place(relx=gui_x_pos, rely=0.10, anchor=tk.CENTER)
         
         #### Buttons for deciding the values of the steps
+        
+        self.servo_step_buttons_text = ctk.CTkLabel(self.tabControl.tab("Motion Control"), text="Step value")
+        self.servo_step_buttons_text.place(relx=gui_x_pos, rely=gui_y_pos-.3, anchor=tk.CENTER)
+        
         self.servo_step_buttons = ctk.CTkSegmentedButton(self.tabControl.tab("Motion Control"),
                                                          values=steps)
         self.servo_step_buttons.place(relx=gui_x_pos, rely=gui_y_pos-.23, anchor=tk.CENTER, relwidth=0.22)
@@ -1062,7 +1068,7 @@ in which you can select UP TO 6 wells to use. You can then press the save button
         
     def set_camera_for_control(self):
         self.camera_control_frame = ctk.CTkFrame(self.tabControl.tab("Motion Control"))
-        self.camera_control_frame.place(relx=0.5, rely=0.3, anchor=tk.CENTER)  
+        self.camera_control_frame.place(relx=0.5, rely=0.35, anchor=tk.CENTER)  
            
         self.control_camera_button = ctk.CTkButton(self.camera_control_frame, 
                                                 textvariable=self.camera_displayed_text, 
