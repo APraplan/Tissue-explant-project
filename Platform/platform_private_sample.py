@@ -15,32 +15,46 @@ class sample:
         self.image = None
             
 def destination(self):
-    
-    # mod = int(self.nb_sample/self.nb_pos[1])
-    # 
-    # print('Tube n° ', self.number_sample)
-    # print('x offset', mod)
-    # print('y offset', self.number_sample%self.num_y)
-    # 
-    # return round(self.dropping_pos[0]-self.offset_pos*mod, 2), round(self.dropping_pos[1]-self.offset_pos*(self.nb_sample%self.nb_pos[1]), 2)
-    
+    ''' Computes the destination of the tip, meaning where the tissue will be deposited, based on the current well number and the current sample number'''
     well_pos = [self.culture_well[self.well_num][0], self.culture_well[self.well_num][1]]
     
-    # radius = 3
-    # if self.nb_sample == 0:
-    #     offset = [0, 0]
-    # else: 
-    #     angle = (self.nb_sample-1)*2*math.pi/(self.settings["Well"]["Number of sample per well"]-1)
-    #     offset = [radius*math.cos(angle), radius*math.sin(angle)]
-    offset = [0, 0]
+    ### Pattern 1
+    match self.settings['Well']['Type']:
+        case 'TPP6':
+            diameter = 33.9
+        case 'TPP12':
+            diameter = 21
+        case 'TPP24':
+            diameter = 15.4
+        case 'TPP48':
+            diameter = 10.6
+        case 'NUNC48':
+            diameter = 6.4
+        case 'FALCON48':
+            diameter = 6.4
+        case 'Millicell plate':
+            diameter = 3 ### #TODO check this
+        case _:
+            raise ValueError('Wrong well plate type')
+    radius = diameter/4 # We divide by 4, because we are defining the radius of tissue depositions, and not the radius of the well.
+    if self.nb_sample == 0:
+        offset = [0, 0]
+    else: 
+        angle = (self.nb_sample-1)*2*math.pi/(self.settings["Well"]["Number of sample per well"]-1)
+        offset = [radius*math.cos(angle), radius*math.sin(angle)]
     
-    if self.nb_sample % 2 == 0: 
-        offset[1] = 1
-    else:   
-        offset[1] = -1
-
-    offset[0] = (self.nb_sample - 2) * 2
-
+    ### Pattern 2
+    # offset = [0, 0]
+    
+    # if self.nb_sample % 2 == 0: 
+    #     offset[1] = 1
+    # else:   
+    #     offset[1] = -1
+    
+    # offset[0] = (self.nb_sample - 2) * 2
+    
+    ####
+    
     return [well_pos[0]+offset[0], well_pos[1]+offset[1]]
 
 def set_tracker(self, target_px):

@@ -7,16 +7,15 @@ def vial(settings, name):
             name :      (string) A, B, or Wash
     Output: position :  [x, y, z]
     '''
-    if name == 'A':  # to change to use self.settings I guess
-        # return [25.5, 120, 60]
-        return settings["Positions"]["Solution A"]
-    elif name == 'B':
-        # return [54.5, 120, 60]
-        return settings["Positions"]["Solution B"]
-    elif name =='Wash':
-        return settings["Positions"]["Wash"]
-    else:
-        print('Wrong vial name')
+    match name:
+        case 'A':  # to change to use self.settings I guess
+            return settings["Positions"]["Solution A"]
+        case 'B':
+            return settings["Positions"]["Solution B"]
+        case'Wash':
+            return settings["Positions"]["Wash"]
+        case _:
+            print('Wrong vial name')
         
         
 def tube(settings, name):
@@ -29,19 +28,21 @@ def tube(settings, name):
     # pos = [5, 140, 42]
     pos = settings["Positions"]["Mixing tubes"].copy()
     offset = 14
-    
-    if name == 'A':
-        pos[0] += 0
-    elif name == 'B':
-        pos[0] += 1*offset
-    elif name == 'C':
-        pos[0] += 2*offset
-    elif name == 'D':
-        pos[0] += 3*offset
-    elif name == 'E':
-        pos[0] += 4*offset
-    elif name == 'F':
-        pos[0] += 5*offset
+    match name:
+        case 'A':
+            pos[0] += 0
+        case 'B':
+            pos[0] += 1*offset
+        case 'C':
+            pos[0] += 2*offset
+        case 'D':
+            pos[0] += 3*offset
+        case 'E':
+            pos[0] += 4*offset
+        case 'F':
+            pos[0] += 5*offset
+        case _:
+            raise ValueError('Wrong tube name')
     
     return pos
     
@@ -56,39 +57,33 @@ def well_plate(id, type='TPP12'):
     Output: position :  [x, y]
     '''
     # https://www.tpp.ch/page/downloads/IFU_TechDoc/TechDoc-testplates-measurements-d-e.pdf?m=1643984087&
+    # https://www.tpp.ch/page/produkte/09_zellkultur_testplatte.php
     
-    # border = [170, 134]
     border = [85, 134]
-    
-    if type == 'TPP6':
-        # position = [border[0]-24, border[1]-24.4, 25]
-        position = [border[0]+24, border[1]-24.4, 25]
-        well_offset = 37.5
-    elif type == 'TPP12':
-        # position = [border[0]-17.9, border[1]-26.55, 25]
-        position = [border[0]+17.9, border[1]-26.55, 25]
-        well_offset = 24.9
-    elif type == 'TPP24':
-        # position = [border[0]-14.85, border[1]-15.4, 25]
-        position = [border[0]+14.85, border[1]-15.4, 25]
-        well_offset = 18.6
-    elif type == 'TPP48':
-        # position = [border[0]-10.25, border[1]-18.4, 25]
-        position = [border[0]+10.25, border[1]-18.4, 25]
-        well_offset = 13
-    elif type == 'NUNC48':
-        # position = [border[0]-10, border[1]-15.5, 25]
-        position = [border[0]+10, border[1]-15.5, 25]
-        well_offset = 13.5
-    elif type == 'FALCON48':
-        # position = [border[0]-11.0, border[1]-18.5, 25]
-        position = [border[0]+11.0, border[1]-18.5, 25]
-        well_offset = 12.85
-    elif type == 'Millicell plate':
-        position = [112.5, 122.5, 25]
-        well_offset = 55
-    else:
-        print('Wrong well plate type')
+    match type :
+        case 'TPP6':
+            position = [border[0]+24, border[1]-24.4, 25]
+            well_offset = 37.5
+        case 'TPP12':
+            position = [border[0]+17.9, border[1]-26.55, 25]
+            well_offset = 24.9
+        case 'TPP24':
+            position = [border[0]+14.85, border[1]-15.4, 25]
+            well_offset = 18.6
+        case 'TPP48':
+            position = [border[0]+10.25, border[1]-18.4, 25]
+            well_offset = 13
+        case 'NUNC48':
+            position = [border[0]+10, border[1]-15.5, 25]
+            well_offset = 13.5
+        case 'FALCON48':
+            position = [border[0]+11.0, border[1]-18.5, 25]
+            well_offset = 12.85
+        case 'Millicell plate':
+            position = [112.5, 122.5, 25]
+            well_offset = 55
+        case _:
+            raise ValueError('Wrong well plate type')
     
     ''' 
     In the well plate, there are multiple wells. The position for each culture is determined by the position in settings.json.
@@ -106,30 +101,28 @@ def well_plate(id, type='TPP12'):
     The letter defines the column (x position), and the number defines the row (y position).
     
     '''
-    if id[0] == 'A': # can probably be written in 3 lines instead of all 6 scenarios
-        position[0] = position[0]
-        position[1] = position[1] - (int(id[1])-1)*well_offset
-    elif id[0] == 'B':
-        position[0] = position[0] + 1*well_offset
-        # position[0] = position[0] - 1*well_offset
-        position[1] = position[1] - (int(id[1])-1)*well_offset
-    elif id[0] == 'C':
-        position[0] = position[0] + 2*well_offset
-        # position[0] = position[0] - 2*well_offset
-        position[1] = position[1] - (int(id[1])-1)*well_offset
-    elif id[0] == 'D':
-        position[0] = position[0] + 3*well_offset
-        # position[0] = position[0] - 3*well_offset
-        position[1] = position[1] - (int(id[1])-1)*well_offset
-    elif id[0] == 'E':
-        position[0] = position[0] + 4*well_offset
-        # position[0] = position[0] - 4*well_offset
-        position[1] = position[1] - (int(id[1])-1)*well_offset
-    elif id[0] == 'F':
-        position[0] = position[0] + 5*well_offset
-        # position[0] = position[0] - 5*well_offset
-        position[1] = position[1] - (int(id[1])-1)*well_offset
-        
+    match id[0]:
+        case 'A': # can probably be written in 3 lines instead of all 6 scenarios
+            position[0] = position[0]
+            position[1] = position[1] - (int(id[1])-1)*well_offset
+        case 'B':
+            position[0] = position[0] + 1*well_offset
+            position[1] = position[1] - (int(id[1])-1)*well_offset
+        case 'C':
+            position[0] = position[0] + 2*well_offset
+            position[1] = position[1] - (int(id[1])-1)*well_offset
+        case 'D':
+            position[0] = position[0] + 3*well_offset
+            position[1] = position[1] - (int(id[1])-1)*well_offset
+        case 'E':
+            position[0] = position[0] + 4*well_offset
+            position[1] = position[1] - (int(id[1])-1)*well_offset
+        case 'F':
+            position[0] = position[0] + 5*well_offset
+            position[1] = position[1] - (int(id[1])-1)*well_offset
+        case _:
+            raise ValueError("Unexpected argument")
+            
     return position
 
 
@@ -367,7 +360,9 @@ def preparing_gel(self):
             #TODO Check if this is beneficial, when we have more solution than necessary
             ''' First sets the speed for the pumping, then pumps the solution B'''
             self.dyna.write_profile_velocity(self.settings["Solution B"]["Solution B pumping speed"], ID = 2)
-            self.pipette_2_pos = self.pipette_empty - (self.settings["Solution A"]["Solution A pumping volume"] + self.settings["Solution B"]["Solution B pumping volume"])*self.settings["Gel"]["Proportion of mixing volume"]
+            volume = max(0, self.pipette_empty - self.settings["Gel"]["Gel pumping volume"])
+            self.pipette_2_pos = volume
+            # self.pipette_2_pos = self.pipette_empty - (self.settings["Solution A"]["Solution A pumping volume"] + self.settings["Solution B"]["Solution B pumping volume"]) *self.settings["Gel"]["Proportion of mixing volume"]
             self.dyna.write_pipette_ul(self.pipette_2_pos, ID = 2)
             self.com_state = 'send'  
 
@@ -383,7 +378,9 @@ def preparing_gel(self):
             #TODO Check if this is beneficial, when we have more solution than necessary
             ''' First sets the speed for the pumping, then pumps the solution B'''
             self.dyna.write_profile_velocity(self.settings["Solution B"]["Solution B pumping speed"], ID = 2)
-            self.pipette_2_pos = self.pipette_empty - (self.settings["Solution A"]["Solution A pumping volume"] + self.settings["Solution B"]["Solution B pumping volume"])*self.settings["Gel"]["Proportion of mixing volume"]
+            volume = max(0, self.pipette_empty - self.settings["Gel"]["Gel pumping volume"])
+            self.pipette_2_pos = volume
+            # self.pipette_2_pos = self.pipette_empty - (self.settings["Solution A"]["Solution A pumping volume"] + self.settings["Solution B"]["Solution B pumping volume"]) *self.settings["Gel"]["Proportion of mixing volume"]
             self.dyna.write_pipette_ul(self.pipette_2_pos, ID = 2)
             self.com_state = 'send'  
 
@@ -418,7 +415,6 @@ def preparing_gel(self):
             ''' First sets the speed for the pumping, then pumps out the solution B'''
             self.dyna.write_profile_velocity(self.settings["Solution B"]["Solution B pumping speed"], ID = 2)
             self.pipette_2_pos = self.pipette_empty
-            # self.pipette_2_pos = self.pipette_2_pos + (self.settings["Solution A"]["Solution A pumping volume"] + self.settings["Solution B"]["Solution B pumping volume"])*self.settings["Gel"]["Proportion of mixing volume"] ##
             self.dyna.write_pipette_ul(self.pipette_2_pos, ID = 2)
             self.com_state = 'send'  
             
