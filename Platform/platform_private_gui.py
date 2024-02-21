@@ -262,6 +262,14 @@ def gui_parameter(self, direction=None):
                 self.settings["Well"]["Type"] = "TPP24"
             elif self.settings["Well"]["Type"] == "TPP24":
                 self.settings["Well"]["Type"] = "TPP48"
+            elif self.settings["Well"]["Type"] == "TPP48":
+                self.settings["Well"]["Type"] = "NUNC48"
+            elif self.settings["Well"]["Type"] == "NUNC48":
+                self.settings["Well"]["Type"] = "FALCON48"
+            elif self.settings["Well"]["Type"] == "FALCON48":
+                self.settings["Well"]["Type"] = "Millicell plate"
+            elif self.settings["Well"]["Type"] == "Millicell plate":
+                self.settings["Well"]["Type"] = "TPP6"
         elif self.gui_menu == 29:
             if self.settings["Well"]["Number of sample per well"] < 8:
                 self.settings["Well"]["Number of sample per well"] += 1
@@ -350,12 +358,20 @@ def gui_parameter(self, direction=None):
         elif self.gui_menu == 27:
             self.settings["Well"]["Well preparation"] = False
         elif self.gui_menu == 28:
-            if self.settings["Well"]["Type"] == "TPP48":
+            if self.settings["Well"]["Type"] == "Millicell plate":
+                self.settings["Well"]["Type"] = "FALCON48"
+            elif self.settings["Well"]["Type"] == "FALCON48":
+                self.settings["Well"]["Type"] = "NUNC48"
+            elif self.settings["Well"]["Type"] == "NUNC48":
+                self.settings["Well"]["Type"] = "TPP48"
+            elif self.settings["Well"]["Type"] == "TPP48":
                 self.settings["Well"]["Type"] = "TPP24"
             elif self.settings["Well"]["Type"] == "TPP24":
                 self.settings["Well"]["Type"] = "TPP12"
             elif self.settings["Well"]["Type"] == "TPP12":
                 self.settings["Well"]["Type"] = "TPP6"
+            elif self.settings["Well"]["Type"] == "TPP6":
+                self.settings["Well"]["Type"] = "Millicell plate"
         elif self.gui_menu == 29:
             if self.settings["Well"]["Number of sample per well"] > 1:
                 self.settings["Well"]["Number of sample per well"] -= 1

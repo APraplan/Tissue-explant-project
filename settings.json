@@ -1,36 +1,39 @@
 {
     "Position": {
         "Pick height": 5.599999999999995,
-        "Drop height": 12
+        "Drop height": 10.0
     },
     "Speed": {
-        "Slow speed": 3,
-        "Medium speed": 8,
+        "Slow speed": 1,
+        "Medium speed": 5,
         "Fast speed": 100
     },
     "Tissues": {
-        "Pumping Volume": 95.0,
+        "Pumping Volume": 127.0,
         "Pumping speed": 65,
-        "Dropping volume": 20.0,
-        "Dropping speed": 151
+        "Dropping volume": 28.0,
+        "Dropping speed": 152
     },
     "Solution A": {
+        "Slow height": 40,
         "Solution A pumping speed": 60,
         "Solution A dropping speed": 60,
-        "Solution A pumping volume": 410,
+        "Solution A pumping volume": 345,
         "Purging speed": 100,
         "Purging volume": 660
     },
     "Solution B": {
+        "Slow height": 40,
         "Solution B pumping speed": 30,
         "Solution B dropping speed": 35,
-        "Solution B pumping volume": 410
+        "Solution B pumping volume": 340
     },
     "Gel": {
-        "Gel pumping volume":575,
+        "Slow height": 30,
+        "Gel pumping volume": 600,
         "Tube pumping height": 2.5,
-        "Vial pumping height": 1.5000000000000004,
-        "Well plate pumping height": 10,
+        "Vial pumping height": 5.0,
+        "Well plate pumping height": 5.5,
         "Waiting time": 3.5,
         "Number of mix": 4,
         "Proportion of mixing volume": 0.95,
@@ -46,12 +49,12 @@
         "Inertia min": 0.3
     },
     "Well": {
-        "Well preparation": true,
-        "Type": "Millicell plate",
-        "Number of sample per well": 2,
+        "Well preparation": false,
+        "Type": "TPP12",
+        "Number of sample per well": 5,
         "Number of well": 1,
-        "Culture 1": "A1",
-        "Culture 2": "B1",
+        "Culture 1": "B3",
+        "Culture 2": "B3",
         "Culture 3": "A2",
         "Culture 4": "B2",
         "Culture 5": "A3",
@@ -69,18 +72,18 @@
             0.0
         ],
         "Tip one": [
-            36.40000000000025,
-            77.89999999999985,
-            3.000000000000001
+            36.10000000000024,
+            73.4000000000001,
+            5.699999999999996
         ],
         "Tip two": [
-            38.70000000000028,
-            76.69999999999992,
-            2.7000000000000006
+            39.30000000000029,
+            76.09999999999995,
+            5.599999999999996
         ],
         "Camera": [
-            49.20000000000043,
-            55.40000000000052,
+            49.40000000000043,
+            55.300000000000516,
             0
         ]
     },
@@ -103,7 +106,7 @@
         "Mixing tubes": [
             5,
             140,
-            42
+            50
         ],
         "Millicell plate": [
             167.5,

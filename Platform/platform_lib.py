@@ -63,8 +63,8 @@ class platform_pick_and_place:
         self.pipette_1_pos = 0
         self.pipette_2_pos = 0
         self.pipette_full = 0
-        self.pipette_empty = 570
-        self.pipette_max_ul = 680
+        self.pipette_empty = 600
+        self.pipette_max_ul = 640
         
         self.dyna = Dynamixel(ID=[1,2,3], descriptive_device_name="XL430 test motor", series_name=["xl", "xl", "xl"], baudrate=57600,
                 pipette_max_ul= self.pipette_max_ul, pipette_empty=self.pipette_empty, port_name=get_com_port("0403", "6014")) 
@@ -258,6 +258,9 @@ class platform_pick_and_place:
             
         elif self.state == 'done':
             done(self)
+            
+        # elif self.state == 'Calibrate pipette':
+        #     calib_pipette(self)
                    
     def pause(self):
         '''' Should be called by pressing the button p while on the GUI '''

@@ -23,7 +23,8 @@ def destination(self):
         case 'TPP6':
             diameter = 33.9
         case 'TPP12':
-            diameter = 21
+            # diameter = 21
+            diameter = 10 ### This is the diameter of a millicell insert, as we will use these inside the plate
         case 'TPP24':
             diameter = 15.4
         case 'TPP48':
@@ -33,7 +34,7 @@ def destination(self):
         case 'FALCON48':
             diameter = 6.4
         case 'Millicell plate':
-            diameter = 3 ### #TODO check this
+            diameter = 10
         case _:
             raise ValueError('Wrong well plate type')
     radius = diameter/4 # We divide by 4, because we are defining the radius of tissue depositions, and not the radius of the well.
