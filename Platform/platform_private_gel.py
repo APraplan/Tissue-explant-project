@@ -505,6 +505,7 @@ def preparing_gel(self):
             ''' Waits until the movement is done, then changes the sub state to go to purge position'''
             self.state = 'detect'
             self.sub_state = 'go to position'
+            self.com_state = 'not send'
             self.prep_gel_done = True
             # self.sub_state = 'go to purge position'
             # self.com_state = 'not send'  
