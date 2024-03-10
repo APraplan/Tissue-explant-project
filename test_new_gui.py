@@ -10,7 +10,7 @@ import Developpement.Cam_gear as cam_gear
 import cv2
 
 
-debug = False
+debug = True
 
 if debug:
     from Platform.Communication.fake_communication import * 
@@ -50,6 +50,10 @@ class ArrowButtonRight(tk.Frame):  ## replace these with pictures
         self.canvas.create_polygon(7, 7, 35, 20, 7, 33, fill="black", outline="black")
         self.canvas.bind("<Button-1>", self.on_click)
         self.canvas.grid()
+        self.other_class = None
+        
+    def assign_class(self, other_class):
+        self.other_class = other_class
 
     def on_click(self, event):
         if self.target_class.is_homed:
@@ -1168,3 +1172,5 @@ if __name__ == "__main__":
         window.execute_function_from_buffer()   
         window.update()
         window.update_idletasks()
+        
+        

@@ -6,7 +6,9 @@ sys.path.append("Platform")
 from Platform.Communication.ports_gestion import *
 
 
-class camThread(threading.Thread):    
+class camThread(threading.Thread):   
+    '''Thread to manage the camera feed.
+    It is used to manage both camera feed at the same time''' 
     def __init__(self, previewName, camID, preview = False):
         threading.Thread.__init__(self)
         self.previewName = previewName
