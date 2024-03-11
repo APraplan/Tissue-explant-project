@@ -99,7 +99,7 @@ def check_pickup_two(self):
     # res = self.NN.predict(cv2.cvtColor(self.macro_frame, cv2.COLOR_BGR2GRAY).reshape(1, 480, 640, 1), verbose=0)
     # logger.info(f"🔮 Prediciton results {res[0, 0]}")
     
-    
+    ## ICI IL FAUT RéACTIVER LE NEURAL NETWORK, ET ADAPTER ICI
     while True:      
 
         # Inputs
@@ -116,7 +116,7 @@ def check_pickup_two(self):
     #     return False ## change here to take picture repeatedlz
     # else:
     #     return False
-    
+    ##############
 
 def delay(self, delay):
 

@@ -10,7 +10,7 @@ import Developpement.Cam_gear as cam_gear
 import cv2
 
 
-debug = True
+debug = False
 
 if debug:
     from Platform.Communication.fake_communication import * 
@@ -1167,6 +1167,7 @@ in which you can select UP TO 6 wells to use. You can then press the save button
 if __name__ == "__main__":
     window = MyWindow()
     
+    ## Equivalent to window.mainloop()
     while window.isOpen:
         window.update_cameras()
         window.execute_function_from_buffer()   
